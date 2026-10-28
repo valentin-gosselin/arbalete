@@ -37,12 +37,12 @@ Fait en premier car tous les textes ajoutés ensuite en dépendent.
 - [x] Archive : bouton en bas de la barre (fenêtre avec recherche, réouverture, retrait, vider) et section « Archive » de la recherche rapide ; purge après 30 jours ; propre à chaque PC (storage.local).
 - [x] Doublons : « Fermer les onglets en double » (clic droit et recherche rapide, depuis la 0.4.0).
 
-## Phase 5 : espaces
+## Phase 5 : espaces (faite le 28/10/2026, version 0.8.0)
 
-- [ ] Règles par site : « tout lien vers tel domaine s'ouvre dans tel espace » (avec conteneur si l'espace en a un).
-- [ ] Règles horaires : bascule automatique d'espace selon le jour et l'heure, désactivable.
-- [ ] Thème par espace : la couleur de l'espace teinte l'interface de Firefox (API des thèmes), fond en dégradé deux couleurs ou image.
-- [ ] Statistiques : nombre d'onglets et temps passé par espace, sur la semaine.
+- [x] Règles par site (« Sites de cet espace ») : l'onglet rejoint l'espace, rouvert dans son conteneur si besoin ; on suit si c'est l'onglet affiché.
+- [x] Bascule horaire par espace (semaine / week-end / tous les jours, plage d'heures, plages de nuit possibles) : une seule bascule à l'entrée dans la plage.
+- [x] Thème : option des réglages qui teinte Firefox (cadre, barre d'outils, champ d'adresse) aux couleurs de l'espace ; fond de la barre en dégradé avec une 2e couleur facultative. (Image de fond : non retenue.)
+- [x] Statistiques : temps passé par espace (fenêtre au premier plan), barres sur 7 jours dans les réglages, 14 jours gardés, propre au PC.
 
 ## Phase 6 : onglets
 

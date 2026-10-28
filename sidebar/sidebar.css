@@ -32,7 +32,7 @@ body {
   font: 13px/1.3 system-ui, "Segoe UI", sans-serif;
   color: var(--fg);
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--space) 22%, transparent), transparent 220px),
+    linear-gradient(180deg, color-mix(in srgb, var(--space) 22%, transparent), color-mix(in srgb, var(--space2, var(--space)) 14%, transparent) 180px, transparent 360px),
     var(--bg);
   transition: background 0.25s;
   overflow: hidden;
@@ -318,6 +318,28 @@ body:not(.mode-sidebar) > .footer { display: none; }
   padding: 7px;
 }
 .panel input[type="color"] { padding: 2px; height: 34px; width: 64px; }
+.panel textarea {
+  font: inherit;
+  color: var(--fg);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 7px;
+  resize: vertical;
+}
+.panel .hint { color: var(--muted); font-size: 11.5px; }
+.panel fieldset.schedule { border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.panel fieldset.schedule .row { align-items: center; }
+.panel [hidden] { display: none !important; }
+
+/* Statistiques par espace */
+.stats { display: flex; flex-direction: column; gap: 6px; }
+.stat { display: grid; grid-template-columns: 110px 1fr auto; align-items: center; gap: 8px; font-size: 12px; }
+.stat-name { display: flex; align-items: center; gap: 4px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.stat-name .ic { width: 14px; height: 14px; }
+.stat-bar { height: 8px; border-radius: 4px; background: var(--row-hover); position: relative; overflow: hidden; }
+.stat-bar::after { content: ""; position: absolute; inset: 0 auto 0 0; width: var(--w); border-radius: 4px; background: var(--c); }
+.stat-value { color: var(--muted); font-variant-numeric: tabular-nums; }
 .row { display: flex; gap: 10px; align-items: flex-end; }
 .grow { flex: 1; }
 

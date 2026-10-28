@@ -164,6 +164,48 @@
   "archiveConfirmClear": {
     "message": "Vider l’archive de l’espace « $1 » ?"
   },
+  "spaceGradient": {
+    "message": "Fond en dégradé avec une 2e couleur"
+  },
+  "spaceSites": {
+    "message": "Sites de cet espace"
+  },
+  "spaceSitesPlaceholder": {
+    "message": "exemple.fr\nmon-travail.org"
+  },
+  "spaceSitesHint": {
+    "message": "Un site par ligne : les onglets qui y vont rejoignent cet espace (et son conteneur)."
+  },
+  "spaceSchedule": {
+    "message": "Basculer automatiquement sur cet espace"
+  },
+  "scheduleWeek": {
+    "message": "Du lundi au vendredi"
+  },
+  "scheduleWeekend": {
+    "message": "Le week-end"
+  },
+  "scheduleAll": {
+    "message": "Tous les jours"
+  },
+  "scheduleFrom": {
+    "message": "De"
+  },
+  "scheduleTo": {
+    "message": "À"
+  },
+  "settingsTheme": {
+    "message": "Teinter Firefox aux couleurs de l’espace actif"
+  },
+  "statsHeading": {
+    "message": "Temps par espace (7 jours)"
+  },
+  "statsTooltip": {
+    "message": "$1 : $2 aujourd’hui, $3 sur 7 jours"
+  },
+  "statsHint": {
+    "message": "Compté quand une fenêtre de Firefox est au premier plan, sur ce PC seulement."
+  },
   "archiveAfter": {
     "message": "Ranger dans l’archive les onglets inactifs depuis"
   },

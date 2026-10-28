@@ -78,6 +78,7 @@ function render() {
   const space = currentSpace();
   const index = state.spaces.indexOf(space);
   document.documentElement.style.setProperty('--space', space.color);
+  document.documentElement.style.setProperty('--space2', space.color2 || space.color);
   if (mode !== 'sidebar') return;
 
   renderFavorites(space);
@@ -555,6 +556,23 @@ async function initEditForm() {
   archive.replaceChildren(...delays.map((h) => el('option', { value: String(h) }, t(h ? `archiveAfter${h}` : 'archiveNever'))));
   archive.value = String(space.archiveAfter || 0);
 
+  // Dégradé (2e couleur), sites de l'espace, bascule horaire.
+  $('#f-gradient').checked = !!space.color2;
+  $('#f-color2').value = space.color2 || space.color;
+  $('#f-color2').hidden = !space.color2;
+  $('#f-gradient').addEventListener('change', () => { $('#f-color2').hidden = !$('#f-gradient').checked; });
+  $('#f-sites').value = (space.sites || []).join('\n');
+  const schedule = space.schedule;
+  $('#f-sched-on').checked = !!schedule;
+  if (schedule) {
+    $('#f-sched-days').value = schedule.days || 'week';
+    $('#f-sched-from').value = schedule.from || '09:00';
+    $('#f-sched-to').value = schedule.to || '18:00';
+  }
+  const toggleSchedule = () => { $('#f-sched-row').hidden = !$('#f-sched-on').checked; };
+  $('#f-sched-on').addEventListener('change', toggleSchedule);
+  toggleSchedule();
+
   let searchTimer = null;
   $('#f-icon-search').addEventListener('input', () => {
     clearTimeout(searchTimer);
@@ -588,6 +606,11 @@ async function initEditForm() {
         id: space.id,
         icon: `lucide:${selectedIcon}`,
         archiveAfter: Number($('#f-archive').value) || 0,
+        color2: $('#f-gradient').checked ? $('#f-color2').value : null,
+        sites: parseSites($('#f-sites').value),
+        schedule: $('#f-sched-on').checked
+          ? { days: $('#f-sched-days').value, from: $('#f-sched-from').value, to: $('#f-sched-to').value }
+          : null,
         name: $('#f-name').value.trim() || t('spaceFallbackName'),
         color: $('#f-color').value,
         cookieStoreId,
@@ -596,6 +619,14 @@ async function initEditForm() {
     });
     window.close();
   });
+}
+
+// « https://www.exemple.fr/page » ou « exemple.fr » -> « exemple.fr »
+function parseSites(text) {
+  const sites = text.split(/[\s,;]+/).map((line) => line.trim().toLowerCase()
+    .replace(/^[a-z]+:\/\//, '').replace(/^www\./, '').replace(/[/?#].*$/, ''))
+    .filter((d) => /^[a-z0-9.-]+\.[a-z]{2,}$/.test(d));
+  return [...new Set(sites)];
 }
 
 // --- Fenêtre « modifier le groupe » --------------------------------------------------
@@ -764,6 +795,11 @@ function initSettings() {
     if (history.checked) history.checked = await browser.permissions.request(HISTORY);
     else await browser.permissions.remove(HISTORY);
   });
+  const theme = $('#s-theme');
+  browser.storage.local.get('tintTheme').then((s) => { theme.checked = !!s.tintTheme; });
+  theme.addEventListener('change', () => browser.storage.local.set({ tintTheme: theme.checked }));
+  renderStats();
+
   const expand = $('#s-expand');
   browser.storage.local.get('expandOnHover').then((s) => { expand.checked = !!s.expandOnHover; });
   expand.addEventListener('change', () => {
@@ -777,6 +813,30 @@ function initSettings() {
   }
   $('#import-file').addEventListener('change', importSpaces);
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') window.close(); });
+}
+
+// Statistiques : minutes passées par espace, aujourd'hui et sur 7 jours.
+async function renderStats() {
+  const stats = await send('getStats');
+  const days = Object.keys(stats).sort().slice(-7);
+  const today = new Date().toISOString().slice(0, 10);
+  const total = (spaceId, list) => list.reduce((sum, d) => sum + ((stats[d] || {})[spaceId] || 0), 0);
+  const rows = state.spaces.map((s) => ({ s, week: total(s.id, days), today: total(s.id, [today]) }));
+  const max = Math.max(1, ...rows.map((r) => r.week));
+  const duration = (minutes) => (minutes >= 60 ? `${Math.floor(minutes / 60)} h ${String(minutes % 60).padStart(2, '0')}` : `${minutes} min`);
+  $('#s-stats').replaceChildren(
+    ...rows.map(({ s, week, today: day }) => {
+      const bar = el('span', { class: 'stat-bar' });
+      bar.style.setProperty('--w', `${(week / max) * 100}%`);
+      bar.style.setProperty('--c', s.color);
+      return el('div', { class: 'stat', title: t('statsTooltip', s.name, duration(day), duration(week)) }, [
+        el('span', { class: 'stat-name' }, [spaceIcon(s, 'ic'), ` ${s.name}`]),
+        bar,
+        el('span', { class: 'stat-value' }, duration(week)),
+      ]);
+    }),
+    el('p', { class: 'hint' }, t('statsHint')),
+  );
 }
 
 // --- Fenêtre « une seule barre » : installe userChrome.css ---------------------------

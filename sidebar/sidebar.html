@@ -53,6 +53,27 @@
         <select id="f-container"></select>
       </label>
     </div>
+    <div class="row">
+      <label class="check"><input type="checkbox" id="f-gradient"> <span data-i18n="spaceGradient"></span></label>
+      <input id="f-color2" type="color" data-i18n-label="spaceGradient">
+    </div>
+    <label><span data-i18n="spaceSites"></span>
+      <textarea id="f-sites" rows="3" data-i18n-placeholder="spaceSitesPlaceholder"></textarea>
+      <span class="hint" data-i18n="spaceSitesHint"></span>
+    </label>
+    <fieldset class="schedule">
+      <label class="check"><input type="checkbox" id="f-sched-on"> <span data-i18n="spaceSchedule"></span></label>
+      <div class="row" id="f-sched-row">
+        <select id="f-sched-days">
+          <option value="week" data-i18n="scheduleWeek"></option>
+          <option value="weekend" data-i18n="scheduleWeekend"></option>
+          <option value="all" data-i18n="scheduleAll"></option>
+        </select>
+        <input id="f-sched-from" type="time" value="09:00" data-i18n-label="scheduleFrom">
+        <span>→</span>
+        <input id="f-sched-to" type="time" value="18:00" data-i18n-label="scheduleTo">
+      </div>
+    </fieldset>
     <label><span data-i18n="archiveAfter"></span>
       <select id="f-archive"></select>
     </label>
@@ -97,8 +118,11 @@
     <h3 data-i18n="settingsShare"></h3>
     <button class="wide" id="s-export" data-i18n="settingsExport"></button>
     <button class="wide" id="s-import" data-i18n="settingsImport"></button>
+    <h3 data-i18n="statsHeading"></h3>
+    <div id="s-stats" class="stats"></div>
     <h3 data-i18n="settingsHeading"></h3>
     <label class="check"><input type="checkbox" id="s-expand"> <span data-i18n="settingsExpand"></span></label>
+    <label class="check"><input type="checkbox" id="s-theme"> <span data-i18n="settingsTheme"></span></label>
     <label class="check"><input type="checkbox" id="s-history"> <span data-i18n="settingsHistory"></span></label>
     <label><span data-i18n="settingsSuggest"></span>
       <span class="row">

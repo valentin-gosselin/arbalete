@@ -164,6 +164,48 @@
   "archiveConfirmClear": {
     "message": "Empty the archive of the space \"$1\"?"
   },
+  "spaceGradient": {
+    "message": "Gradient background with a 2nd color"
+  },
+  "spaceSites": {
+    "message": "Sites of this space"
+  },
+  "spaceSitesPlaceholder": {
+    "message": "example.com\nwork-site.org"
+  },
+  "spaceSitesHint": {
+    "message": "One site per line: tabs going there join this space (and its container)."
+  },
+  "spaceSchedule": {
+    "message": "Switch to this space automatically"
+  },
+  "scheduleWeek": {
+    "message": "Monday to Friday"
+  },
+  "scheduleWeekend": {
+    "message": "On weekends"
+  },
+  "scheduleAll": {
+    "message": "Every day"
+  },
+  "scheduleFrom": {
+    "message": "From"
+  },
+  "scheduleTo": {
+    "message": "To"
+  },
+  "settingsTheme": {
+    "message": "Tint Firefox with the active space colors"
+  },
+  "statsHeading": {
+    "message": "Time per space (7 days)"
+  },
+  "statsTooltip": {
+    "message": "$1: $2 today, $3 over 7 days"
+  },
+  "statsHint": {
+    "message": "Counted while a Firefox window is in front, on this computer only."
+  },
   "archiveAfter": {
     "message": "Archive tabs inactive for"
   },

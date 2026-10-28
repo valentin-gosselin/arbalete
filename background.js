@@ -67,6 +67,7 @@ async function saveSpaces() {
     saving = false;
   }
   buildMenus();
+  applyThemeEverywhere().catch(() => {});
   notify();
 }
 
@@ -145,6 +146,7 @@ async function switchSpace(windowId, spaceId) {
   browser.sessions.setWindowValue(windowId, 'space', spaceId).catch(() => {});
   await ensureActiveInSpace(windowId);
   await applyVisibility(windowId);
+  applyTheme(windowId).catch(() => {});
   notify();
 }
 
@@ -485,6 +487,9 @@ async function importSpaces(imported) {
     containerName: s.containerName || null,
     cookieStoreId: null,
     archiveAfter: Number(s.archiveAfter) || 0,
+    sites: Array.isArray(s.sites) ? s.sites.map(String) : [],
+    schedule: s.schedule && typeof s.schedule === 'object' ? s.schedule : null,
+    color2: s.color2 || null,
     favorites: (s.favorites || []).map((f) => ({ id: f.id || uid(), url: f.url, title: f.title || f.url, favIconUrl: f.favIconUrl || '' })),
   }));
   await resolveContainers();
@@ -543,8 +548,8 @@ function openPopup(query, height) {
   });
 }
 
-const editSpace = (windowId, spaceId) => openPopup(`edit=${encodeURIComponent(spaceId)}&win=${windowId}`, 620);
-const openSettings = (windowId) => openPopup(`settings=1&win=${windowId}`, 440);
+const editSpace = (windowId, spaceId) => openPopup(`edit=${encodeURIComponent(spaceId)}&win=${windowId}`, 780);
+const openSettings = (windowId) => openPopup(`settings=1&win=${windowId}`, 640);
 const openSetup = (windowId) => openPopup(`setup=1&win=${windowId}`, 560);
 
 // Première installation : on propose tout de suite de masquer les onglets natifs.
@@ -553,6 +558,176 @@ browser.runtime.onInstalled.addListener(async ({ reason }) => {
   await ready;
   const win = await browser.windows.getLastFocused();
   openSetup(win.id);
+});
+
+// --- Règles par site --------------------------------------------------------------------
+// Chaque espace peut lister des sites (space.sites, un domaine par ligne) : un onglet
+// qui charge l'un d'eux rejoint l'espace (et son conteneur s'il en a un). Si c'est
+// l'onglet affiché, on suit. Le premier espace qui revendique le site l'emporte.
+
+function siteRuleSpace(url) {
+  let hostname;
+  try {
+    const u = new URL(url);
+    if (!/^https?:$/.test(u.protocol)) return null;
+    hostname = u.hostname.replace(/^www\./, '');
+  } catch (e) {
+    return null;
+  }
+  return spaces.find((s) => (s.sites || []).some((d) => hostname === d || hostname.endsWith(`.${d}`))) || null;
+}
+
+const ruleMoves = new Set(); // onglets en cours de réouverture dans un conteneur
+
+async function applySiteRule(tab) {
+  if (tab.pinned || ruleMoves.has(tab.id)) return;
+  const win = await browser.windows.get(tab.windowId).catch(() => null);
+  if (!win || win.type !== 'normal') return;
+  const space = siteRuleSpace(tab.url);
+  if (!space) return;
+  const needsContainer = space.cookieStoreId && tab.cookieStoreId !== space.cookieStoreId;
+  if (tabSpace.get(tab.id) === space.id && !needsContainer) return;
+
+  if (needsContainer) {
+    // Les cookies d'un conteneur ne se changent pas à chaud : on rouvre dans le bon.
+    ruleMoves.add(tab.id);
+    try {
+      const reopened = await browser.tabs.create({
+        windowId: tab.windowId,
+        index: tab.index + 1,
+        url: tab.url,
+        active: tab.active,
+        cookieStoreId: space.cookieStoreId,
+      });
+      assign(reopened.id, space.id);
+      await browser.tabs.remove(tab.id);
+      if (reopened.active) await switchSpace(tab.windowId, space.id);
+      else await applyVisibility(tab.windowId);
+    } finally {
+      ruleMoves.delete(tab.id);
+    }
+    return;
+  }
+  assign(tab.id, space.id);
+  setFav(tab.id, null);
+  if (tab.active) await switchSpace(tab.windowId, space.id);
+  else await applyVisibility(tab.windowId);
+  notify();
+}
+
+browser.tabs.onUpdated.addListener((tabId, change, tab) => {
+  if (change.url) ready.then(() => applySiteRule(tab)).catch(() => {});
+}, { properties: ['url'] });
+
+// --- Bascule horaire ---------------------------------------------------------------------
+// space.schedule = { days: 'all' | 'week' | 'weekend', from: 'HH:MM', to: 'HH:MM' }.
+// À l'entrée dans la plage d'un espace, toutes les fenêtres y passent, une seule fois :
+// on peut ensuite changer d'espace à la main sans être ramené.
+
+function scheduledSpace(date) {
+  const day = date.getDay(); // 0 = dimanche
+  const minutes = date.getHours() * 60 + date.getMinutes();
+  const toMinutes = (hhmm) => {
+    const [h, m] = String(hhmm || '').split(':').map(Number);
+    return Number.isFinite(h) ? h * 60 + (m || 0) : null;
+  };
+  return spaces.find((s) => {
+    const rule = s.schedule;
+    if (!rule) return false;
+    const weekend = day === 0 || day === 6;
+    if ((rule.days === 'week' && weekend) || (rule.days === 'weekend' && !weekend)) return false;
+    const from = toMinutes(rule.from);
+    const to = toMinutes(rule.to);
+    if (from === null || to === null) return false;
+    return from <= to ? minutes >= from && minutes < to : minutes >= from || minutes < to; // plage de nuit
+  }) || null;
+}
+
+let lastScheduledId;
+async function checkSchedule() {
+  const space = scheduledSpace(new Date());
+  const id = space ? space.id : null;
+  if (lastScheduledId === undefined) {
+    lastScheduledId = id; // au démarrage, on ne bouscule pas l'espace restauré
+    return;
+  }
+  if (id === lastScheduledId) return;
+  lastScheduledId = id;
+  if (!space) return;
+  for (const windowId of activeByWindow.keys()) {
+    if (activeSpace(windowId) !== space.id) await switchSpace(windowId, space.id);
+  }
+}
+
+// --- Thème aux couleurs de l'espace (option des réglages) --------------------------------
+
+function mix(hex, other, weight) {
+  const parse = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const a = parse(hex);
+  const b = parse(other);
+  return `#${a.map((v, i) => Math.round(v * weight + b[i] * (1 - weight)).toString(16).padStart(2, '0')).join('')}`;
+}
+
+async function applyTheme(windowId) {
+  if (!browser.theme) return;
+  const { tintTheme } = await browser.storage.local.get('tintTheme');
+  if (!tintTheme) return;
+  const space = getSpace(activeSpace(windowId));
+  if (!space || !/^#[0-9a-f]{6}$/i.test(space.color)) return;
+  const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const base = dark ? '#1c1b22' : '#f0f0f4';
+  const text = dark ? '#fbfbfe' : '#15141a';
+  await browser.theme.update(windowId, {
+    colors: {
+      frame: mix(space.color, base, dark ? 0.35 : 0.25),
+      frame_inactive: mix(space.color, base, dark ? 0.2 : 0.15),
+      tab_background_text: text,
+      toolbar: mix(space.color, base, dark ? 0.18 : 0.12),
+      toolbar_text: text,
+      toolbar_field: mix(space.color, dark ? '#2b2a33' : '#ffffff', 0.08),
+      toolbar_field_text: text,
+      sidebar: mix(space.color, base, dark ? 0.1 : 0.06),
+      sidebar_text: text,
+    },
+  }).catch(() => {});
+}
+
+async function applyThemeEverywhere() {
+  const { tintTheme } = await browser.storage.local.get('tintTheme');
+  for (const windowId of activeByWindow.keys()) {
+    if (tintTheme) await applyTheme(windowId);
+    else if (browser.theme) await browser.theme.reset(windowId).catch(() => {});
+  }
+}
+
+browser.storage.onChanged.addListener((changes, area) => {
+  if (area === 'local' && changes.tintTheme) applyThemeEverywhere();
+});
+
+// --- Statistiques : temps passé par espace ------------------------------------------------
+// Chaque minute où une fenêtre de Firefox a le focus, on compte une minute pour son
+// espace actif. Gardé 14 jours, sur ce PC seulement.
+
+async function countMinute() {
+  const win = await browser.windows.getLastFocused().catch(() => null);
+  if (!win || !win.focused || win.type !== 'normal') return;
+  const spaceId = activeSpace(win.id);
+  const day = new Date().toISOString().slice(0, 10);
+  const { stats = {} } = await browser.storage.local.get('stats');
+  stats[day] = stats[day] || {};
+  stats[day][spaceId] = (stats[day][spaceId] || 0) + 1;
+  for (const d of Object.keys(stats).sort().slice(0, -14)) delete stats[d];
+  await browser.storage.local.set({ stats });
+}
+
+// Une horloge à la minute pour les horaires et les statistiques.
+ready.then(() => {
+  checkSchedule().catch(() => {});
+  applyThemeEverywhere().catch(() => {});
+  setInterval(() => {
+    checkSchedule().catch(() => {});
+    countMinute().catch(() => {});
+  }, 60e3);
 });
 
 // --- Archive et nettoyage automatique (façon Arc) ------------------------------------------
@@ -1287,6 +1462,7 @@ const handlers = {
   reopenArchived: (m) => reopenArchived(m.windowId, m.spaceId, m.url),
   removeArchived: (m) => removeArchived(m.spaceId, m.url),
   archiveDelays: () => ARCHIVE_DELAYS,
+  getStats: async () => (await browser.storage.local.get('stats')).stats || {},
 };
 
 browser.runtime.onMessage.addListener(async (message, sender) => {
