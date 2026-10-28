@@ -11,7 +11,7 @@ const t = (key, ...subs) => browser.i18n.getMessage(key, subs.map(String)) || ke
 const send = (type, data = {}) => browser.runtime.sendMessage({ type, windowId, ...data });
 
 const params = new URLSearchParams(location.search);
-const mode = ['edit', 'group', 'settings', 'setup'].find((m) => params.has(m)) || 'sidebar';
+const mode = ['edit', 'group', 'settings', 'setup', 'archive'].find((m) => params.has(m)) || 'sidebar';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const SPRITE = '../icons/lucide.svg';
@@ -388,6 +388,8 @@ function initSidebar() {
   $('#new-tab').addEventListener('click', () => send('newTab'));
   $('#settings-button').append(icon('settings'));
   $('#search-button').append(icon('search'));
+  $('#archive-button').append(icon('archive'));
+  $('#archive-button').addEventListener('click', () => send('openArchive'));
   $('#search-button').addEventListener('click', openPalette);
   $('#settings-button').addEventListener('click', () => send('openSettings'));
 
@@ -548,6 +550,11 @@ async function initEditForm() {
   $('#f-new-container').value = space.name;
   $('#f-delete').disabled = state.spaces.length < 2;
 
+  const archive = $('#f-archive');
+  const delays = await send('archiveDelays');
+  archive.replaceChildren(...delays.map((h) => el('option', { value: String(h) }, t(h ? `archiveAfter${h}` : 'archiveNever'))));
+  archive.value = String(space.archiveAfter || 0);
+
   let searchTimer = null;
   $('#f-icon-search').addEventListener('input', () => {
     clearTimeout(searchTimer);
@@ -580,6 +587,7 @@ async function initEditForm() {
       space: {
         id: space.id,
         icon: `lucide:${selectedIcon}`,
+        archiveAfter: Number($('#f-archive').value) || 0,
         name: $('#f-name').value.trim() || t('spaceFallbackName'),
         color: $('#f-color').value,
         cookieStoreId,
@@ -631,6 +639,81 @@ async function initGroupForm() {
     await browser.tabGroups.update(groupId, { title: $('#g-title').value.trim(), color });
     window.close();
   });
+}
+
+// --- Fenêtre « archive » : onglets rangés automatiquement de l'espace actif ----------------
+
+function ago(time) {
+  const minutes = Math.round((Date.now() - time) / 60000);
+  if (minutes < 60) return t('agoMinutes', Math.max(1, minutes));
+  const hours = Math.round(minutes / 60);
+  if (hours < 48) return t('agoHours', hours);
+  return t('agoDays', Math.round(hours / 24));
+}
+
+async function initArchive() {
+  const space = currentSpace();
+  document.title = t('archiveWindowTitle', space.name);
+  $('#archive-panel').hidden = false;
+  $('#archive-heading').replaceChildren(spaceIcon(space, 'ic space-icon'), ` ${t('archiveWindowTitle', space.name)}`);
+  let entries = [];
+
+  const render = () => {
+    const words = $('#archive-search').value.toLowerCase().split(/\s+/).filter(Boolean);
+    const shown = entries.filter((x) => words.every((w) => `${x.title} ${x.url}`.toLowerCase().includes(w)));
+    $('#archive-clear').disabled = !entries.length;
+    if (!shown.length) {
+      $('#archive-list').replaceChildren(el('li', { class: 'more' }, entries.length ? t('archiveNoMatch') : t('archiveEmpty')));
+      return;
+    }
+    $('#archive-list').replaceChildren(...shown.map((x) => el('li', { class: 'archived' }, [
+      el('button', {
+        class: 'archived-open',
+        title: x.url,
+        onclick: async () => {
+          await send('reopenArchived', { spaceId: space.id, url: x.url });
+          window.close();
+        },
+      }, [
+        favicon(x.favIconUrl, x.title),
+        el('span', { class: 'archived-text' }, [
+          el('span', { class: 'archived-title' }, x.title),
+          el('span', { class: 'archived-sub' }, `${hostOf(x.url)} · ${ago(x.archivedAt)}`),
+        ]),
+      ]),
+      el('button', {
+        class: 'archived-remove',
+        title: t('archiveRemove'),
+        'aria-label': t('archiveRemove'),
+        onclick: async () => {
+          await send('removeArchived', { spaceId: space.id, url: x.url });
+          entries = entries.filter((y) => y !== x);
+          render();
+        },
+      }, icon('x')),
+    ])));
+  };
+
+  entries = (await send('getArchive'))[space.id] || [];
+  render();
+  $('#archive-search').addEventListener('input', render);
+  $('#archive-search').focus();
+  $('#archive-close').addEventListener('click', () => window.close());
+  $('#archive-clear').addEventListener('click', async () => {
+    if (!confirm(t('archiveConfirmClear', space.name))) return;
+    await send('removeArchived', { spaceId: space.id, url: null });
+    entries = [];
+    render();
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') window.close(); });
+}
+
+function hostOf(url) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '');
+  } catch (e) {
+    return url;
+  }
 }
 
 // --- Fenêtre « réglages » ----------------------------------------------------------
@@ -861,5 +944,6 @@ function applyI18n() {
   else if (mode === 'edit') await initEditForm();
   else if (mode === 'group') await initGroupForm();
   else if (mode === 'setup') await initSetup();
+  else if (mode === 'archive') await initArchive();
   else initSettings();
 })();

@@ -31,11 +31,11 @@ Fait en premier car tous les textes ajoutés ensuite en dépendent.
 - [x] Commandes dans la palette (« > » pour ne voir qu'elles) : nouvel onglet / espace, vue scindée, copier, dupliquer, doublons, nettoyer, rouvrir, aller à l'espace…, déplacer l'onglet vers…, réglages, raccourcis.
 - [x] Raccourcis : onglet vers l'espace suivant / précédent (Alt+Maj+→ / ←), favoris 1 à 5 (sans touche par défaut, à choisir). Ctrl+T ouvre déjà dans l'espace actif.
 
-## Phase 4 : nettoyage automatique
+## Phase 4 : nettoyage automatique (faite le 28/10/2026, version 0.7.0)
 
-- [ ] Délai réglable par espace (jamais, 12 h, 24 h, 7 jours) : les onglets inactifs partent dans l'**archive** de l'espace (favoris, onglets épinglés et onglets qui jouent du son exclus).
-- [ ] Archive consultable dans la barre et dans la recherche rapide, réouverture en un clic, purge après 30 jours.
-- [ ] Doublons : repérer les onglets ouverts deux fois dans un espace et proposer de les fusionner.
+- [x] Délai réglable par espace dans « Modifier l'espace » (jamais, 12 h, 24 h, 7 jours) : les onglets inactifs partent dans l'**archive** de l'espace (exclus : actif, épinglés, favoris, son, sélection, groupes, pages internes). Vérification toutes les 10 min. « Fermer les onglets de l'espace » archive aussi.
+- [x] Archive : bouton en bas de la barre (fenêtre avec recherche, réouverture, retrait, vider) et section « Archive » de la recherche rapide ; purge après 30 jours ; propre à chaque PC (storage.local).
+- [x] Doublons : « Fermer les onglets en double » (clic droit et recherche rapide, depuis la 0.4.0).
 
 ## Phase 5 : espaces
 

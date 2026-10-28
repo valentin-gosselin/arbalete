@@ -27,6 +27,7 @@
   <footer class="footer">
     <div id="spaces" class="spaces" role="toolbar" data-i18n-label="spaceList"></div>
     <div class="tools">
+      <button id="archive-button" class="tool" data-i18n-title="archiveTitle" data-i18n-label="archiveTitle"></button>
       <button id="search-button" class="tool" data-i18n-title="paletteButton" data-i18n-label="paletteButton"></button>
       <button id="pin-button" class="tool" hidden></button>
       <button id="settings-button" class="tool" data-i18n-title="settings" data-i18n-label="settings"></button>
@@ -52,6 +53,9 @@
         <select id="f-container"></select>
       </label>
     </div>
+    <label><span data-i18n="archiveAfter"></span>
+      <select id="f-archive"></select>
+    </label>
     <label id="f-new-container-row" hidden><span data-i18n="newContainerName"></span><input id="f-new-container" maxlength="40"></label>
     <div class="actions">
       <button type="button" id="f-delete" class="danger" data-i18n="delete"></button>
@@ -72,6 +76,18 @@
       <button type="submit" class="primary" data-i18n="save"></button>
     </div>
   </form>
+
+  <!-- Petite fenêtre « archive » (?archive=1) -->
+  <section id="archive-panel" class="panel" hidden>
+    <h2 id="archive-heading"></h2>
+    <input id="archive-search" type="search" data-i18n-placeholder="archiveSearch" data-i18n-label="archiveSearch">
+    <ul id="archive-list" class="archive-list"></ul>
+    <div class="actions">
+      <button type="button" id="archive-clear" class="danger" data-i18n="archiveClear"></button>
+      <span class="grow"></span>
+      <button type="button" id="archive-close" data-i18n="archiveClose"></button>
+    </div>
+  </section>
 
   <!-- Petite fenêtre « réglages » (?settings=1) -->
   <section id="settings-panel" class="panel" hidden>

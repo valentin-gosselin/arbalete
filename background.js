@@ -484,6 +484,7 @@ async function importSpaces(imported) {
     color: String(s.color || PALETTE[0]),
     containerName: s.containerName || null,
     cookieStoreId: null,
+    archiveAfter: Number(s.archiveAfter) || 0,
     favorites: (s.favorites || []).map((f) => ({ id: f.id || uid(), url: f.url, title: f.title || f.url, favIconUrl: f.favIconUrl || '' })),
   }));
   await resolveContainers();
@@ -553,6 +554,86 @@ browser.runtime.onInstalled.addListener(async ({ reason }) => {
   const win = await browser.windows.getLastFocused();
   openSetup(win.id);
 });
+
+// --- Archive et nettoyage automatique (façon Arc) ------------------------------------------
+// Chaque espace peut ranger tout seul ses onglets inactifs depuis un délai (archiveAfter,
+// en heures, 0 = jamais). Ils vont dans l'archive de l'espace (storage.local, propre à
+// ce PC), d'où on les rouvre en un clic. L'archive est purgée après 30 jours.
+// Jamais archivés : onglet actif, épinglés, favoris, onglets qui jouent du son, onglets
+// sélectionnés ou dans un groupe, pages internes.
+
+const ARCHIVE_DAYS = 30;
+const ARCHIVE_MAX_PER_SPACE = 300;
+const ARCHIVE_DELAYS = [0, 12, 24, 168]; // heures proposées dans « Modifier l'espace »
+
+async function readArchive() {
+  const { archive = {} } = await browser.storage.local.get('archive');
+  return archive;
+}
+
+async function writeArchive(archive) {
+  const limit = Date.now() - ARCHIVE_DAYS * 86400e3;
+  for (const id of Object.keys(archive)) {
+    archive[id] = archive[id].filter((x) => x.archivedAt > limit).slice(0, ARCHIVE_MAX_PER_SPACE);
+    if (!archive[id].length || !getSpace(id)) delete archive[id];
+  }
+  await browser.storage.local.set({ archive });
+  notify();
+}
+
+const archivable = (tab) => !tab.pinned && /^(https?|file):/.test(tab.url) && !tabFav.has(tab.id);
+
+// Range des onglets dans l'archive de leur espace, puis les ferme.
+async function archiveTabs(tabs) {
+  if (!tabs.length) return;
+  const archive = await readArchive();
+  const now = Date.now();
+  for (const tab of tabs) {
+    const spaceId = tabSpace.get(tab.id);
+    if (!spaceId) continue;
+    const list = (archive[spaceId] || []).filter((x) => x.url !== tab.url);
+    list.unshift({ url: tab.url, title: tab.title || tab.url, favIconUrl: tab.favIconUrl || '', archivedAt: now });
+    archive[spaceId] = list;
+  }
+  await writeArchive(archive);
+  await browser.tabs.remove(tabs.map((tab) => tab.id));
+}
+
+async function autoArchive() {
+  const now = Date.now();
+  const tabs = await browser.tabs.query({});
+  const old = [];
+  for (const space of spaces) {
+    if (!space.archiveAfter) continue;
+    const limit = now - space.archiveAfter * 3600e3;
+    old.push(...tabs.filter((tab) => tabSpace.get(tab.id) === space.id && archivable(tab)
+      && !tab.active && !tab.audible && !tab.highlighted
+      && (tab.groupId === undefined || tab.groupId === -1)
+      && tab.lastAccessed && tab.lastAccessed < limit));
+  }
+  await archiveTabs(old);
+  if (!old.length) await writeArchive(await readArchive()); // purge des vieilles entrées
+}
+
+// Toutes les 10 minutes, et une minute après le démarrage.
+ready.then(() => setTimeout(() => autoArchive().catch(() => {}), 60e3));
+setInterval(() => ready.then(autoArchive).catch(() => {}), 10 * 60e3);
+
+async function reopenArchived(windowId, spaceId, url) {
+  const archive = await readArchive();
+  archive[spaceId] = (archive[spaceId] || []).filter((x) => x.url !== url);
+  await writeArchive(archive);
+  if (getSpace(spaceId) && activeSpace(windowId) !== spaceId) await switchSpace(windowId, spaceId);
+  await newTab(windowId, getSpace(spaceId) ? spaceId : activeSpace(windowId), url);
+}
+
+async function removeArchived(spaceId, url) {
+  const archive = await readArchive();
+  archive[spaceId] = (archive[spaceId] || []).filter((x) => url && x.url !== url);
+  await writeArchive(archive);
+}
+
+const openArchive = (windowId) => openPopup(`archive=1&win=${windowId}`, 560);
 
 // --- Menus contextuels -------------------------------------------------------------
 // Clic droit dans la barre : on affiche un vrai menu Firefox (menus.overrideContext),
@@ -1173,14 +1254,19 @@ const handlers = {
   exportSpaces: () => spaces.map(({ cookieStoreId, ...rest }) => rest),
   importSpaces: (m) => importSpaces(m.spaces),
   clearSpace: async (m) => {
-    // « Nettoyer » : ferme les onglets de l'espace qui ne sont pas des favoris.
-    const tabs = await browser.tabs.query({ windowId: m.windowId });
-    const ids = tabs
-      .filter((t) => !t.pinned && tabSpace.get(t.id) === m.spaceId && !tabFav.has(t.id))
-      .map((t) => t.id);
+    // « Nettoyer » : range dans l'archive les onglets de l'espace (hors favoris et
+    // épinglés), les pages internes sont simplement fermées.
+    const tabs = (await browser.tabs.query({ windowId: m.windowId }))
+      .filter((t) => !t.pinned && tabSpace.get(t.id) === m.spaceId && !tabFav.has(t.id));
     await newTab(m.windowId, m.spaceId);
-    await browser.tabs.remove(ids);
+    await archiveTabs(tabs.filter(archivable));
+    await browser.tabs.remove(tabs.filter((t) => !archivable(t)).map((t) => t.id));
   },
+  getArchive: () => readArchive(),
+  openArchive: (m) => openArchive(m.windowId).then(() => undefined),
+  reopenArchived: (m) => reopenArchived(m.windowId, m.spaceId, m.url),
+  removeArchived: (m) => removeArchived(m.spaceId, m.url),
+  archiveDelays: () => ARCHIVE_DELAYS,
 };
 
 browser.runtime.onMessage.addListener(async (message, sender) => {

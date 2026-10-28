@@ -134,6 +134,60 @@
   "paletteMoveTabToSpace": {
     "message": "Move tab to $1"
   },
+  "paletteSectionArchive": {
+    "message": "Archive"
+  },
+  "archiveTitle": {
+    "message": "Space archive"
+  },
+  "archiveWindowTitle": {
+    "message": "Archive: $1"
+  },
+  "archiveSearch": {
+    "message": "Search the archive"
+  },
+  "archiveClear": {
+    "message": "Empty archive"
+  },
+  "archiveClose": {
+    "message": "Close"
+  },
+  "archiveRemove": {
+    "message": "Remove from archive"
+  },
+  "archiveEmpty": {
+    "message": "No archived tab in this space."
+  },
+  "archiveNoMatch": {
+    "message": "No archived tab matches."
+  },
+  "archiveConfirmClear": {
+    "message": "Empty the archive of the space \"$1\"?"
+  },
+  "archiveAfter": {
+    "message": "Archive tabs inactive for"
+  },
+  "archiveNever": {
+    "message": "Never"
+  },
+  "archiveAfter12": {
+    "message": "12 hours"
+  },
+  "archiveAfter24": {
+    "message": "24 hours"
+  },
+  "archiveAfter168": {
+    "message": "7 days"
+  },
+  "agoMinutes": {
+    "message": "$1 min ago"
+  },
+  "agoHours": {
+    "message": "$1 h ago"
+  },
+  "agoDays": {
+    "message": "$1 days ago"
+  },
   "paletteSectionSuggestions": {
     "message": "Suggestions"
   },

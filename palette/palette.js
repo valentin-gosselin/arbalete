@@ -169,6 +169,27 @@ async function search(query) {
       }
     }
     list.push(...scored(favorites).slice(0, 5));
+
+    // Onglets rangés dans l'archive des espaces (nettoyage automatique).
+    const archive = await send('getArchive').catch(() => ({}));
+    if (id !== searchId) return;
+    const archived = [];
+    for (const [spaceId, entries] of Object.entries(archive || {})) {
+      const space = spaceOf(spaceId);
+      for (const x of entries) {
+        archived.push({
+          kind: 'archived',
+          section: t('paletteSectionArchive'),
+          label: x.title,
+          sub: host(x.url),
+          favicon: x.favIconUrl,
+          url: x.url,
+          badge: space ? { icon: spaceIconName(space), text: space.name } : null,
+          run: () => send('reopenArchived', { spaceId, url: x.url }),
+        });
+      }
+    }
+    list.push(...scored(archived).slice(0, 5));
   }
   list.push(...scored(commands()).slice(0, commandsOnly ? 30 : 4));
 

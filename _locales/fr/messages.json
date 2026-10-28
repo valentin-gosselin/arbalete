@@ -134,6 +134,60 @@
   "paletteMoveTabToSpace": {
     "message": "Déplacer l’onglet vers $1"
   },
+  "paletteSectionArchive": {
+    "message": "Archive"
+  },
+  "archiveTitle": {
+    "message": "Archive de l’espace"
+  },
+  "archiveWindowTitle": {
+    "message": "Archive : $1"
+  },
+  "archiveSearch": {
+    "message": "Chercher dans l’archive"
+  },
+  "archiveClear": {
+    "message": "Vider l’archive"
+  },
+  "archiveClose": {
+    "message": "Fermer"
+  },
+  "archiveRemove": {
+    "message": "Retirer de l’archive"
+  },
+  "archiveEmpty": {
+    "message": "Aucun onglet archivé dans cet espace."
+  },
+  "archiveNoMatch": {
+    "message": "Aucun onglet archivé ne correspond."
+  },
+  "archiveConfirmClear": {
+    "message": "Vider l’archive de l’espace « $1 » ?"
+  },
+  "archiveAfter": {
+    "message": "Ranger dans l’archive les onglets inactifs depuis"
+  },
+  "archiveNever": {
+    "message": "Jamais"
+  },
+  "archiveAfter12": {
+    "message": "12 heures"
+  },
+  "archiveAfter24": {
+    "message": "24 heures"
+  },
+  "archiveAfter168": {
+    "message": "7 jours"
+  },
+  "agoMinutes": {
+    "message": "il y a $1 min"
+  },
+  "agoHours": {
+    "message": "il y a $1 h"
+  },
+  "agoDays": {
+    "message": "il y a $1 j"
+  },
   "paletteSectionSuggestions": {
     "message": "Suggestions"
   },

@@ -9,6 +9,9 @@ Version française : [LISEZMOI.md](LISEZMOI.md).
 - **Spaces**: each space has its own tabs, favorites, color, icon and optionally its own Firefox container (separate logins). Switching spaces hides the other spaces' tabs in the same window, no extra windows.
 - **Switch spaces** with the icons at the bottom, a horizontal swipe or Shift+wheel anywhere in the sidebar, or Alt+1 to Alt+5 and Alt+Shift+Up/Down.
 - **Favorites**: tiles at the top of each space, like Arc's pinned tabs.
+- **Auto-archive**: per space, tabs inactive for 12 h, 24 h or 7 days go to the space archive (sidebar button and quick search), kept 30 days.
+- **Quick search** (Alt+K): tabs of all spaces, favorites, archive, commands, history, web search with your engine's suggestions.
+- **Split view**: two sites side by side in one tab.
 - **Tab groups**: Firefox tab groups are shown with their color, can be collapsed, renamed, ungrouped or moved to another space.
 - **Right-click** opens Firefox's own tab menu, plus Arbalète actions (favorites, move to space, groups).
 - **Compact mode**: icons only, titles as tooltips. Optional expand on hover, and a button to keep the sidebar expanded.
