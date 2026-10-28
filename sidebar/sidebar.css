@@ -153,6 +153,22 @@ body:not(.mode-sidebar) > .footer { display: none; }
 .tab:hover { background: var(--row-hover); }
 .tab.active { background: var(--row-active); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12); }
 .tab.drop-before { box-shadow: inset 0 2px 0 var(--space); }
+/* Multi-sélection (Ctrl / Maj + clic) */
+.tab.selected { background: color-mix(in srgb, var(--space) 20%, transparent); }
+.tab.selected:hover { background: color-mix(in srgb, var(--space) 28%, transparent); }
+/* Onglet déchargé : estompé, comme dans Firefox */
+.tab.discarded .favicon, .tab.discarded .title { opacity: 0.55; }
+
+/* Vue scindée : deux onglets sur une même ligne */
+.split {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  margin: 1px 0;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+.split > .tab { flex: 1; min-width: 0; }
 .tab.loading .favicon { animation: pulse 1s infinite alternate; }
 @keyframes pulse { to { opacity: 0.3; } }
 
@@ -415,6 +431,7 @@ body.mode-setup .panel { user-select: text; }
   .tab { justify-content: center; padding: 7px 0; }
   .tab .title, .tab .close, .tab .badge { display: none; }
   .tab .favicon { width: 18px; height: 18px; }
+  .split { flex-direction: column; gap: 0; padding: 1px; }
   /* Haut-parleur en pastille sur le coin du favicon */
   .tab .audio {
     position: absolute;

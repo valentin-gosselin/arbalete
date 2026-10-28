@@ -13,6 +13,7 @@ const DEFAULT_SPACES = [
   { id: 'boulot', name: t('spaceWork'), icon: 'lucide:briefcase', color: PALETTE[1], cookieStoreId: null, favorites: [] },
 ];
 const SIDEBAR_PAGE = browser.runtime.getURL('sidebar/sidebar.html');
+const SPLIT_PAGE = browser.runtime.getURL('split/split.html');
 const BLANK_URLS = ['about:newtab', 'about:home'];
 
 let spaces = [];
@@ -297,6 +298,9 @@ async function getState(windowId) {
       pinned: t.pinned,
       audible: t.audible,
       muted: !!(t.mutedInfo && t.mutedInfo.muted),
+      highlighted: t.highlighted,
+      discarded: t.discarded,
+      splitViewId: t.splitViewId === undefined ? -1 : t.splitViewId,
       status: t.status,
       cookieStoreId: t.cookieStoreId,
       groupId: t.groupId === undefined ? -1 : t.groupId,
@@ -329,6 +333,14 @@ async function init() {
 }
 
 const ready = init();
+
+// Rouvrir les vues scindées après un rechargement ou une mise à jour de l'extension.
+// Au démarrage de Firefox (onStartup), la restauration de session s'en charge déjà.
+let browserStarting = false;
+browser.runtime.onStartup.addListener(() => { browserStarting = true; });
+ready.then(() => setTimeout(() => {
+  if (!browserStarting) restoreSplits().catch(() => {});
+}, 1500));
 
 // Largeur de la barre : userChrome.css repère un caractère invisible à la fin du
 // titre de la barre. ‌ = dépliée en permanence, ​ = élargie au survol.
@@ -403,23 +415,34 @@ browser.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
   else notify();
 });
 
+browser.tabs.onRemoved.addListener(onSplitTabRemoved);
 browser.tabs.onRemoved.addListener((tabId) => {
   tabSpace.delete(tabId);
   tabFav.delete(tabId);
   notify();
 });
 
-browser.tabs.onUpdated.addListener(
-  (tabId, change) => {
-    if (change.pinned === false && !tabSpace.has(tabId)) {
-      browser.tabs.get(tabId).then((t) => assign(tabId, activeSpace(t.windowId)));
-    }
-    notify();
-  },
-  { properties: ['title', 'favIconUrl', 'status', 'pinned', 'audible', 'mutedInfo', 'url'] }
-);
+function onTabUpdated(tabId, change) {
+  // Vue scindée redevenue un onglet normal (côté fermé) : on l'oublie.
+  if (change.url && splitTabs.has(tabId) && !change.url.startsWith(SPLIT_PAGE)) {
+    forgetSplit(splitTabs.get(tabId));
+    splitTabs.delete(tabId);
+  }
+  if (change.pinned === false && !tabSpace.has(tabId)) {
+    browser.tabs.get(tabId).then((t) => assign(tabId, activeSpace(t.windowId)));
+  }
+  notify();
+}
+const WATCHED = ['title', 'favIconUrl', 'status', 'pinned', 'audible', 'mutedInfo', 'url', 'discarded'];
+try {
+  // splitViewId n'existe que dans les Firefox récents (vue scindée).
+  browser.tabs.onUpdated.addListener(onTabUpdated, { properties: [...WATCHED, 'splitViewId'] });
+} catch (e) {
+  browser.tabs.onUpdated.addListener(onTabUpdated, { properties: WATCHED });
+}
 
 browser.tabs.onMoved.addListener(notify);
+browser.tabs.onHighlighted.addListener(notify);
 
 browser.tabs.onAttached.addListener(async (tabId, { newWindowId }) => {
   await ready;
@@ -511,10 +534,13 @@ browser.runtime.onInstalled.addListener(async ({ reason }) => {
 
 // --- Menus contextuels -------------------------------------------------------------
 // Clic droit dans la barre : on affiche un vrai menu Firefox (menus.overrideContext),
-// qui peut déborder de la barre. Sur un onglet, c'est le menu d'onglet natif de
-// Firefox (groupes, épingler, recharger…) complété par les entrées d'Arbalète.
+// qui peut déborder de la barre. Mais sur un onglet, Firefox n'y met QUE les entrées
+// des extensions, pas les siennes : Arbalète recrée donc le menu d'onglet de Firefox
+// (tout ce qu'une API permet ; pas la vue scindée ni l'envoi vers un appareil).
+// Ces entrées « natives » ne s'affichent que depuis la barre (viewType sidebar),
+// pour ne pas doubler le vrai menu quand les onglets natifs sont visibles.
 
-let lastMenuTarget = null; // { kind: 'fav' | 'space' | 'global', windowId, spaceId, favId, tabId }
+let lastMenuTarget = null; // { kind: 'fav' | 'space' | 'group' | 'global', windowId, spaceId, favId, tabId, groupId }
 
 // identifiant du menu -> clé de traduction
 const SIDE_ITEMS = {
@@ -534,20 +560,57 @@ const SIDE_ITEMS = {
   'arb-settings': 'menuSettings',
 };
 
+// Menu d'onglet, dans l'ordre de celui de Firefox. null = séparateur.
+// Les entrées marquées native ne sont affichées que depuis la barre Arbalète.
+const TAB_ITEMS = [
+  { id: 'arb-tab-newtab', key: 'menuTabNewTab', native: true },
+  { id: 'arb-tab-newgroup', key: 'menuNewGroup', native: true, groups: true },
+  { id: 'arb-tab-addgroup', key: 'menuAddToGroup', native: true, groups: true },
+  { id: 'arb-tab-ungroup', key: 'menuUngroupTab', native: true, groups: true },
+  { id: 'arb-tab-split', key: 'menuTabSplit', native: true },
+  null,
+  { id: 'arb-tab-reload', key: 'menuTabReload', native: true },
+  { id: 'arb-tab-mute', key: 'menuTabMute', native: true },
+  { id: 'arb-tab-pin', key: 'menuTabPin', native: true },
+  { id: 'arb-tab-discard', key: 'menuTabDiscard', native: true },
+  { id: 'arb-tab-duplicate', key: 'menuTabDuplicate', native: true },
+  null,
+  { id: 'arb-fav', key: 'menuAddFavorite' },
+  { id: 'arb-move', key: 'menuMoveTab' },
+  { id: 'arb-tab-copyurl', key: 'menuTabCopyUrl', native: true },
+  { id: 'arb-tab-moveopts', key: 'menuTabMoveOptions', native: true },
+  { id: 'arb-tab-container', key: 'menuTabContainer', native: true },
+  { id: 'arb-tab-selectall', key: 'menuTabSelectAll', native: true },
+  null,
+  { id: 'arb-tab-close', key: 'menuTabClose', native: true },
+  { id: 'arb-tab-closedupes', key: 'menuTabCloseDuplicates', native: true },
+  { id: 'arb-tab-closeopts', key: 'menuTabCloseOptions', native: true },
+  { id: 'arb-tab-undo', key: 'menuTabUndoClose', native: true },
+];
+
 let menusBuilding = Promise.resolve();
 function buildMenus() {
   menusBuilding = menusBuilding.then(async () => {
     await browser.menus.removeAll();
-    browser.menus.create({ id: 'arb-fav', title: t('menuAddFavorite'), contexts: ['tab'] });
-    browser.menus.create({ id: 'arb-move', title: t('menuMoveTab'), contexts: ['tab'] });
-    if (browser.tabGroups) {
-      browser.menus.create({ id: 'arb-tab-newgroup', title: t('menuNewGroup'), contexts: ['tab'] });
-      browser.menus.create({ id: 'arb-tab-addgroup', title: t('menuAddToGroup'), contexts: ['tab'] });
-      browser.menus.create({ id: 'arb-tab-ungroup', title: t('menuUngroupTab'), contexts: ['tab'] });
+    let separator = 0;
+    for (const item of TAB_ITEMS) {
+      if (!item) {
+        browser.menus.create({ id: `arb-tab-sep-${separator++}`, type: 'separator', contexts: ['tab'] });
+        continue;
+      }
+      if (item.groups && !browser.tabGroups) continue;
+      browser.menus.create({ id: item.id, title: t(item.key), contexts: ['tab'] });
     }
     for (const s of spaces) {
       browser.menus.create({ id: `arb-move:${s.id}`, parentId: 'arb-move', title: s.name, contexts: ['tab'] });
     }
+    for (const [id, key] of [['start', 'menuTabMoveStart'], ['end', 'menuTabMoveEnd'], ['window', 'menuTabMoveWindow']]) {
+      browser.menus.create({ id: `arb-tab-moveopts:${id}`, parentId: 'arb-tab-moveopts', title: t(key), contexts: ['tab'] });
+    }
+    for (const [id, key] of [['above', 'menuTabCloseAbove'], ['below', 'menuTabCloseBelow'], ['others', 'menuTabCloseOthers']]) {
+      browser.menus.create({ id: `arb-tab-closeopts:${id}`, parentId: 'arb-tab-closeopts', title: t(key), contexts: ['tab'] });
+    }
+
     for (const [id, key] of Object.entries(SIDE_ITEMS)) {
       browser.menus.create({ id, title: t(key), contexts: ['all'], viewTypes: ['sidebar', 'popup', 'tab'], visible: false });
       if (id === 'arb-group-ungroup') {
@@ -561,25 +624,74 @@ function buildMenus() {
   return menusBuilding;
 }
 
-// Sous-menu « Ajouter au groupe » : les groupes de la fenêtre, recalculés à chaque ouverture.
-let groupMenuIds = [];
-async function updateTabGroupMenu(tab) {
-  await Promise.all(groupMenuIds.map((id) => browser.menus.remove(id).catch(() => {})));
-  groupMenuIds = [];
-  const groups = (await browser.tabGroups.query({ windowId: tab.windowId }).catch(() => []))
-    .filter((g) => g.id !== tab.groupId);
-  for (const g of groups) {
-    const id = `arb-tab-addgroup:${g.id}`;
-    browser.menus.create({ id, parentId: 'arb-tab-addgroup', title: g.title || t('unnamedGroup'), contexts: ['tab'] });
-    groupMenuIds.push(id);
+// Onglets visés par le menu : la multi-sélection si l'onglet cliqué en fait partie.
+async function menuTabs(tab) {
+  if (!tab.highlighted) return [tab];
+  const selected = await browser.tabs.query({ windowId: tab.windowId, highlighted: true });
+  return selected.length > 1 ? selected : [tab];
+}
+
+// Onglets de l'espace de cet onglet, dans l'ordre de la barre (hors épinglés).
+async function spaceTabs(tab) {
+  const spaceId = tabSpace.get(tab.id);
+  return (await browser.tabs.query({ windowId: tab.windowId }))
+    .filter((x) => !x.pinned && tabSpace.get(x.id) === spaceId);
+}
+
+// Sous-menus calculés à l'ouverture : groupes de la fenêtre, conteneurs.
+let dynamicMenuIds = [];
+async function updateTabMenu(tab, fromSidebar) {
+  await Promise.all(dynamicMenuIds.map((id) => browser.menus.remove(id).catch(() => {})));
+  dynamicMenuIds = [];
+  const add = (props) => {
+    browser.menus.create({ contexts: ['tab'], ...props });
+    dynamicMenuIds.push(props.id);
+  };
+  const targets = await menuTabs(tab);
+  const many = targets.length > 1;
+  const count = (key, pluralKey) => (many ? t(pluralKey, targets.length) : t(key));
+  const updates = {};
+
+  for (const item of TAB_ITEMS) if (item && item.native) updates[item.id] = { visible: fromSidebar };
+
+  if (browser.tabGroups && fromSidebar) {
+    const groups = (await browser.tabGroups.query({ windowId: tab.windowId }).catch(() => []))
+      .filter((g) => g.id !== tab.groupId);
+    for (const g of groups) add({ id: `arb-tab-addgroup:${g.id}`, parentId: 'arb-tab-addgroup', title: g.title || t('unnamedGroup') });
+    updates['arb-tab-addgroup'] = { visible: groups.length > 0 };
+    updates['arb-tab-ungroup'] = { visible: targets.some((x) => x.groupId !== undefined && x.groupId !== -1) };
   }
-  const inGroup = tab.groupId !== undefined && tab.groupId !== -1;
-  await browser.menus.update('arb-tab-addgroup', { visible: groups.length > 0 });
-  await browser.menus.update('arb-tab-ungroup', { visible: inGroup });
+
+  if (fromSidebar) {
+    let containers = [];
+    try {
+      containers = await browser.contextualIdentities.query({});
+    } catch (e) {
+      // conteneurs désactivés
+    }
+    add({ id: 'arb-tab-container:firefox-default', parentId: 'arb-tab-container', title: t('menuTabNoContainer') });
+    for (const c of containers) add({ id: `arb-tab-container:${c.cookieStoreId}`, parentId: 'arb-tab-container', title: c.name });
+    updates['arb-tab-container'] = { visible: containers.length > 0 && !many };
+
+    updates['arb-tab-reload'] = { visible: true, title: count('menuTabReload', 'menuTabsReload') };
+    updates['arb-tab-mute'] = { visible: true, title: count(tab.mutedInfo.muted ? 'menuTabUnmute' : 'menuTabMute', tab.mutedInfo.muted ? 'menuTabsUnmute' : 'menuTabsMute') };
+    updates['arb-tab-pin'] = { visible: true, title: count(tab.pinned ? 'menuTabUnpin' : 'menuTabPin', tab.pinned ? 'menuTabsUnpin' : 'menuTabsPin') };
+    updates['arb-tab-discard'] = { visible: true, title: count('menuTabDiscard', 'menuTabsDiscard'), enabled: targets.some((x) => !x.active && !x.discarded) };
+    updates['arb-tab-split'] = {
+      visible: true,
+      title: t(targets.length >= 2 ? 'menuTabsSplit' : 'menuTabSplit'),
+      enabled: targets.length <= 2,
+    };
+    updates['arb-tab-duplicate'] = { visible: true, title: count('menuTabDuplicate', 'menuTabsDuplicate') };
+    updates['arb-tab-close'] = { visible: true, title: count('menuTabClose', 'menuTabsClose') };
+    updates['arb-tab-undo'] = { visible: true, enabled: (await browser.sessions.getRecentlyClosed({ maxResults: 1 })).length > 0 };
+  }
+  await Promise.all(Object.entries(updates).map(([id, u]) => browser.menus.update(id, u).catch(() => {})));
 }
 
 browser.menus.onShown.addListener(async (info, tab) => {
-  if (browser.tabGroups && info.contexts.includes('tab') && tab) await updateTabGroupMenu(tab).catch(() => {});
+  const fromSidebar = (info.pageUrl || '').startsWith(SIDEBAR_PAGE) || info.viewType === 'sidebar';
+  if (info.contexts.includes('tab') && tab) await updateTabMenu(tab, fromSidebar).catch(() => {});
   const t = (info.pageUrl || '').startsWith(SIDEBAR_PAGE) && !info.contexts.includes('tab') ? lastMenuTarget : null;
   const kind = t && t.kind;
   const index = t ? spaces.findIndex((s) => s.id === t.spaceId) : -1;
@@ -604,22 +716,259 @@ browser.menus.onShown.addListener(async (info, tab) => {
   browser.menus.refresh();
 });
 
+// Actions du menu d'onglet recréé. targets = onglets visés (multi-sélection comprise).
+async function tabAction(id, tab) {
+  const targets = await menuTabs(tab);
+  const ids = targets.map((x) => x.id);
+  const [action, arg] = id.slice('arb-tab-'.length).split(':');
+  switch (action) {
+    case 'newtab': {
+      const created = await newTab(tab.windowId, tabSpace.get(tab.id) || activeSpace(tab.windowId));
+      return browser.tabs.move(created.id, { index: tab.index + 1 });
+    }
+    case 'newgroup': {
+      // Comme Firefox : on crée le groupe puis on propose de le nommer.
+      const groupId = await browser.tabs.group({ tabIds: ids });
+      return openPopup(`group=${groupId}&win=${tab.windowId}`, 300);
+    }
+    case 'addgroup': return browser.tabs.group({ groupId: Number(arg), tabIds: ids });
+    case 'ungroup': return browser.tabs.ungroup(ids);
+    case 'split': return openSplit(tab, targets);
+    case 'reload': return Promise.all(ids.map((x) => browser.tabs.reload(x)));
+    case 'mute': return Promise.all(ids.map((x) => browser.tabs.update(x, { muted: !tab.mutedInfo.muted })));
+    case 'pin': return Promise.all(ids.map((x) => browser.tabs.update(x, { pinned: !tab.pinned })));
+    case 'discard': return browser.tabs.discard(targets.filter((x) => !x.active).map((x) => x.id));
+    case 'duplicate': return Promise.all(ids.map((x) => browser.tabs.duplicate(x)));
+    case 'copyurl': {
+      await navigator.clipboard.writeText(targets.map((x) => x.url).join('\n'));
+      return browser.runtime.sendMessage({ type: 'toast', text: t('urlCopied') }).catch(() => {});
+    }
+    case 'moveopts': {
+      if (arg === 'window') {
+        const win = await browser.windows.create({ tabId: ids[0] });
+        if (ids.length > 1) await browser.tabs.move(ids.slice(1), { windowId: win.id, index: -1 });
+        return undefined;
+      }
+      const inSpace = await spaceTabs(tab);
+      const index = arg === 'start' ? (inSpace[0] ? inSpace[0].index : 0) : -1;
+      return browser.tabs.move(ids, { index });
+    }
+    case 'container': {
+      if (!arg) return undefined;
+      const replacement = await browser.tabs.create({
+        windowId: tab.windowId,
+        index: tab.index + 1,
+        url: /^(https?|file|ftp):/.test(tab.url) ? tab.url : undefined,
+        cookieStoreId: arg,
+        active: tab.active,
+      });
+      assign(replacement.id, tabSpace.get(tab.id) || activeSpace(tab.windowId));
+      return browser.tabs.remove(tab.id);
+    }
+    case 'selectall': {
+      const inSpace = await spaceTabs(tab);
+      const active = inSpace.find((x) => x.active) || tab;
+      return highlightTabs(tab.windowId, [active.id, ...inSpace.filter((x) => x !== active).map((x) => x.id)]);
+    }
+    case 'close': return browser.tabs.remove(ids);
+    case 'closedupes': {
+      const seen = new Set();
+      const dupes = [];
+      for (const x of (await spaceTabs(tab)).sort((a, b) => Number(b.active) - Number(a.active))) {
+        if (seen.has(x.url)) dupes.push(x.id);
+        else seen.add(x.url);
+      }
+      return browser.tabs.remove(dupes);
+    }
+    case 'closeopts': {
+      const inSpace = await spaceTabs(tab);
+      const keep = new Set(ids);
+      const pos = inSpace.findIndex((x) => x.id === tab.id);
+      const toClose = inSpace.filter((x, i) => !keep.has(x.id) && !tabFav.has(x.id)
+        && (arg === 'others' || (arg === 'above' ? i < pos : i > pos)));
+      return browser.tabs.remove(toClose.map((x) => x.id));
+    }
+    case 'undo': return browser.sessions.restore();
+  }
+  return undefined;
+}
+
+// --- Vue scindée maison (page split/split.html à deux cadres) ------------------------------
+// La vue scindée native de Firefox n'est pas accessible aux extensions. Ici : un onglet
+// d'extension qui affiche deux sites. Il faut la permission optionnelle « tous les
+// sites » (demandée au premier usage par la page elle-même) pour :
+//  - retirer X-Frame-Options et frame-ancestors, qui interdisent aux sites d'être
+//    affichés dans un cadre, uniquement pour les cadres de cette page ;
+//  - suivre les navigations des cadres (adresse affichée, « Séparer »).
+
+async function openSplit(tab, targets) {
+  // Les pages internes (nouvel onglet, about:…) ne peuvent pas s'afficher dans un
+  // cadre : leur côté s'ouvre vide, avec le choix d'un onglet ou d'une adresse.
+  const [left, right] = targets.slice(0, 2);
+  const web = (x) => (x && /^(https?|file):/.test(x.url) ? x.url : '');
+  const q = new URLSearchParams({ sid: uid() });
+  if (web(left)) q.set('left', web(left));
+  if (web(right)) q.set('right', web(right));
+  const props = { windowId: tab.windowId, index: left.index, url: `${SPLIT_PAGE}?${q}`, active: true };
+  let split;
+  try {
+    split = await browser.tabs.create({ ...props, cookieStoreId: left.cookieStoreId });
+  } catch (e) {
+    split = await browser.tabs.create(props);
+  }
+  assign(split.id, tabSpace.get(left.id) || activeSpace(tab.windowId));
+  await browser.tabs.remove(targets.slice(0, 2).map((x) => x.id));
+}
+
+function isSplitFrame(details) {
+  if (details.type !== 'sub_frame' || details.parentFrameId !== 0) return false;
+  const parent = details.frameAncestors && details.frameAncestors[0]
+    ? details.frameAncestors[0].url
+    : details.documentUrl;
+  return !!parent && parent.startsWith(SPLIT_PAGE);
+}
+
+function allowFraming(details) {
+  if (!isSplitFrame(details)) return {};
+  browser.runtime.sendMessage({ type: 'splitFrame', tabId: details.tabId, frameId: details.frameId, url: details.url })
+    .catch(() => {});
+  const responseHeaders = [];
+  for (const header of details.responseHeaders) {
+    const name = header.name.toLowerCase();
+    if (name === 'x-frame-options') continue;
+    if (name === 'content-security-policy') {
+      const kept = header.value.split(';').filter((d) => !d.trim().toLowerCase().startsWith('frame-ancestors'));
+      responseHeaders.push({ name: header.name, value: kept.join(';') });
+      continue;
+    }
+    responseHeaders.push(header);
+  }
+  return { responseHeaders };
+}
+
+// Une page d'extension n'envoie pas de Referer à ses cadres. Certains sites l'exigent
+// (le lecteur intégré de YouTube affiche sinon « erreur 153 ») : on annonce le site
+// le dépôt d'Arbalète comme site intégrateur (YouTube refuse youtube.com lui-même).
+const EMBEDDER = 'https://github.com/valentin-gosselin/arbalete';
+
+function addReferer(details) {
+  if (!isSplitFrame(details)) return {};
+  const requestHeaders = details.requestHeaders.filter((h) => h.name.toLowerCase() !== 'referer');
+  try {
+    const { hostname, origin } = new URL(details.url);
+    const youtube = /(^|\.)youtube(-nocookie)?\.com$/.test(hostname);
+    requestHeaders.push({ name: 'Referer', value: youtube ? EMBEDDER : `${origin}/` });
+  } catch (e) {
+    return {};
+  }
+  return { requestHeaders };
+}
+
+// Firefox ferme tous les onglets d'une extension quand elle est rechargée ou mise à
+// jour. On garde donc la liste des vues scindées ouvertes (storage.local) pour les
+// rouvrir ensuite. Chaque vue a un identifiant « sid » dans son adresse.
+const splitTabs = new Map(); // tabId -> sid
+
+async function rememberSplit(tabId, sid, url) {
+  const tab = await browser.tabs.get(tabId).catch(() => null);
+  if (!tab) return;
+  splitTabs.set(tabId, sid);
+  const { splits = {} } = await browser.storage.local.get('splits');
+  splits[sid] = { url, windowId: tab.windowId, index: tab.index, spaceId: tabSpace.get(tabId) || null, cookieStoreId: tab.cookieStoreId };
+  await browser.storage.local.set({ splits });
+}
+
+async function forgetSplit(sid) {
+  const { splits = {} } = await browser.storage.local.get('splits');
+  delete splits[sid];
+  await browser.storage.local.set({ splits });
+}
+
+// Onglet fermé : on attend un peu, car si c'est l'extension qui s'arrête (mise à
+// jour), ce délai n'arrive jamais à son terme et la vue reste mémorisée.
+function onSplitTabRemoved(tabId) {
+  const sid = splitTabs.get(tabId);
+  if (!sid) return;
+  splitTabs.delete(tabId);
+  setTimeout(() => forgetSplit(sid), 2000);
+}
+
+async function restoreSplits() {
+  const { splits = {} } = await browser.storage.local.get('splits');
+  const open = new Set();
+  for (const tab of await browser.tabs.query({})) {
+    if (!tab.url.startsWith(SPLIT_PAGE)) continue;
+    const sid = new URL(tab.url).searchParams.get('sid');
+    if (sid) {
+      open.add(sid);
+      splitTabs.set(tab.id, sid);
+    }
+  }
+  const windows = await browser.windows.getAll({ windowTypes: ['normal'] });
+  for (const [sid, record] of Object.entries(splits)) {
+    if (open.has(sid)) continue;
+    const win = windows.find((w) => w.id === record.windowId) || windows[0];
+    if (!win) continue;
+    const props = { windowId: win.id, index: record.index, url: record.url, active: false };
+    let tab;
+    try {
+      tab = await browser.tabs.create({ ...props, cookieStoreId: record.cookieStoreId });
+    } catch (e) {
+      tab = await browser.tabs.create(props).catch(() => null);
+    }
+    if (!tab) continue;
+    splitTabs.set(tab.id, sid);
+    if (record.spaceId && getSpace(record.spaceId)) assign(tab.id, record.spaceId);
+  }
+  for (const windowId of activeByWindow.keys()) await applyVisibility(windowId).catch(() => {});
+  notify();
+}
+
+let framingListener = false;
+async function enableSplitSupport() {
+  if (framingListener || !browser.webRequest) return;
+  const granted = await browser.permissions.contains({
+    permissions: ['webRequest', 'webRequestBlocking'],
+    origins: ['<all_urls>'],
+  });
+  if (!granted) return;
+  browser.webRequest.onHeadersReceived.addListener(allowFraming, { urls: ['<all_urls>'], types: ['sub_frame'] }, ['blocking', 'responseHeaders']);
+  browser.webRequest.onBeforeSendHeaders.addListener(addReferer, { urls: ['<all_urls>'], types: ['sub_frame'] }, ['blocking', 'requestHeaders']);
+  if (browser.contentScripts) {
+    await browser.contentScripts.register({
+      matches: ['<all_urls>'],
+      js: [{ file: 'split/frame.js' }],
+      allFrames: true,
+      runAt: 'document_start',
+    }).catch(() => {});
+  }
+  framingListener = true;
+}
+enableSplitSupport();
+browser.permissions.onAdded.addListener(enableSplitSupport);
+
+// Multi-sélection : celle de Firefox (onglets « surlignés »). Le premier de la
+// liste doit être l'onglet actif, sinon Firefox active un autre onglet.
+async function highlightTabs(windowId, tabIds) {
+  const tabs = await browser.tabs.query({ windowId });
+  const indexes = tabIds.map((id) => tabs.find((x) => x.id === id)).filter(Boolean).map((x) => x.index);
+  if (indexes.length) await browser.tabs.highlight({ windowId, tabs: indexes, populate: false });
+}
+
 browser.menus.onClicked.addListener(async (info, tab) => {
   await ready;
   const id = String(info.menuItemId);
-  if (id === 'arb-fav' && tab) return addFavorite(tab.id);
-  if (id.startsWith('arb-move:') && tab) return moveTab(tab.id, id.slice('arb-move:'.length));
-  if (id === 'arb-tab-newgroup' && tab) {
-    // Comme Firefox : on crée le groupe puis on propose de le nommer.
-    const groupId = await browser.tabs.group({ tabIds: [tab.id] });
-    return openPopup(`group=${groupId}&win=${tab.windowId}`, 300);
+  if (id === 'arb-fav' && tab) {
+    for (const x of await menuTabs(tab)) await addFavorite(x.id);
+    return undefined;
   }
-  if (id.startsWith('arb-tab-addgroup:') && tab) {
-    return browser.tabs.group({ groupId: Number(id.slice('arb-tab-addgroup:'.length)), tabIds: [tab.id] });
+  if (id.startsWith('arb-move:') && tab) {
+    for (const x of await menuTabs(tab)) await moveTab(x.id, id.slice('arb-move:'.length));
+    return undefined;
   }
-  if (id === 'arb-tab-ungroup' && tab) return browser.tabs.ungroup([tab.id]);
+  if (id.startsWith('arb-tab-') && tab) return tabAction(id, tab);
   const t = lastMenuTarget;
-  if (!t) return;
+  if (!t) return undefined;
   if (id.startsWith('arb-group')) return groupAction(id, t);
   const index = spaces.findIndex((s) => s.id === t.spaceId);
   switch (id) {
@@ -641,6 +990,7 @@ browser.menus.onClicked.addListener(async (info, tab) => {
     case 'arb-clear': return handlers.clearSpace({ windowId: t.windowId, spaceId: activeSpace(t.windowId) });
     case 'arb-settings': return openSettings(t.windowId);
   }
+  return undefined;
 });
 
 // Actions du clic droit sur un groupe d'onglets (Firefox ne prête pas son menu de
@@ -696,6 +1046,15 @@ const handlers = {
   openSettings: (m) => openSettings(m.windowId).then(() => undefined),
   openSetup: (m) => openSetup(m.windowId).then(() => undefined),
   setMenuTarget: (m) => { lastMenuTarget = m.target; },
+  enableSplit: () => enableSplitSupport(),
+  // Navigation interne d'un cadre (frame.js) : relayée à la page de vue scindée.
+  splitFrameChanged: (m, sender) => {
+    if (!sender.tab || !splitTabs.has(sender.tab.id) && !(sender.tab.url || '').startsWith(SPLIT_PAGE)) return undefined;
+    return browser.runtime.sendMessage({ type: 'splitFrame', tabId: sender.tab.id, frameId: sender.frameId, url: m.url, title: m.title })
+      .catch(() => {});
+  },
+  splitState: (m, sender) => rememberSplit(sender.tab.id, m.sid, m.url),
+  highlight: (m) => highlightTabs(m.windowId, m.tabIds),
   toggleMute: (m) => browser.tabs.update(m.tabId, { muted: m.muted }).then(() => undefined),
   toggleGroup: (m) => browser.tabGroups.update(m.groupId, { collapsed: m.collapsed }).then(() => undefined),
   exportSpaces: () => spaces.map(({ cookieStoreId, ...rest }) => rest),
@@ -711,8 +1070,9 @@ const handlers = {
   },
 };
 
-browser.runtime.onMessage.addListener(async (message) => {
+browser.runtime.onMessage.addListener(async (message, sender) => {
   await ready;
   const handler = handlers[message.type];
-  if (handler) return handler(message);
+  if (handler) return handler(message, sender);
+  return undefined;
 });

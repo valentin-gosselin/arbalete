@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Arbalète</title>
+  <link rel="icon" href="../icons/split.svg">
+  <link rel="stylesheet" href="split.css">
+</head>
+<body>
+  <!-- Vue scindée d'Arbalète : deux sites dans un seul onglet. Les adresses sont dans
+       l'URL de la page (?left=…&right=…&ratio=…), ce qui la rend restaurable. -->
+  <div id="permission" class="permission" hidden>
+    <h1 data-i18n="splitPermissionTitle"></h1>
+    <p data-i18n="splitPermissionText"></p>
+    <button id="grant" class="primary" data-i18n="splitPermissionGrant"></button>
+  </div>
+
+  <div id="split" class="split" hidden>
+    <section class="pane" id="pane-left"></section>
+    <div id="divider" class="divider" role="separator" aria-orientation="vertical" tabindex="0"></div>
+    <section class="pane" id="pane-right"></section>
+  </div>
+
+  <script src="split.js"></script>
+</body>
+</html>

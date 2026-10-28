@@ -101,6 +101,150 @@
   "menuGroupClose": {
     "message": "Fermer le groupe"
   },
+  "menuTabNewTab": {
+    "message": "Nouvel onglet"
+  },
+  "menuTabSplit": {
+    "message": "Ouvrir en vue scindée"
+  },
+  "menuTabsSplit": {
+    "message": "Ouvrir les 2 onglets en vue scindée"
+  },
+  "splitTitle": {
+    "message": "Vue scindée"
+  },
+  "splitAddress": {
+    "message": "Adresse ou recherche"
+  },
+  "splitReload": {
+    "message": "Actualiser"
+  },
+  "splitOpenTab": {
+    "message": "Ouvrir dans un onglet"
+  },
+  "splitClosePane": {
+    "message": "Fermer ce côté"
+  },
+  "splitChoose": {
+    "message": "Choisir un onglet de l’espace, ou taper une adresse ci-dessus"
+  },
+  "splitNoTabs": {
+    "message": "Aucun autre onglet dans cet espace."
+  },
+  "splitDivider": {
+    "message": "Séparateur (flèches gauche et droite pour ajuster)"
+  },
+  "splitProtectedTitle": {
+    "message": "Site protégé par Firefox"
+  },
+  "splitProtectedText": {
+    "message": "$1 fait partie des sites de Mozilla qu’aucune extension n’a le droit de modifier : il ne peut pas s’afficher dans la vue scindée."
+  },
+  "splitSwap": {
+    "message": "Échanger les côtés"
+  },
+  "splitSeparate": {
+    "message": "Séparer en deux onglets"
+  },
+  "splitPermissionTitle": {
+    "message": "Autoriser la vue scindée"
+  },
+  "splitPermissionText": {
+    "message": "Pour afficher deux sites côte à côte, Arbalète doit pouvoir lever l’interdiction que certains sites posent sur l’affichage dans un cadre, uniquement dans cette page. Firefox va demander l’accès à tous les sites : rien n’est lu ni envoyé ailleurs."
+  },
+  "splitPermissionGrant": {
+    "message": "Autoriser"
+  },
+  "menuTabReload": {
+    "message": "Actualiser l’onglet"
+  },
+  "menuTabsReload": {
+    "message": "Actualiser $1 onglets"
+  },
+  "menuTabMute": {
+    "message": "Couper le son de l’onglet"
+  },
+  "menuTabUnmute": {
+    "message": "Réactiver le son de l’onglet"
+  },
+  "menuTabsMute": {
+    "message": "Couper le son de $1 onglets"
+  },
+  "menuTabsUnmute": {
+    "message": "Réactiver le son de $1 onglets"
+  },
+  "menuTabPin": {
+    "message": "Épingler l’onglet"
+  },
+  "menuTabUnpin": {
+    "message": "Désépingler l’onglet"
+  },
+  "menuTabsPin": {
+    "message": "Épingler $1 onglets"
+  },
+  "menuTabsUnpin": {
+    "message": "Désépingler $1 onglets"
+  },
+  "menuTabDiscard": {
+    "message": "Décharger l’onglet"
+  },
+  "menuTabsDiscard": {
+    "message": "Décharger $1 onglets"
+  },
+  "menuTabDuplicate": {
+    "message": "Dupliquer l’onglet"
+  },
+  "menuTabsDuplicate": {
+    "message": "Dupliquer $1 onglets"
+  },
+  "menuTabCopyUrl": {
+    "message": "Copier l’adresse"
+  },
+  "menuTabMoveOptions": {
+    "message": "Déplacer l’onglet"
+  },
+  "menuTabMoveStart": {
+    "message": "Déplacer au début"
+  },
+  "menuTabMoveEnd": {
+    "message": "Déplacer à la fin"
+  },
+  "menuTabMoveWindow": {
+    "message": "Déplacer vers une nouvelle fenêtre"
+  },
+  "menuTabContainer": {
+    "message": "Rouvrir dans un onglet contextuel"
+  },
+  "menuTabNoContainer": {
+    "message": "Sans conteneur"
+  },
+  "menuTabSelectAll": {
+    "message": "Sélectionner tous les onglets de l’espace"
+  },
+  "menuTabClose": {
+    "message": "Fermer l’onglet"
+  },
+  "menuTabsClose": {
+    "message": "Fermer $1 onglets"
+  },
+  "menuTabCloseDuplicates": {
+    "message": "Fermer les onglets en double"
+  },
+  "menuTabCloseOptions": {
+    "message": "Fermer plusieurs onglets"
+  },
+  "menuTabCloseAbove": {
+    "message": "Fermer les onglets au-dessus"
+  },
+  "menuTabCloseBelow": {
+    "message": "Fermer les onglets en dessous"
+  },
+  "menuTabCloseOthers": {
+    "message": "Fermer les autres onglets"
+  },
+  "menuTabUndoClose": {
+    "message": "Rouvrir l’onglet fermé"
+  },
   "menuNewSpace": {
     "message": "Nouvel espace"
   },

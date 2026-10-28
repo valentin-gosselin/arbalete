@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "__MSG_extName__",
-  "version": "0.3.0",
+  "version": "0.5.0",
   "description": "__MSG_extDescription__",
   "default_locale": "en",
   "author": "Valentin Gosselin",
@@ -9,7 +9,11 @@
     "gecko": {
       "id": "arbalete@gosselin.pro",
       "strict_min_version": "142.0",
-      "data_collection_permissions": { "required": ["none"] }
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
     }
   },
   "icons": {
@@ -29,7 +33,9 @@
     "tabGroups"
   ],
   "background": {
-    "scripts": ["background.js"]
+    "scripts": [
+      "background.js"
+    ]
   },
   "sidebar_action": {
     "default_title": "Arbalète",
@@ -39,16 +45,64 @@
   },
   "commands": {
     "_execute_sidebar_action": {
-      "suggested_key": { "default": "Alt+Shift+S" },
+      "suggested_key": {
+        "default": "Alt+Shift+S"
+      },
       "description": "__MSG_cmdSidebar__"
     },
-    "space-1": { "suggested_key": { "default": "Alt+1" }, "description": "__MSG_cmdSpace1__" },
-    "space-2": { "suggested_key": { "default": "Alt+2" }, "description": "__MSG_cmdSpace2__" },
-    "space-3": { "suggested_key": { "default": "Alt+3" }, "description": "__MSG_cmdSpace3__" },
-    "space-4": { "suggested_key": { "default": "Alt+4" }, "description": "__MSG_cmdSpace4__" },
-    "space-5": { "suggested_key": { "default": "Alt+5" }, "description": "__MSG_cmdSpace5__" },
-    "space-next": { "suggested_key": { "default": "Alt+Shift+Down" }, "description": "__MSG_cmdSpaceNext__" },
-    "space-prev": { "suggested_key": { "default": "Alt+Shift+Up" }, "description": "__MSG_cmdSpacePrev__" },
-    "copy-url": { "suggested_key": { "default": "Alt+Shift+C" }, "description": "__MSG_cmdCopyUrl__" }
-  }
+    "space-1": {
+      "suggested_key": {
+        "default": "Alt+1"
+      },
+      "description": "__MSG_cmdSpace1__"
+    },
+    "space-2": {
+      "suggested_key": {
+        "default": "Alt+2"
+      },
+      "description": "__MSG_cmdSpace2__"
+    },
+    "space-3": {
+      "suggested_key": {
+        "default": "Alt+3"
+      },
+      "description": "__MSG_cmdSpace3__"
+    },
+    "space-4": {
+      "suggested_key": {
+        "default": "Alt+4"
+      },
+      "description": "__MSG_cmdSpace4__"
+    },
+    "space-5": {
+      "suggested_key": {
+        "default": "Alt+5"
+      },
+      "description": "__MSG_cmdSpace5__"
+    },
+    "space-next": {
+      "suggested_key": {
+        "default": "Alt+Shift+Down"
+      },
+      "description": "__MSG_cmdSpaceNext__"
+    },
+    "space-prev": {
+      "suggested_key": {
+        "default": "Alt+Shift+Up"
+      },
+      "description": "__MSG_cmdSpacePrev__"
+    },
+    "copy-url": {
+      "suggested_key": {
+        "default": "Alt+Shift+C"
+      },
+      "description": "__MSG_cmdCopyUrl__"
+    }
+  },
+  "optional_permissions": [
+    "webRequest",
+    "webRequestBlocking",
+    "browsingData",
+    "<all_urls>"
+  ]
 }

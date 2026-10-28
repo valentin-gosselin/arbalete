@@ -119,11 +119,19 @@ function renderTabs(space) {
   if (pinned.length && own.length) rows.push(el('div', { class: 'separator' }));
 
   let currentGroup = null;
-  for (const tab of own) {
+  for (let i = 0; i < own.length; i++) {
+    const tab = own[i];
     const group = groups.get(tab.groupId) || null;
     if (group && group !== currentGroup) rows.push(groupRow(group));
     currentGroup = group;
     if (group && group.collapsed && !tab.active) continue;
+    // Vue scindée de Firefox : les deux onglets côte à côte, sur une seule ligne.
+    const next = own[i + 1];
+    if (tab.splitViewId !== -1 && next && next.splitViewId === tab.splitViewId) {
+      rows.push(el('div', { class: 'split', role: 'group' }, [tabRow(tab, group), tabRow(next, group)]));
+      i++;
+      continue;
+    }
     rows.push(tabRow(tab, group));
   }
   if (!own.length) rows.push(el('div', { class: 'empty' }, t('emptySpace')));
@@ -166,6 +174,11 @@ $('#tabs').addEventListener('keydown', (e) => {
     case 'Delete':
       if (row.menuTarget.kind === 'tab') send('closeTab', { tabId: row.menuTarget.tabId });
       break;
+    case 'Escape': {
+      const active = state.tabs.find((x) => x.active);
+      if (active) send('highlight', { tabIds: [active.id] });
+      break;
+    }
     default: return;
   }
   e.preventDefault();
@@ -192,8 +205,39 @@ function groupRow(group) {
   return row;
 }
 
+// Multi-sélection : c'est celle de Firefox (onglets « surlignés »), partagée avec
+// ses propres raccourcis et avec le clic droit d'Arbalète.
+const isMultiSelected = (tab) => tab.highlighted && !tab.active && state.tabs.some((x) => x.active && x.highlighted);
+
+function ownTabIds() {
+  const space = currentSpace();
+  return state.tabs.filter((x) => !x.pinned && x.spaceId === space.id && !x.favId).map((x) => x.id);
+}
+
+function onTabClick(e, tab) {
+  const active = state.tabs.find((x) => x.active);
+  const selected = state.tabs.filter((x) => x.highlighted && !x.active).map((x) => x.id);
+  if ((e.ctrlKey || e.metaKey) && active && !tab.active) {
+    const others = selected.includes(tab.id) ? selected.filter((id) => id !== tab.id) : [...selected, tab.id];
+    return send('highlight', { tabIds: [active.id, ...others] });
+  }
+  if (e.shiftKey && active && !tab.active) {
+    const order = ownTabIds();
+    const from = order.indexOf(active.id);
+    const to = order.indexOf(tab.id);
+    if (from !== -1 && to !== -1) {
+      const range = order.slice(Math.min(from, to), Math.max(from, to) + 1).filter((id) => id !== active.id);
+      return send('highlight', { tabIds: [active.id, ...range] });
+    }
+  }
+  // Clic simple : active l'onglet et vide la sélection.
+  if (selected.length) return send('highlight', { tabIds: [tab.id] });
+  return send('activateTab', { tabId: tab.id });
+}
+
 function tabRow(tab, group) {
-  const classes = ['tab', tab.active && 'active', tab.status === 'loading' && 'loading', group && 'in-group']
+  const classes = ['tab', tab.active && 'active', isMultiSelected(tab) && 'selected', tab.discarded && 'discarded',
+    tab.status === 'loading' && 'loading', group && 'in-group']
     .filter(Boolean).join(' ');
   const row = el('div', {
     class: classes,
@@ -202,7 +246,7 @@ function tabRow(tab, group) {
     tabIndex: -1,
     'aria-label': tab.title || tab.url,
     draggable: true,
-    onclick: () => send('activateTab', { tabId: tab.id }),
+    onclick: (e) => onTabClick(e, tab),
     onauxclick: (e) => { if (e.button === 1) send('closeTab', { tabId: tab.id }); },
     ondragstart: (e) => {
       e.dataTransfer.setData('application/x-arbalete-tab', String(tab.id));
@@ -249,6 +293,7 @@ function tabRow(tab, group) {
   row.menuTarget = { kind: 'tab', tabId: tab.id };
   row.dataset.key = 'tab:' + tab.id;
   if (tab.active) row.setAttribute('aria-current', 'page');
+  if (isMultiSelected(tab)) row.setAttribute('aria-selected', 'true');
   return row;
 }
 

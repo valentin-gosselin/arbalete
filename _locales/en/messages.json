@@ -101,6 +101,150 @@
   "menuGroupClose": {
     "message": "Close group"
   },
+  "menuTabNewTab": {
+    "message": "New tab"
+  },
+  "menuTabSplit": {
+    "message": "Open in split view"
+  },
+  "menuTabsSplit": {
+    "message": "Open the 2 tabs in split view"
+  },
+  "splitTitle": {
+    "message": "Split view"
+  },
+  "splitAddress": {
+    "message": "Address or search"
+  },
+  "splitReload": {
+    "message": "Reload"
+  },
+  "splitOpenTab": {
+    "message": "Open in a tab"
+  },
+  "splitClosePane": {
+    "message": "Close this side"
+  },
+  "splitChoose": {
+    "message": "Pick a tab from this space, or type an address above"
+  },
+  "splitNoTabs": {
+    "message": "No other tab in this space."
+  },
+  "splitDivider": {
+    "message": "Divider (left and right arrows to adjust)"
+  },
+  "splitProtectedTitle": {
+    "message": "Site protected by Firefox"
+  },
+  "splitProtectedText": {
+    "message": "$1 is one of the Mozilla sites no extension is allowed to modify: it cannot be shown in split view."
+  },
+  "splitSwap": {
+    "message": "Swap sides"
+  },
+  "splitSeparate": {
+    "message": "Split into two tabs"
+  },
+  "splitPermissionTitle": {
+    "message": "Allow split view"
+  },
+  "splitPermissionText": {
+    "message": "To show two sites side by side, Arbalète needs to lift the \"no framing\" rule some sites set, only inside this page. Firefox will ask for access to all websites: nothing is read or sent anywhere."
+  },
+  "splitPermissionGrant": {
+    "message": "Allow"
+  },
+  "menuTabReload": {
+    "message": "Reload tab"
+  },
+  "menuTabsReload": {
+    "message": "Reload $1 tabs"
+  },
+  "menuTabMute": {
+    "message": "Mute tab"
+  },
+  "menuTabUnmute": {
+    "message": "Unmute tab"
+  },
+  "menuTabsMute": {
+    "message": "Mute $1 tabs"
+  },
+  "menuTabsUnmute": {
+    "message": "Unmute $1 tabs"
+  },
+  "menuTabPin": {
+    "message": "Pin tab"
+  },
+  "menuTabUnpin": {
+    "message": "Unpin tab"
+  },
+  "menuTabsPin": {
+    "message": "Pin $1 tabs"
+  },
+  "menuTabsUnpin": {
+    "message": "Unpin $1 tabs"
+  },
+  "menuTabDiscard": {
+    "message": "Unload tab"
+  },
+  "menuTabsDiscard": {
+    "message": "Unload $1 tabs"
+  },
+  "menuTabDuplicate": {
+    "message": "Duplicate tab"
+  },
+  "menuTabsDuplicate": {
+    "message": "Duplicate $1 tabs"
+  },
+  "menuTabCopyUrl": {
+    "message": "Copy address"
+  },
+  "menuTabMoveOptions": {
+    "message": "Move tab"
+  },
+  "menuTabMoveStart": {
+    "message": "Move to start"
+  },
+  "menuTabMoveEnd": {
+    "message": "Move to end"
+  },
+  "menuTabMoveWindow": {
+    "message": "Move to new window"
+  },
+  "menuTabContainer": {
+    "message": "Reopen in container"
+  },
+  "menuTabNoContainer": {
+    "message": "No container"
+  },
+  "menuTabSelectAll": {
+    "message": "Select all tabs of the space"
+  },
+  "menuTabClose": {
+    "message": "Close tab"
+  },
+  "menuTabsClose": {
+    "message": "Close $1 tabs"
+  },
+  "menuTabCloseDuplicates": {
+    "message": "Close duplicate tabs"
+  },
+  "menuTabCloseOptions": {
+    "message": "Close multiple tabs"
+  },
+  "menuTabCloseAbove": {
+    "message": "Close tabs above"
+  },
+  "menuTabCloseBelow": {
+    "message": "Close tabs below"
+  },
+  "menuTabCloseOthers": {
+    "message": "Close other tabs"
+  },
+  "menuTabUndoClose": {
+    "message": "Reopen closed tab"
+  },
   "menuNewSpace": {
     "message": "New space"
   },

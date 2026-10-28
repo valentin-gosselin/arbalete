@@ -6,8 +6,8 @@ Nom : **Arbalète** dans toutes les langues (décidé le 28/10/2026), clin d'œi
 
 ## Ce que Firefox 158 permet (vérifié dans ses fichiers)
 
-- **Vue scindée** : une extension peut **lire** qu'un onglet fait partie d'une vue scindée (`splitViewId`) mais **ne peut pas en créer**. Arbalète peut donc afficher les paires scindées (une seule ligne à deux favicons, comme Firefox) ; la création reste dans le menu natif de Firefox.
-- **Menu d'onglet natif** : Arbalète l'ouvre déjà via `menus.overrideContext`, mais Firefox y masque les entrées liées à la barre d'onglets (vue scindée, certains choix de groupe). Ce qu'on ne peut pas récupérer est recréé par Arbalète quand une API existe (groupes : fait ; vue scindée : impossible tant que Firefox n'ouvre pas l'API).
+- **Vue scindée** : une extension peut **lire** qu'un onglet fait partie d'une vue scindée native (`splitViewId`) mais **ne peut pas en créer**. Arbalète affiche les paires natives sur une ligne, et propose **sa propre vue scindée** (page à deux cadres, version 0.5.0) : en-têtes anti-cadre retirés, Referer pour le lecteur YouTube, service worker de YouTube effacé avant affichage, navigation interne suivie par un script de cadre, vues rouvertes après une mise à jour. Permission « tous les sites » + « données de navigation » demandée au premier usage. Impossible : sites de Mozilla protégés (addons.mozilla.org…).
+- **Menu d'onglet natif** : quand une extension ouvre le menu d'un onglet (`menus.overrideContext`), Firefox n'y met que les entrées des extensions, aucune des siennes. Arbalète recrée donc le menu de Firefox avec ce que les API permettent ; impossible : vue scindée, envoi vers un appareil, marque-page (permission en plus), notes d'onglet.
 
 ## Phase 1 : fondations pour la publication (faite le 28/10/2026, version 0.3.0)
 
@@ -19,11 +19,11 @@ Fait en premier car tous les textes ajoutés ensuite en dépendent.
 - [x] Politique de confidentialité (PRIVACY.md), licence MIT, README anglais et LISEZMOI à jour.
 - [x] Dépôt git local. Dépôt public (GitHub ou forge perso) au moment de publier.
 
-## Phase 2 : clic droit et vue scindée
+## Phase 2 : clic droit et vue scindée (faite le 28/10/2026, version 0.4.0)
 
-- [ ] Inventaire précis des entrées natives absentes du menu d'onglet ouvert depuis Arbalète, et recréation de celles qu'une API permet (dupliquer, recharger, épingler, couper le son, déplacer vers une fenêtre, fermer les autres / à droite, rouvrir).
-- [ ] Affichage des vues scindées : les deux onglets sur une ligne, comme Firefox.
-- [ ] Multi-sélection (Ctrl+clic, Maj+clic) avec actions groupées : déplacer, grouper, fermer, mettre en favoris.
+- [x] Menu d'onglet de Firefox recréé : nouvel onglet, groupes, actualiser, son, épingler, décharger, dupliquer, copier l'adresse, déplacer (début, fin, nouvelle fenêtre), rouvrir dans un conteneur, tout sélectionner, fermer, doublons, au-dessus / en dessous / autres, rouvrir l'onglet fermé. Uniquement depuis la barre, pour ne pas doubler le vrai menu.
+- [x] Affichage des vues scindées : les deux onglets sur une ligne (empilés en mode compact).
+- [x] Multi-sélection (Ctrl+clic, Maj+clic, Échap pour vider), partagée avec celle de Firefox ; tout le menu d'onglet agit sur la sélection.
 
 ## Phase 3 : recherche rapide et raccourcis
 
