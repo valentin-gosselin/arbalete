@@ -14,6 +14,7 @@ const DEFAULT_SPACES = [
 ];
 const SIDEBAR_PAGE = browser.runtime.getURL('sidebar/sidebar.html');
 const SPLIT_PAGE = browser.runtime.getURL('split/split.html');
+const PALETTE_PAGE = browser.runtime.getURL('palette/palette.html');
 const BLANK_URLS = ['about:newtab', 'about:home'];
 
 let spaces = [];
@@ -291,6 +292,7 @@ async function getState(windowId) {
     tabs: tabs.map((t) => ({
       id: t.id,
       index: t.index,
+      lastAccessed: t.lastAccessed,
       title: t.title,
       url: t.url,
       favIconUrl: t.favIconUrl || '',
@@ -499,6 +501,26 @@ browser.commands.onCommand.addListener(async (command) => {
   if (command === 'space-prev') return switchRelative(win.id, -1);
   const m = /^space-(\d)$/.exec(command);
   if (m && spaces[m[1] - 1]) return switchSpace(win.id, spaces[m[1] - 1].id);
+
+  // Onglet actif vers l'espace suivant / précédent (on le suit).
+  if (command === 'move-tab-next' || command === 'move-tab-prev') {
+    const [tab] = await browser.tabs.query({ windowId: win.id, active: true });
+    if (!tab || tab.pinned) return undefined;
+    const i = spaces.findIndex((s) => s.id === activeSpace(win.id));
+    const target = spaces[(i + (command === 'move-tab-next' ? 1 : -1) + spaces.length) % spaces.length];
+    assign(tab.id, target.id);
+    setFav(tab.id, null);
+    return switchSpace(win.id, target.id);
+  }
+
+  // Favori n de l'espace actif.
+  const f = /^favorite-(\d)$/.exec(command);
+  if (f) {
+    const space = getSpace(activeSpace(win.id));
+    const fav = space && space.favorites[f[1] - 1];
+    if (fav) return openFavorite(win.id, space.id, fav.id);
+  }
+  return undefined;
 });
 
 if (browser.tabGroups) {
@@ -947,6 +969,67 @@ async function enableSplitSupport() {
 enableSplitSupport();
 browser.permissions.onAdded.addListener(enableSplitSupport);
 
+// --- Recherche rapide -------------------------------------------------------------------
+// Alt+K : calque centré injecté dans l'onglet actif (permission activeTab, accordée par
+// le raccourci). Vue scindée d'Arbalète : la page affiche le calque elle-même.
+// Pages où Firefox interdit toute extension (about:, sites de Mozilla…) : panneau sous
+// l'icône d'Arbalète. browserAction.openPopup() n'est permis que pendant le geste de
+// l'utilisateur, avant tout « await » : la décision se prend donc sur un cache
+// (fenêtre active et adresse de son onglet actif) tenu à jour en continu.
+
+const PROTECTED_HOSTS = [
+  'accounts-static.cdn.mozilla.net', 'accounts.firefox.com', 'addons.cdn.mozilla.net', 'addons.mozilla.org',
+  'api.accounts.firefox.com', 'content.cdn.mozilla.net', 'discovery.addons.mozilla.org', 'install.mozilla.org',
+  'oauth.accounts.firefox.com', 'profile.accounts.firefox.com', 'support.mozilla.org', 'sync.services.mozilla.com',
+];
+
+function canInject(url) {
+  try {
+    const u = new URL(url);
+    return /^(https?|file):$/.test(u.protocol) && !PROTECTED_HOSTS.includes(u.hostname) && !u.pathname.endsWith('.pdf');
+  } catch (e) {
+    return false;
+  }
+}
+
+let focusedWindowId = null;
+const activeTabByWindow = new Map(); // windowId -> { id, url }
+
+browser.windows.getLastFocused().then((w) => { focusedWindowId = w.id; });
+browser.tabs.query({ active: true }).then((tabs) => {
+  for (const tab of tabs) activeTabByWindow.set(tab.windowId, { id: tab.id, url: tab.url });
+});
+browser.windows.onFocusChanged.addListener((windowId) => {
+  if (windowId !== browser.windows.WINDOW_ID_NONE) focusedWindowId = windowId;
+});
+browser.tabs.onActivated.addListener(({ tabId, windowId }) => {
+  browser.tabs.get(tabId).then((tab) => activeTabByWindow.set(windowId, { id: tab.id, url: tab.url })).catch(() => {});
+});
+browser.tabs.onUpdated.addListener((tabId, change, tab) => {
+  if (tab.active && change.url) activeTabByWindow.set(tab.windowId, { id: tabId, url: change.url });
+}, { properties: ['url'] });
+
+// Appelée pendant le geste de l'utilisateur : surtout pas d'await avant openPopup().
+function openPalette(windowId) {
+  const tab = activeTabByWindow.get(windowId);
+  if (tab && tab.url.startsWith(SPLIT_PAGE)) {
+    browser.runtime.sendMessage({ type: 'togglePalette', tabId: tab.id }).catch(() => {});
+    return;
+  }
+  if (tab && canInject(tab.url)) {
+    browser.tabs.executeScript(tab.id, { code: `window.arbaleteWindowId = ${Number(windowId)};` })
+      .then(() => browser.tabs.executeScript(tab.id, { file: 'palette/overlay.js' }))
+      .catch(() => {});
+    return;
+  }
+  browser.browserAction.openPopup().catch(() => {});
+}
+
+// Écouteur à part et sans await : le raccourci doit rester un « geste » pour Firefox.
+browser.commands.onCommand.addListener((command) => {
+  if (command === 'open-palette' && focusedWindowId !== null) openPalette(focusedWindowId);
+});
+
 // Multi-sélection : celle de Firefox (onglets « surlignés »). Le premier de la
 // liste doit être l'onglet actif, sinon Firefox active un autre onglet.
 async function highlightTabs(windowId, tabIds) {
@@ -1047,6 +1130,34 @@ const handlers = {
   openSetup: (m) => openSetup(m.windowId).then(() => undefined),
   setMenuTarget: (m) => { lastMenuTarget = m.target; },
   enableSplit: () => enableSplitSupport(),
+  openPalette: (m) => openPalette(m.windowId),
+  // Actions de la recherche rapide qui demandent des droits absents de son cadre.
+  reopenClosed: () => browser.sessions.restore().then(() => undefined),
+  openShortcuts: () => (browser.commands.openShortcutSettings ? browser.commands.openShortcutSettings() : undefined),
+  webSearch: (m) => browser.search.query({ text: m.text, disposition: 'NEW_TAB' }),
+  // Suggestions du moteur choisi dans les réglages (format OpenSearch, comme Firefox).
+  suggest: async (m) => {
+    const { suggestUrl } = await browser.storage.local.get('suggestUrl');
+    if (!suggestUrl || !m.text) return [];
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 1500);
+    try {
+      const url = suggestUrl.replace(/\{searchTerms\}|%s/g, encodeURIComponent(m.text));
+      const data = await (await fetch(url, { signal: controller.signal, credentials: 'omit' })).json();
+      const list = Array.isArray(data) && Array.isArray(data[1]) ? data[1] : (Array.isArray(data) ? data : []);
+      return list.filter((x) => typeof x === 'string').slice(0, 8);
+    } catch (e) {
+      return [];
+    } finally {
+      clearTimeout(timer);
+    }
+  },
+  searchHistory: async (m) => {
+    if (!browser.history || !(await browser.permissions.contains({ permissions: ['history'] }))) return [];
+    const visits = await browser.history.search({ text: m.text, maxResults: 30, startTime: 0 });
+    return visits.map((v) => ({ url: v.url, title: v.title }));
+  },
+  paletteCanInject: (m) => canInject(m.url),
   // Navigation interne d'un cadre (frame.js) : relayée à la page de vue scindée.
   splitFrameChanged: (m, sender) => {
     if (!sender.tab || !splitTabs.has(sender.tab.id) && !(sender.tab.url || '').startsWith(SPLIT_PAGE)) return undefined;
@@ -1055,6 +1166,8 @@ const handlers = {
   },
   splitState: (m, sender) => rememberSplit(sender.tab.id, m.sid, m.url),
   highlight: (m) => highlightTabs(m.windowId, m.tabIds),
+  // Actions du menu d'onglet, depuis la recherche rapide.
+  tabAction: async (m) => tabAction('arb-tab-' + m.action, await browser.tabs.get(m.tabId)),
   toggleMute: (m) => browser.tabs.update(m.tabId, { muted: m.muted }).then(() => undefined),
   toggleGroup: (m) => browser.tabGroups.update(m.groupId, { collapsed: m.collapsed }).then(() => undefined),
   exportSpaces: () => spaces.map(({ cookieStoreId, ...rest }) => rest),

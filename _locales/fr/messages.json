@@ -29,8 +29,128 @@
   "cmdSpacePrev": {
     "message": "Espace précédent"
   },
+  "cmdPalette": {
+    "message": "Ouvrir la recherche rapide"
+  },
+  "cmdMoveTabNext": {
+    "message": "Déplacer l'onglet vers l'espace suivant"
+  },
+  "cmdMoveTabPrev": {
+    "message": "Déplacer l'onglet vers l'espace précédent"
+  },
+  "cmdFavorite1": {
+    "message": "Ouvrir le favori 1 de l’espace"
+  },
+  "cmdFavorite2": {
+    "message": "Ouvrir le favori 2 de l’espace"
+  },
+  "cmdFavorite3": {
+    "message": "Ouvrir le favori 3 de l’espace"
+  },
+  "cmdFavorite4": {
+    "message": "Ouvrir le favori 4 de l’espace"
+  },
+  "cmdFavorite5": {
+    "message": "Ouvrir le favori 5 de l’espace"
+  },
   "cmdCopyUrl": {
     "message": "Copier l'adresse de l'onglet"
+  },
+  "paletteTitle": {
+    "message": "Recherche rapide d’Arbalète (Alt+K)"
+  },
+  "paletteButton": {
+    "message": "Recherche rapide (Alt+K)"
+  },
+  "palettePlaceholder": {
+    "message": "Onglets, favoris, commandes, adresse ou recherche…"
+  },
+  "paletteHintMove": {
+    "message": "choisir"
+  },
+  "paletteHintOpen": {
+    "message": "ouvrir"
+  },
+  "paletteHintCommands": {
+    "message": "commandes seulement"
+  },
+  "paletteSectionRecent": {
+    "message": "Récents"
+  },
+  "paletteSectionTabs": {
+    "message": "Onglets"
+  },
+  "paletteSectionFavorites": {
+    "message": "Favoris"
+  },
+  "paletteSectionCommands": {
+    "message": "Commandes"
+  },
+  "paletteSectionHistory": {
+    "message": "Historique"
+  },
+  "paletteSectionWeb": {
+    "message": "Web"
+  },
+  "paletteOpenUrl": {
+    "message": "Ouvrir $1"
+  },
+  "paletteSearchWeb": {
+    "message": "Rechercher « $1 » sur le Web"
+  },
+  "paletteNewTab": {
+    "message": "Nouvel onglet"
+  },
+  "paletteNewSpace": {
+    "message": "Nouvel espace"
+  },
+  "paletteSplit": {
+    "message": "Ouvrir l’onglet en vue scindée"
+  },
+  "paletteCopyUrl": {
+    "message": "Copier l’adresse de l’onglet"
+  },
+  "paletteDuplicate": {
+    "message": "Dupliquer l’onglet"
+  },
+  "paletteCloseDuplicates": {
+    "message": "Fermer les onglets en double"
+  },
+  "paletteClearSpace": {
+    "message": "Fermer les onglets de l’espace"
+  },
+  "paletteReopenClosed": {
+    "message": "Rouvrir l’onglet fermé"
+  },
+  "paletteSettings": {
+    "message": "Réglages d’Arbalète"
+  },
+  "paletteShortcuts": {
+    "message": "Raccourcis clavier"
+  },
+  "paletteGoToSpace": {
+    "message": "Aller à l’espace $1"
+  },
+  "paletteMoveTabToSpace": {
+    "message": "Déplacer l’onglet vers $1"
+  },
+  "paletteSectionSuggestions": {
+    "message": "Suggestions"
+  },
+  "settingsSuggest": {
+    "message": "Suggestions de recherche (adresse de votre moteur)"
+  },
+  "settingsSuggestHint": {
+    "message": "Format OpenSearch, avec {searchTerms} à la place du texte. Exemple SearXNG : https://votre-instance/autocompleter?q={searchTerms}. Laisser vide pour désactiver."
+  },
+  "settingsSuggestSaved": {
+    "message": "Suggestions enregistrées"
+  },
+  "settingsSuggestInvalid": {
+    "message": "Adresse invalide : il faut {searchTerms} à la place du texte"
+  },
+  "settingsHistory": {
+    "message": "Chercher aussi dans l’historique avec la recherche rapide"
   },
   "spacePersonal": {
     "message": "Perso"

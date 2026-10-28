@@ -25,11 +25,11 @@ Fait en premier car tous les textes ajoutés ensuite en dépendent.
 - [x] Affichage des vues scindées : les deux onglets sur une ligne (empilés en mode compact).
 - [x] Multi-sélection (Ctrl+clic, Maj+clic, Échap pour vider), partagée avec celle de Firefox ; tout le menu d'onglet agit sur la sélection.
 
-## Phase 3 : recherche rapide et raccourcis
+## Phase 3 : recherche rapide et raccourcis (faite le 28/10/2026, version 0.6.0)
 
-- [ ] Palette de recherche (raccourci configurable) : onglets de tous les espaces, favoris, onglets archivés, historique ; Entrée bascule sur le bon espace.
-- [ ] Commandes dans la palette : « nouvel espace », « déplacer l'onglet vers… », « nettoyer l'espace »…
-- [ ] Raccourcis supplémentaires : nouvel onglet dans l'espace, favori 1 à 9, onglet vers l'espace suivant / précédent.
+- [x] Palette de recherche (Alt+K, loupe en bas de la barre, bouton d'outils) : onglets de tous les espaces, favoris, historique (option des réglages), adresse, recherche Web ; Entrée bascule sur le bon espace. Onglets archivés : avec la phase 4.
+- [x] Commandes dans la palette (« > » pour ne voir qu'elles) : nouvel onglet / espace, vue scindée, copier, dupliquer, doublons, nettoyer, rouvrir, aller à l'espace…, déplacer l'onglet vers…, réglages, raccourcis.
+- [x] Raccourcis : onglet vers l'espace suivant / précédent (Alt+Maj+→ / ←), favoris 1 à 5 (sans touche par défaut, à choisir). Ctrl+T ouvre déjà dans l'espace actif.
 
 ## Phase 4 : nettoyage automatique
 

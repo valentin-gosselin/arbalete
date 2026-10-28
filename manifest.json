@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "__MSG_extName__",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "__MSG_extDescription__",
   "default_locale": "en",
   "author": "Valentin Gosselin",
@@ -30,7 +30,9 @@
     "clipboardWrite",
     "menus",
     "menus.overrideContext",
-    "tabGroups"
+    "tabGroups",
+    "search",
+    "activeTab"
   ],
   "background": {
     "scripts": [
@@ -49,6 +51,12 @@
         "default": "Alt+Shift+S"
       },
       "description": "__MSG_cmdSidebar__"
+    },
+    "open-palette": {
+      "suggested_key": {
+        "default": "Alt+K"
+      },
+      "description": "__MSG_cmdPalette__"
     },
     "space-1": {
       "suggested_key": {
@@ -92,6 +100,33 @@
       },
       "description": "__MSG_cmdSpacePrev__"
     },
+    "move-tab-next": {
+      "suggested_key": {
+        "default": "Alt+Shift+Right"
+      },
+      "description": "__MSG_cmdMoveTabNext__"
+    },
+    "move-tab-prev": {
+      "suggested_key": {
+        "default": "Alt+Shift+Left"
+      },
+      "description": "__MSG_cmdMoveTabPrev__"
+    },
+    "favorite-1": {
+      "description": "__MSG_cmdFavorite1__"
+    },
+    "favorite-2": {
+      "description": "__MSG_cmdFavorite2__"
+    },
+    "favorite-3": {
+      "description": "__MSG_cmdFavorite3__"
+    },
+    "favorite-4": {
+      "description": "__MSG_cmdFavorite4__"
+    },
+    "favorite-5": {
+      "description": "__MSG_cmdFavorite5__"
+    },
     "copy-url": {
       "suggested_key": {
         "default": "Alt+Shift+C"
@@ -103,6 +138,18 @@
     "webRequest",
     "webRequestBlocking",
     "browsingData",
+    "history",
     "<all_urls>"
+  ],
+  "browser_action": {
+    "default_icon": "icons/arbalete.svg",
+    "default_title": "__MSG_paletteTitle__",
+    "default_popup": "palette/palette.html?panel=1"
+  },
+  "web_accessible_resources": [
+    "palette/palette.html",
+    "palette/palette.css",
+    "palette/palette.js",
+    "icons/lucide.svg"
   ]
 }

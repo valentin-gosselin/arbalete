@@ -1,0 +1,161 @@
+:root {
+  --accent: #7c6cf2;
+  --bg: rgba(255, 255, 255, 0.97);
+  --fg: #1d1b26;
+  --muted: #6c6879;
+  --border: rgba(0, 0, 0, 0.08);
+  --hover: rgba(0, 0, 0, 0.045);
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: rgba(32, 31, 40, 0.97);
+    --fg: #ecebf2;
+    --muted: #9d99ab;
+    --border: rgba(255, 255, 255, 0.08);
+    --hover: rgba(255, 255, 255, 0.05);
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+html { background: transparent; }
+body {
+  font: 14px/1.35 system-ui, "Segoe UI", sans-serif;
+  color: var(--fg);
+  background:
+    radial-gradient(120% 60% at 50% 0%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%),
+    var(--bg);
+  overflow: hidden;
+}
+/* Dans le calque de la page, le cadre a déjà les coins arrondis et l'ombre */
+body.mode-overlay { border-radius: 16px; }
+/* Panneau sous l'icône d'Arbalète (pages où le calque est interdit) */
+body.mode-panel { width: 640px; }
+body.mode-panel .results { max-height: 420px; }
+
+.ic {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Champ de recherche */
+.search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.search .ic { width: 20px; height: 20px; color: var(--accent); }
+#query {
+  flex: 1;
+  border: 0;
+  outline: none;
+  background: none;
+  color: var(--fg);
+  font: inherit;
+  font-size: 18px;
+  font-weight: 450;
+}
+#query::placeholder { color: var(--muted); opacity: 0.8; }
+
+/* Résultats */
+.results {
+  list-style: none;
+  margin: 0;
+  padding: 6px 8px 8px;
+  /* Hauteur fixe et non en vh : dans le calque, vh serait la hauteur du cadre, qui
+     démarre petit et grandit d'après ce contenu (le calque limite le cadre à 72vh). */
+  max-height: 440px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.results:empty { display: none; }
+.section {
+  padding: 10px 12px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.item:not(.selected):hover { background: var(--hover); }
+.item.selected { background: color-mix(in srgb, var(--accent) 16%, transparent); }
+.item.selected::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--accent);
+}
+.visual {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 8px;
+  background: var(--hover);
+  color: var(--muted);
+}
+.item.selected .visual { color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.visual img { width: 18px; height: 18px; border-radius: 3px; }
+.item .text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.item .title, .item .sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item .sub { color: var(--muted); font-size: 12px; }
+.item .badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--hover);
+  color: var(--muted);
+  font-size: 11.5px;
+}
+.item .badge .ic { width: 13px; height: 13px; }
+.item .enter { display: none; color: var(--muted); font-size: 12px; }
+.item.selected .enter { display: block; }
+
+/* Aide clavier */
+.hints {
+  display: flex;
+  gap: 16px;
+  padding: 9px 20px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 11.5px;
+}
+.hints kbd {
+  display: inline-block;
+  min-width: 18px;
+  padding: 1px 5px;
+  margin-right: 3px;
+  font: inherit;
+  text-align: center;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: var(--hover);
+}

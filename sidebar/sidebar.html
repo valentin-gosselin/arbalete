@@ -27,6 +27,7 @@
   <footer class="footer">
     <div id="spaces" class="spaces" role="toolbar" data-i18n-label="spaceList"></div>
     <div class="tools">
+      <button id="search-button" class="tool" data-i18n-title="paletteButton" data-i18n-label="paletteButton"></button>
       <button id="pin-button" class="tool" hidden></button>
       <button id="settings-button" class="tool" data-i18n-title="settings" data-i18n-label="settings"></button>
     </div>
@@ -82,6 +83,14 @@
     <button class="wide" id="s-import" data-i18n="settingsImport"></button>
     <h3 data-i18n="settingsHeading"></h3>
     <label class="check"><input type="checkbox" id="s-expand"> <span data-i18n="settingsExpand"></span></label>
+    <label class="check"><input type="checkbox" id="s-history"> <span data-i18n="settingsHistory"></span></label>
+    <label><span data-i18n="settingsSuggest"></span>
+      <span class="row">
+        <input id="s-suggest" class="grow" type="url" placeholder="https://…/autocompleter?q={searchTerms}">
+        <button type="button" class="wide" id="s-suggest-save" data-i18n="save"></button>
+      </span>
+      <span class="hint" data-i18n="settingsSuggestHint"></span>
+    </label>
     <button class="wide" id="s-setup" data-i18n="settingsHideNative"></button>
     <button class="wide" id="s-shortcuts" data-i18n="settingsShortcuts"></button>
   </section>

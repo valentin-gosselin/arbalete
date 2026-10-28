@@ -12,6 +12,8 @@ Arbalète does not collect, send or sell any data. It contains no analytics, no 
 
 Split view is optional. The first time you use it, Firefox asks for access to all websites: Arbalète then removes the "do not display in a frame" headers (X-Frame-Options, CSP frame-ancestors) of pages loaded inside its own split view page, and notes their address to show it in the split view. Before showing YouTube in split view, it also clears YouTube's service worker (browsing data permission), because that worker would otherwise keep the page from being framed; YouTube reinstalls it on your next visit. Nothing else is read, stored or sent. You can revoke this permission at any time in about:addons.
 
+Quick search suggestions are off by default. If you enter a suggestion address in the settings (your own search engine), what you type in quick search is sent to that address only, to get suggestions, as Firefox's own search bar does.
+
 Permissions are used only for what the extension does: reading and hiding tabs (spaces), sessions (remembering each tab's space), storage (settings), containers and cookies (one container per space), menus (right-click menus), tab groups, and clipboard (copy the tab address).
 
 ## Français
@@ -25,5 +27,7 @@ Arbalète ne collecte, n'envoie ni ne vend aucune donnée. Aucune mesure d'audie
 - Les fichiers d'export sont créés sur votre ordinateur et vont là où vous les enregistrez.
 
 La vue scindée est facultative. À la première utilisation, Firefox demande l'accès à tous les sites : Arbalète retire alors les en-têtes « ne pas afficher dans un cadre » (X-Frame-Options, CSP frame-ancestors) des pages chargées dans sa propre page de vue scindée, et note leur adresse pour l'afficher. Avant d'afficher YouTube dans la vue scindée, elle efface aussi le service worker de YouTube (permission « données de navigation »), qui empêcherait sinon l'affichage en cadre ; YouTube le réinstalle à la visite suivante. Rien d'autre n'est lu, conservé ni envoyé. Cette permission se retire à tout moment dans about:addons.
+
+Les suggestions de la recherche rapide sont désactivées par défaut. Si vous indiquez une adresse de suggestions dans les réglages (votre propre moteur), ce que vous tapez dans la recherche rapide est envoyé à cette adresse seulement, pour obtenir des suggestions, comme le fait la barre de recherche de Firefox.
 
 Les permissions servent uniquement au fonctionnement : lire et masquer les onglets (espaces), sessions (mémoriser l'espace de chaque onglet), stockage (réglages), conteneurs et cookies (un conteneur par espace), menus (clic droit), groupes d'onglets, presse-papiers (copier l'adresse de l'onglet).

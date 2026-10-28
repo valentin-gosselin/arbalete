@@ -281,6 +281,15 @@ function initDivider() {
 
 // --- Navigation dans les cadres, signalée par le script de fond ---------------------------
 
+// Alt+K sur une vue scindée : le calque de recherche rapide s'affiche dans cette page.
+browser.runtime.onMessage.addListener((message) => {
+  if (message.type !== 'togglePalette' || !currentTab || message.tabId !== currentTab.id) return;
+  const script = document.createElement('script');
+  script.src = '../palette/overlay.js';
+  script.addEventListener('load', () => script.remove());
+  document.head.append(script);
+});
+
 browser.runtime.onMessage.addListener((message) => {
   if (message.type !== 'splitFrame' || !currentTab || message.tabId !== currentTab.id) return;
   const { url, title } = message;

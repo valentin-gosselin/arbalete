@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Arbalète</title>
+  <link rel="stylesheet" href="palette.css">
+</head>
+<body>
+  <!-- Recherche rapide : fenêtre du bouton Arbalète de la barre d'outils, ouverte par
+       raccourci (Alt+K par défaut) ou par la loupe en bas de la barre latérale. -->
+  <div class="search">
+    <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="../icons/lucide.svg#search"/></svg>
+    <input id="query" autocomplete="off" spellcheck="false" role="combobox" aria-controls="results" aria-expanded="true">
+  </div>
+  <ul id="results" class="results" role="listbox"></ul>
+  <footer class="hints" id="hints"></footer>
+  <script src="palette.js"></script>
+</body>
+</html>

@@ -29,8 +29,128 @@
   "cmdSpacePrev": {
     "message": "Previous space"
   },
+  "cmdPalette": {
+    "message": "Open quick search"
+  },
+  "cmdMoveTabNext": {
+    "message": "Move tab to next space"
+  },
+  "cmdMoveTabPrev": {
+    "message": "Move tab to previous space"
+  },
+  "cmdFavorite1": {
+    "message": "Open space favorite 1"
+  },
+  "cmdFavorite2": {
+    "message": "Open space favorite 2"
+  },
+  "cmdFavorite3": {
+    "message": "Open space favorite 3"
+  },
+  "cmdFavorite4": {
+    "message": "Open space favorite 4"
+  },
+  "cmdFavorite5": {
+    "message": "Open space favorite 5"
+  },
   "cmdCopyUrl": {
     "message": "Copy the tab address"
+  },
+  "paletteTitle": {
+    "message": "Arbalète quick search (Alt+K)"
+  },
+  "paletteButton": {
+    "message": "Quick search (Alt+K)"
+  },
+  "palettePlaceholder": {
+    "message": "Tabs, favorites, commands, address or search…"
+  },
+  "paletteHintMove": {
+    "message": "move"
+  },
+  "paletteHintOpen": {
+    "message": "open"
+  },
+  "paletteHintCommands": {
+    "message": "commands only"
+  },
+  "paletteSectionRecent": {
+    "message": "Recent"
+  },
+  "paletteSectionTabs": {
+    "message": "Tabs"
+  },
+  "paletteSectionFavorites": {
+    "message": "Favorites"
+  },
+  "paletteSectionCommands": {
+    "message": "Commands"
+  },
+  "paletteSectionHistory": {
+    "message": "History"
+  },
+  "paletteSectionWeb": {
+    "message": "Web"
+  },
+  "paletteOpenUrl": {
+    "message": "Open $1"
+  },
+  "paletteSearchWeb": {
+    "message": "Search the web for \"$1\""
+  },
+  "paletteNewTab": {
+    "message": "New tab"
+  },
+  "paletteNewSpace": {
+    "message": "New space"
+  },
+  "paletteSplit": {
+    "message": "Open tab in split view"
+  },
+  "paletteCopyUrl": {
+    "message": "Copy tab address"
+  },
+  "paletteDuplicate": {
+    "message": "Duplicate tab"
+  },
+  "paletteCloseDuplicates": {
+    "message": "Close duplicate tabs"
+  },
+  "paletteClearSpace": {
+    "message": "Close the tabs of this space"
+  },
+  "paletteReopenClosed": {
+    "message": "Reopen closed tab"
+  },
+  "paletteSettings": {
+    "message": "Arbalète settings"
+  },
+  "paletteShortcuts": {
+    "message": "Keyboard shortcuts"
+  },
+  "paletteGoToSpace": {
+    "message": "Go to space $1"
+  },
+  "paletteMoveTabToSpace": {
+    "message": "Move tab to $1"
+  },
+  "paletteSectionSuggestions": {
+    "message": "Suggestions"
+  },
+  "settingsSuggest": {
+    "message": "Search suggestions (your search engine address)"
+  },
+  "settingsSuggestHint": {
+    "message": "OpenSearch format, with {searchTerms} in place of the text. SearXNG example: https://your-instance/autocompleter?q={searchTerms}. Leave empty to turn off."
+  },
+  "settingsSuggestSaved": {
+    "message": "Suggestions saved"
+  },
+  "settingsSuggestInvalid": {
+    "message": "Invalid address: {searchTerms} must stand for the text"
+  },
+  "settingsHistory": {
+    "message": "Also search history in quick search"
   },
   "spacePersonal": {
     "message": "Personal"

@@ -387,6 +387,8 @@ function initSidebar() {
   $('#new-tab').append(icon('plus'), el('span', { class: 'label' }, t('newTab')));
   $('#new-tab').addEventListener('click', () => send('newTab'));
   $('#settings-button').append(icon('settings'));
+  $('#search-button').append(icon('search'));
+  $('#search-button').addEventListener('click', openPalette);
   $('#settings-button').addEventListener('click', () => send('openSettings'));
 
   // Bouton déplier / replier (comme le « Replier » de nombreuses applis web) : visible quand l'élargissement au
@@ -438,6 +440,22 @@ function initSidebar() {
     locked = true;
     setTimeout(() => { locked = false; }, 350);
   }, { passive: false });
+}
+
+// Loupe : calque dans la page si Arbalète peut y entrer (accès aux sites donné pour la
+// vue scindée), sinon panneau sous l'icône d'Arbalète. openPopup() exige d'être appelé
+// pendant le clic, d'où la décision immédiate sur l'état déjà connu.
+let canReachSites = false;
+browser.permissions.contains({ origins: ['<all_urls>'] }).then((granted) => { canReachSites = granted; });
+const SPLIT_URL = browser.runtime.getURL('split/split.html');
+
+function openPalette() {
+  const active = state.tabs.find((x) => x.active);
+  const url = active ? active.url : '';
+  if (url.startsWith(SPLIT_URL)) return send('openPalette');
+  const web = /^(https?|file):/.test(url) && !/^https?:\/\/([\w-]+\.)*(mozilla\.org|firefox\.com|mozilla\.net)\//.test(url);
+  if (web && canReachSites) return send('openPalette');
+  return browser.browserAction.openPopup();
 }
 
 let toastTimer = null;
@@ -632,6 +650,37 @@ function initSettings() {
   $('#s-export').addEventListener('click', exportSpaces);
   $('#s-import').addEventListener('click', () => $('#import-file').click());
   $('#s-setup').addEventListener('click', () => send('openSetup'));
+
+  // Suggestions de recherche : adresse au format OpenSearch de son moteur. Il faut le
+  // droit de contacter ce site, demandé ici (geste de l'utilisateur).
+  const suggest = $('#s-suggest');
+  browser.storage.local.get('suggestUrl').then((s) => { suggest.value = s.suggestUrl || ''; });
+  $('#s-suggest-save').addEventListener('click', async () => {
+    const value = suggest.value.trim();
+    if (!value) {
+      await browser.storage.local.remove('suggestUrl');
+      return toast(t('settingsSuggestSaved'));
+    }
+    let origin;
+    try {
+      origin = new URL(value.replace(/{searchTerms}|%s/g, 'test')).origin;
+    } catch (e) {
+      origin = null;
+    }
+    if (!origin || !/{searchTerms}|%s/.test(value)) return toast(t('settingsSuggestInvalid'));
+    if (!(await browser.permissions.request({ origins: [`${origin}/*`] }))) return undefined;
+    await browser.storage.local.set({ suggestUrl: value });
+    return toast(t('settingsSuggestSaved'));
+  });
+
+  // Historique dans la recherche rapide : permission facultative, demandée ici.
+  const history = $('#s-history');
+  const HISTORY = { permissions: ['history'] };
+  browser.permissions.contains(HISTORY).then((granted) => { history.checked = granted; });
+  history.addEventListener('change', async () => {
+    if (history.checked) history.checked = await browser.permissions.request(HISTORY);
+    else await browser.permissions.remove(HISTORY);
+  });
   const expand = $('#s-expand');
   browser.storage.local.get('expandOnHover').then((s) => { expand.checked = !!s.expandOnHover; });
   expand.addEventListener('change', () => {
