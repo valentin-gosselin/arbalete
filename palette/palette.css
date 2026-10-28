@@ -29,9 +29,9 @@ body {
     var(--bg);
   overflow: hidden;
 }
-/* Dans le calque de la page, le cadre a déjà les coins arrondis et l'ombre */
+/* In the page overlay, the frame already has rounded corners and the shadow */
 body.mode-overlay { border-radius: 16px; }
-/* Panneau sous l'icône d'Arbalète (pages où le calque est interdit) */
+/* Panel under the Arbalète icon (pages where the overlay is forbidden) */
 body.mode-panel { width: 640px; }
 body.mode-panel .results { max-height: 420px; }
 
@@ -46,7 +46,7 @@ body.mode-panel .results { max-height: 420px; }
   stroke-linejoin: round;
 }
 
-/* Champ de recherche */
+/* Search field */
 .search {
   display: flex;
   align-items: center;
@@ -67,13 +67,13 @@ body.mode-panel .results { max-height: 420px; }
 }
 #query::placeholder { color: var(--muted); opacity: 0.8; }
 
-/* Résultats */
+/* Results */
 .results {
   list-style: none;
   margin: 0;
   padding: 6px 8px 8px;
-  /* Hauteur fixe et non en vh : dans le calque, vh serait la hauteur du cadre, qui
-     démarre petit et grandit d'après ce contenu (le calque limite le cadre à 72vh). */
+  /* Fixed height and not in vh: in the overlay, vh would be the frame's height, which
+     starts small and grows according to this content (the overlay caps the frame at 72vh). */
   max-height: 440px;
   overflow-y: auto;
   scrollbar-width: thin;
@@ -138,7 +138,7 @@ body.mode-panel .results { max-height: 420px; }
 .item .enter { display: none; color: var(--muted); font-size: 12px; }
 .item.selected .enter { display: block; }
 
-/* Aide clavier */
+/* Keyboard help */
 .hints {
   display: flex;
   gap: 16px;

@@ -1,22 +1,22 @@
 'use strict';
 
-// Vue scindée d'Arbalète : deux sites côte à côte dans un seul onglet (deux cadres).
-// Firefox ne laisse pas les extensions créer sa vue scindée native, d'où cette page.
-// Le script de fond retire aux sites l'interdiction d'être affichés dans un cadre
-// (uniquement pour les cadres de cette page) et signale chaque navigation des cadres,
-// ce qui permet d'afficher l'adresse de chaque côté et de « séparer » en deux onglets.
+// Arbalète split view: two sites side by side in a single tab (two frames).
+// Firefox does not let extensions create its native split view, hence this page.
+// The background script removes the ban on sites being displayed in a frame
+// (only for this page's frames) and reports each navigation of the frames,
+// which makes it possible to show each side's address and to "separate" into two tabs.
 
 const $ = (sel) => document.querySelector(sel);
 const t = (key, ...subs) => browser.i18n.getMessage(key, subs.map(String)) || key;
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const PERMISSIONS = { permissions: ['webRequest', 'webRequestBlocking', 'browsingData'], origins: ['<all_urls>'] };
 
-// Sites dont le service worker fabrique lui-même les pages (avec l'interdiction d'être
-// affichées dans un cadre), hors de portée de l'extension. On efface ce service worker
-// juste avant de charger le cadre : la page repasse par le réseau, où l'interdiction
-// est levée. Le site le réinstalle à la visite suivante, sans effet visible.
-// Liste volontairement courte : effacer un service worker coupe aussi les
-// notifications du site (Mastodon, messageries…).
+// Sites whose service worker builds the pages itself (with the ban on being
+// displayed in a frame), out of the extension's reach. This service worker is erased
+// just before loading the frame: the page goes back through the network, where the ban
+// is lifted. The site reinstalls it on the next visit, with no visible effect.
+// The list is deliberately short: erasing a service worker also cuts the site's
+// notifications (Mastodon, messaging apps...).
 const SERVICE_WORKER_HOSTS = ['youtube.com', 'www.youtube.com', 'm.youtube.com'];
 
 async function clearServiceWorker(url) {
@@ -36,7 +36,7 @@ const panes = {
   right: { url: params.get('right') || '', frameId: null },
 };
 let ratio = Number(params.get('ratio')) || 0.5;
-// Identifiant de la vue : permet au script de fond de la rouvrir après une mise à jour.
+// View identifier: lets the background script reopen it after an update.
 const sid = params.get('sid') || Math.random().toString(36).slice(2, 10);
 let currentTab = null;
 
@@ -71,9 +71,9 @@ const host = (url) => {
   }
 };
 
-// Sites Mozilla qu'aucune extension n'a le droit de modifier (réglage
-// extensions.webextensions.restrictedDomains de Firefox) : ils refusent toujours
-// l'affichage en cadre, on propose directement de les ouvrir dans un onglet.
+// Mozilla sites that no extension may modify (Firefox's
+// extensions.webextensions.restrictedDomains setting): they always refuse
+// to be displayed in a frame, so we directly offer to open them in a tab.
 const PROTECTED_HOSTS = [
   'accounts-static.cdn.mozilla.net', 'accounts.firefox.com', 'addons.cdn.mozilla.net', 'addons.mozilla.org',
   'api.accounts.firefox.com', 'content.cdn.mozilla.net', 'discovery.addons.mozilla.org', 'install.mozilla.org',
@@ -87,7 +87,7 @@ const isProtected = (url) => {
   }
 };
 
-// Adresse tapée : URL complète, nom de domaine, ou recherche.
+// Typed address: full URL, domain name, or search.
 function normalizeInput(text) {
   const value = text.trim();
   if (!value) return '';
@@ -96,7 +96,7 @@ function normalizeInput(text) {
   return `https://duckduckgo.com/?q=${encodeURIComponent(value)}`;
 }
 
-// L'état est gardé dans l'adresse de la page : rechargement et restauration de session.
+// The state is kept in the page's address: reload and session restore.
 function saveState() {
   const q = new URLSearchParams({ sid });
   if (panes.left.url) q.set('left', panes.left.url);
@@ -109,7 +109,7 @@ function saveState() {
   document.title = names.join(' | ') || t('splitTitle');
 }
 
-// --- Les deux côtés ---------------------------------------------------------------------
+// --- The two sides -----------------------------------------------------------
 
 function renderPane(side) {
   const pane = panes[side];
@@ -171,7 +171,7 @@ function navigate(side, url) {
   renderPane(side);
 }
 
-// Côté vide : choisir un onglet de l'espace, ou taper une adresse.
+// Empty side: pick a tab of the space, or type an address.
 function chooser(side) {
   const list = el('div', { class: 'choices' });
   const box = el('div', { class: 'chooser' }, [el('h2', {}, t('splitChoose')), list]);
@@ -208,7 +208,7 @@ async function openInTab(side) {
   closePane(side);
 }
 
-// Fermer un côté : l'onglet redevient un onglet normal sur l'autre site.
+// Close a side: the tab becomes a normal tab again on the other site.
 async function closePane(side) {
   const other = panes[side === 'left' ? 'right' : 'left'].url;
   if (other) await browser.tabs.update(currentTab.id, { url: other });
@@ -222,7 +222,7 @@ function swap() {
   renderPane('right');
 }
 
-// « Séparer » : les deux sites redeviennent deux onglets, à la place de la vue scindée.
+// "Separate": the two sites become two tabs again, in place of the split view.
 async function separate() {
   let index = currentTab.index;
   for (const side of ['left', 'right']) {
@@ -240,7 +240,7 @@ async function separate() {
   await browser.tabs.remove(currentTab.id);
 }
 
-// --- Séparateur : glisser ou flèches du clavier ------------------------------------------
+// --- Divider: drag or keyboard arrows ----------------------------------------
 
 function applyRatio() {
   document.documentElement.style.setProperty('--ratio', ratio);
@@ -279,9 +279,9 @@ function initDivider() {
   applyRatio();
 }
 
-// --- Navigation dans les cadres, signalée par le script de fond ---------------------------
+// --- Navigation inside the frames, reported by the background script ---------
 
-// Alt+K sur une vue scindée : le calque de recherche rapide s'affiche dans cette page.
+// Alt+K on a split view: the quick search overlay is shown in this page.
 browser.runtime.onMessage.addListener((message) => {
   if (message.type !== 'togglePalette' || !currentTab || message.tabId !== currentTab.id) return;
   const script = document.createElement('script');
@@ -314,7 +314,7 @@ async function start() {
     $('#permission').hidden = false;
     $('#grant').addEventListener('click', async () => {
       if (!(await browser.permissions.request(PERMISSIONS))) return;
-      // Le script de fond doit écouter les en-têtes avant que les cadres se chargent.
+      // The background script must listen to the headers before the frames load.
       await browser.runtime.sendMessage({ type: 'enableSplit' });
       location.reload();
     });

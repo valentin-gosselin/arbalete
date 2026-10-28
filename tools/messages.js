@@ -1,5 +1,5 @@
-// Source des traductions : node tools/messages.js écrit _locales/{fr,en}/messages.json.
-// [clé, français, anglais]
+// Source of the translations: node tools/messages.js writes _locales/{fr,en}/messages.json.
+// [key, French, English]
 const M = [
   ['extName', 'Arbalète', 'Arbalète'],
   ['extDescription', 'Des espaces façon Arc dans une barre latérale compacte : chaque espace a ses onglets, ses favoris, sa couleur et son conteneur.', 'Arc-style spaces in a compact sidebar: each space has its own tabs, pinned favorites, color and container.'],
@@ -21,7 +21,7 @@ const M = [
   ['cmdFavorite5', 'Ouvrir le favori 5 de l’espace', 'Open space favorite 5'],
   ['cmdCopyUrl', "Copier l'adresse de l'onglet", 'Copy the tab address'],
 
-  // Recherche rapide
+  // Quick search
   ['paletteTitle', 'Recherche rapide d’Arbalète (Alt+K)', 'Arbalète quick search (Alt+K)'],
   ['paletteButton', 'Recherche rapide (Alt+K)', 'Quick search (Alt+K)'],
   ['palettePlaceholder', 'Onglets, favoris, commandes, adresse ou recherche…', 'Tabs, favorites, commands, address or search…'],
@@ -57,15 +57,16 @@ const M = [
   ['archiveRemove', 'Retirer de l’archive', 'Remove from archive'],
   ['archiveEmpty', 'Aucun onglet archivé dans cet espace.', 'No archived tab in this space.'],
   ['archiveNoMatch', 'Aucun onglet archivé ne correspond.', 'No archived tab matches.'],
-  ['archiveConfirmClear', 'Vider l’archive de l’espace « $1 » ?', 'Empty the archive of the space "$1"?'],
-  ['spaceGradient', 'Fond en dégradé avec une 2e couleur', 'Gradient background with a 2nd color'],
   ['spaceSites', 'Sites de cet espace', 'Sites of this space'],
   ['spaceSitesPlaceholder', 'exemple.fr\nmon-travail.org', 'example.com\nwork-site.org'],
-  ['spaceSitesHint', 'Un site par ligne : les onglets qui y vont rejoignent cet espace (et son conteneur).', 'One site per line: tabs going there join this space (and its container).'],
+  ['spaceSitesHint', 'Un site par ligne, * pour n’importe quelle partie (dev.*.exemple.fr) : les onglets qui y vont rejoignent cet espace (et son conteneur).', 'One site per line, * for any part (dev.*.example.com): tabs going there join this space (and its container).'],
+  ['spaceSitesRejected', 'Pas une adresse de site : $1', 'Not a site address: $1'],
   ['spaceSchedule', 'Basculer automatiquement sur cet espace', 'Switch to this space automatically'],
-  ['scheduleWeek', 'Du lundi au vendredi', 'Monday to Friday'],
-  ['scheduleWeekend', 'Le week-end', 'On weekends'],
-  ['scheduleAll', 'Tous les jours', 'Every day'],
+  ['scheduleDays', 'Jours', 'Days'],
+  ['scheduleAddSlot', 'Ajouter un créneau', 'Add a time slot'],
+  ['scheduleRemoveSlot', 'Retirer ce créneau', 'Remove this time slot'],
+  ['scheduleHint', 'Bascule au début de chaque créneau', 'Switches when each slot begins'],
+  ['scheduleInvalid', 'Chaque créneau a besoin d’au moins un jour et de deux heures différentes.', 'Each time slot needs at least one day and two different times.'],
   ['scheduleFrom', 'De', 'From'],
   ['scheduleTo', 'À', 'To'],
   ['settingsTheme', 'Teinter Firefox aux couleurs de l’espace actif', 'Tint Firefox with the active space colors'],
@@ -85,16 +86,18 @@ const M = [
   ['settingsSuggestHint', 'Format OpenSearch, avec {searchTerms} à la place du texte. Exemple SearXNG : https://votre-instance/autocompleter?q={searchTerms}. Laisser vide pour désactiver.', 'OpenSearch format, with {searchTerms} in place of the text. SearXNG example: https://your-instance/autocompleter?q={searchTerms}. Leave empty to turn off.'],
   ['settingsSuggestSaved', 'Suggestions enregistrées', 'Suggestions saved'],
   ['settingsSuggestInvalid', 'Adresse invalide : il faut {searchTerms} à la place du texte', 'Invalid address: {searchTerms} must stand for the text'],
+  ['settingsCenter', 'Fenêtres centrées sur la page', 'Dialogs centered on the page'],
+  ['settingsCenterHint', 'Réglages et espaces s’ouvrent par-dessus la page plutôt que sous l’icône d’Arbalète. Demande l’accès à tous les sites, comme la vue scindée.', 'Settings and spaces open over the page instead of under the Arbalète button. Asks for access to all websites, like split view.'],
   ['settingsHistory', 'Chercher aussi dans l’historique avec la recherche rapide', 'Also search history in quick search'],
 
-  // Espaces par défaut
+  // Default spaces
   ['spacePersonal', 'Perso', 'Personal'],
   ['spaceWork', 'Boulot', 'Work'],
   ['newSpaceName', 'Nouvel espace', 'New space'],
   ['spaceFallbackName', 'Espace', 'Space'],
   ['urlCopied', 'Adresse copiée', 'Address copied'],
 
-  // Menus (clic droit)
+  // Menus (right click)
   ['menuAddFavorite', "Ajouter aux favoris de l'espace", 'Add to space favorites'],
   ['menuMoveTab', "Déplacer vers l'espace", 'Move to space'],
   ['menuNewGroup', 'Ajouter à un nouveau groupe', 'Add to new group'],
@@ -118,12 +121,12 @@ const M = [
   ['menuGroupUngroup', 'Dissocier le groupe', 'Ungroup tabs'],
   ['menuGroupMove', "Déplacer le groupe vers l'espace", 'Move group to space'],
   ['menuGroupClose', 'Fermer le groupe', 'Close group'],
-  // Menu d'onglet recréé (Firefox ne prête pas le sien aux extensions)
+  // Recreated tab menu (Firefox does not lend its own to extensions)
   ['menuTabNewTab', 'Nouvel onglet', 'New tab'],
   ['menuTabSplit', 'Ouvrir en vue scindée', 'Open in split view'],
   ['menuTabsSplit', 'Ouvrir les 2 onglets en vue scindée', 'Open the 2 tabs in split view'],
 
-  // Vue scindée (page à deux cadres)
+  // Split view (two-frame page)
   ['splitTitle', 'Vue scindée', 'Split view'],
   ['splitAddress', 'Adresse ou recherche', 'Address or search'],
   ['splitReload', 'Actualiser', 'Reload'],
@@ -176,7 +179,7 @@ const M = [
   ['menuClearSpace', "Fermer les onglets de l'espace", 'Close the tabs of this space'],
   ['menuSettings', "Réglages d'Arbalète…", 'Arbalète settings…'],
 
-  // Barre
+  // Sidebar
   ['newTab', 'Nouvel onglet', 'New tab'],
   ['settings', "Réglages d'Arbalète", 'Arbalète settings'],
   ['emptySpace', 'Aucun onglet dans cet espace', 'No tabs in this space'],
@@ -189,6 +192,9 @@ const M = [
   ['pinnedTab', 'Onglet épinglé', 'Pinned tab'],
   ['spaceButton', '$1 (Alt+$2)', '$1 (Alt+$2)'],
   ['newSpace', 'Nouvel espace', 'New space'],
+  ['toolArchive', 'Archive', 'Archive'],
+  ['toolSearch', 'Recherche rapide', 'Quick search'],
+  ['toolSettings', 'Réglages', 'Settings'],
   ['pinCollapse', 'Replier la barre', 'Collapse the sidebar'],
   ['pinExpand', 'Garder la barre dépliée', 'Keep the sidebar expanded'],
   ['tabList', 'Onglets de l’espace $1', 'Tabs of space $1'],
@@ -198,11 +204,32 @@ const M = [
   ['bannerLater', 'Plus tard', 'Later'],
   ['bannerSetup', 'Configurer', 'Set up'],
 
-  // Fenêtre espace
+  // Space window
   ['spaceFormTitle', 'Espace', 'Space'],
   ['spaceWindowTitle', 'Espace : $1', 'Space: $1'],
   ['name', 'Nom', 'Name'],
-  ['chosenIcon', 'Icône choisie', 'Selected icon'],
+  // Dialogs (0.10)
+  ['close', 'Fermer', 'Close'],
+  ['grantAllow', 'Autoriser', 'Allow'],
+  ['grantHistoryTitle', 'Historique dans la recherche rapide', 'History in quick search'],
+  ['grantHistoryText', 'Firefox va vous demander d’autoriser Arbalète à lire votre historique. Il ne sert qu’à la recherche rapide et ne quitte pas votre ordinateur.', 'Firefox will ask you to let Arbalète read your history. It is only used by quick search and never leaves your computer.'],
+  ['grantCenterTitle', 'Fenêtres centrées sur la page', 'Dialogs centered on the page'],
+  ['grantCenterText', 'Firefox va vous demander d’autoriser Arbalète à accéder à tous les sites. Cela lui permet d’afficher ses fenêtres par-dessus la page ; Arbalète ne lit ni n’envoie rien. C’est la même autorisation que pour la vue scindée.', 'Firefox will ask you to let Arbalète access all websites. This lets it show its dialogs over the page; Arbalète neither reads nor sends anything. It is the same permission as for split view.'],
+  ['grantSuggestTitle', 'Suggestions de recherche', 'Search suggestions'],
+  ['grantSuggestText', 'Firefox va vous demander d’autoriser Arbalète à contacter $1, uniquement pour les suggestions de recherche.', 'Firefox will ask you to let Arbalète reach $1, only for search suggestions.'],
+  ['iconChange', 'Changer l’icône', 'Change the icon'],
+  ['iconUpload', 'Importer une image…', 'Import an image…'],
+  ['iconUploadHint', 'SVG, PNG ou JPEG, réduite à 64 px', 'SVG, PNG or JPEG, shrunk to 64 px'],
+  ['iconUnreadable', 'Image illisible ou trop lourde', 'Unreadable or too heavy image'],
+  ['spaceBackground', 'Fond de la barre', 'Sidebar background'],
+  ['backgroundNone', 'Aucun', 'None'],
+  ['backgroundColor', 'Couleur', 'Color'],
+  ['backgroundGradient', 'Dégradé', 'Gradient'],
+  ['spaceSecondColor', '2e couleur', '2nd color'],
+  ['colorCustom', 'Autre couleur', 'Other color'],
+  ['deleteArmed', 'Supprimer vraiment ?', 'Really delete?'],
+  ['clearArmed', 'Tout vider vraiment ?', 'Really empty it?'],
+  ['importArmed', 'Remplacer par les $1 espaces du fichier ?', 'Replace with the $1 spaces of the file?'],
   ['icon', 'Icône', 'Icon'],
   ['iconSearch', 'Chercher : maison, travail, musique, banque…', 'Search: home, work, music, bank…'],
   ['moreIcons', '$1 autres, précisez la recherche', '$1 more, refine your search'],
@@ -215,9 +242,8 @@ const M = [
   ['delete', 'Supprimer', 'Delete'],
   ['cancel', 'Annuler', 'Cancel'],
   ['save', 'Enregistrer', 'Save'],
-  ['confirmDeleteSpace', 'Supprimer l’espace « $1 » ? Ses onglets iront dans un autre espace.', 'Delete the space "$1"? Its tabs will move to another space.'],
 
-  // Fenêtre groupe
+  // Group window
   ['groupFormTitle', "Groupe d'onglets", 'Tab group'],
   ['colorGrey', 'Gris', 'Grey'],
   ['colorBlue', 'Bleu', 'Blue'],
@@ -229,7 +255,7 @@ const M = [
   ['colorCyan', 'Cyan', 'Cyan'],
   ['colorOrange', 'Orange', 'Orange'],
 
-  // Réglages
+  // Settings
   ['settingsClearSpace', "Fermer les onglets de l'espace actuel", 'Close the tabs of the current space'],
   ['settingsShare', 'Partager entre PC', 'Share between computers'],
   ['settingsExport', 'Exporter les espaces (fichier)', 'Export spaces (file)'],
@@ -242,11 +268,10 @@ const M = [
   ['expandOn', 'Élargissement au survol activé', 'Expand on hover enabled'],
   ['expandOff', 'Barre compacte fixe', 'Fixed compact sidebar'],
   ['exportFileName', 'arbalete-espaces.json', 'arbalete-spaces.json'],
-  ['confirmImport', 'Remplacer vos espaces par les $1 espaces du fichier ?', 'Replace your spaces with the $1 spaces from the file?'],
   ['spacesImported', 'Espaces importés', 'Spaces imported'],
   ['fileNotRecognized', 'Fichier non reconnu', 'File not recognized'],
 
-  // Fenêtre « une seule barre »
+  // "Single sidebar" window
   ['setupTitle', 'Une seule barre', 'A single sidebar'],
   ['setupWindowTitle', 'Arbalète : une seule barre', 'Arbalète: a single sidebar'],
   ['setupIntro', "Firefox n'autorise pas les extensions à masquer ses propres onglets. Un petit fichier de personnalisation (userChrome.css) le fait une fois pour toutes, sans droits administrateur. Les onglets natifs ne sont masqués que lorsque la barre Arbalète est ouverte.", "Firefox does not let extensions hide its own tabs. A small customization file (userChrome.css) does it once and for all, without administrator rights. Firefox's tabs are only hidden while the Arbalète sidebar is open."],
@@ -255,18 +280,24 @@ const M = [
   ['setupStep1', 'Ouvrez le fichier téléchargé. Si Windows affiche « Windows a protégé votre ordinateur », cliquez sur « Informations complémentaires » puis « Exécuter quand même ».', 'Open the downloaded file. If Windows shows "Windows protected your PC", click "More info" then "Run anyway".'],
   ['setupStep2', 'Fermez complètement Firefox puis relancez-le.', 'Close Firefox completely, then start it again.'],
   ['setupRepeat', "À refaire sur chaque PC. Relancer l'installateur met simplement à jour la configuration.", 'Do it once on each computer. Running the installer again simply updates the configuration.'],
-  ['setupManualSummary', 'Installation manuelle (Mac, Linux, ou sans script)', 'Manual setup (Mac, Linux, or without the script)'],
+  ['setupDownloadScriptUnix', "Télécharger l'installateur (Linux, macOS)", 'Download the installer (Linux, macOS)'],
+  ['setupUnixStep1', 'Ouvrez un terminal et lancez :', 'Open a terminal and run:'],
+  ['setupUnixDrag', 'Fichier enregistré ailleurs : tapez sh suivi d’une espace, glissez le fichier dans le terminal, puis Entrée.', 'Saved it elsewhere? Type sh followed by a space, drag the file into the terminal, then press Enter.'],
+  ['setupUnixCommandHint', 'À lancer dans un terminal : sh installer-arbalete.sh', 'Run it in a terminal: sh installer-arbalete.sh'],
+  ['copy', 'Copier', 'Copy'],
+  ['copied', 'Copié', 'Copied'],
+  ['setupManualSummary', 'Installation manuelle (sans script)', 'Manual setup (without the script)'],
   ['setupManual1', 'Dans about:config, passer toolkit.legacyUserProfileCustomizations.stylesheets à true.', 'In about:config, set toolkit.legacyUserProfileCustomizations.stylesheets to true.'],
   ['setupManual2', 'Dans about:support, ligne « Dossier du profil », cliquer « Ouvrir le dossier ».', 'In about:support, on the "Profile Folder" row, click "Open Folder".'],
   ['setupManual3', 'Y créer un dossier chrome et y mettre le fichier ci-dessous, nommé userChrome.css.', 'Create a folder named chrome there and put the file below in it, named userChrome.css.'],
   ['setupManual4', 'Redémarrer Firefox.', 'Restart Firefox.'],
   ['setupDownloadCss', 'Télécharger userChrome.css', 'Download userChrome.css'],
-  // Messages de l'installateur Windows (console : sans accents)
-  ['installerRunning', 'Configuration de Firefox pour Arbalete...', 'Setting up Firefox for Arbalete...'],
+  // Installer messages (accents removed in the Windows .cmd, see plain())
+  ['installerRunning', 'Configuration de Firefox pour Arbalète…', 'Setting up Firefox for Arbalète…'],
   ['installerNoFirefox', 'Firefox introuvable pour cet utilisateur.', 'Firefox was not found for this user.'],
-  ['installerProfileDone', 'Profil configure : ', 'Profile configured: '],
-  ['installerDone', 'Termine. Fermez completement Firefox puis relancez-le.', 'Done. Close Firefox completely, then start it again.'],
-  ['installerNoProfile', 'Aucun profil Firefox trouve.', 'No Firefox profile found.'],
+  ['installerProfileDone', 'Profil configuré : ', 'Profile configured: '],
+  ['installerDone', 'Terminé. Fermez complètement Firefox puis relancez-le.', 'Done. Close Firefox completely, then start it again.'],
+  ['installerNoProfile', 'Aucun profil Firefox trouvé.', 'No Firefox profile found.'],
 ];
 
 const fs = require('fs');

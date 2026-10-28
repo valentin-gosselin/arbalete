@@ -6,10 +6,10 @@
   <link rel="stylesheet" href="sidebar.css">
 </head>
 <body>
-  <!-- Les textes viennent de _locales : data-i18n (texte), data-i18n-title,
+  <!-- The texts come from _locales: data-i18n (text), data-i18n-title,
        data-i18n-placeholder, data-i18n-label (aria-label). -->
 
-  <!-- Barre latérale -->
+  <!-- Sidebar -->
   <section id="favorites" class="favorites" data-i18n-label="favoriteList"></section>
 
   <main id="tabs" class="tabs" role="list"></main>
@@ -36,48 +36,81 @@
 
   <div id="toast" class="toast" role="status" hidden></div>
 
-  <!-- Petite fenêtre « modifier l'espace » (?edit=…) -->
+  <!-- Dialogs: shown in an overlay over the page, in the panel under the toolbar button,
+       or in a popup window (see "frame" in sidebar.js). data-icon adds a Lucide icon. -->
+
+  <!-- Space editor (?edit=<space> or ?edit=new) -->
   <form id="space-form" class="panel" hidden>
-    <h2 data-i18n="spaceFormTitle"></h2>
-    <div class="row">
-      <button type="button" id="f-icon-preview" class="icon-preview" data-i18n-title="chosenIcon" data-i18n-label="chosenIcon"></button>
-      <label class="grow"><span data-i18n="name"></span><input id="f-name" required maxlength="40"></label>
+    <header class="dialog-head">
+      <h2 id="f-title"></h2>
+      <button type="button" class="dialog-close" data-icon="x" data-i18n-title="close" data-i18n-label="close"></button>
+    </header>
+
+    <div class="identity">
+      <button type="button" id="f-icon-preview" class="icon-preview" aria-haspopup="dialog" aria-expanded="false" data-i18n-title="iconChange" data-i18n-label="iconChange"></button>
+      <input id="f-name" class="name-input" required maxlength="40" autocomplete="off" data-i18n-label="name" data-i18n-placeholder="name">
     </div>
-    <label><span data-i18n="icon"></span>
-      <input id="f-icon-search" type="search" data-i18n-placeholder="iconSearch">
-    </label>
-    <div id="f-icon-grid" class="icon-grid"></div>
-    <div class="row">
-      <label><span data-i18n="color"></span><input id="f-color" type="color"></label>
-      <label class="grow"><span data-i18n="container"></span>
+
+    <div id="f-icon-popover" class="popover" role="dialog" data-i18n-label="icon" hidden>
+      <input id="f-icon-search" type="search" autocomplete="off" data-i18n-placeholder="iconSearch" data-i18n-label="iconSearch">
+      <div id="f-icon-grid" class="icon-grid"></div>
+      <div class="popover-foot">
+        <button type="button" id="f-icon-upload" class="ghost" data-icon="image-up" data-i18n="iconUpload"></button>
+        <span class="hint" data-i18n="iconUploadHint"></span>
+      </div>
+      <input id="f-icon-file" type="file" accept="image/svg+xml,image/png,image/jpeg,image/webp,image/gif,.svg" hidden>
+    </div>
+
+    <section class="card">
+      <div class="line">
+        <span class="line-label" data-i18n="color"></span>
+        <div id="f-colors" class="color-picker"></div>
+      </div>
+      <div class="line">
+        <span class="line-label" data-i18n="spaceBackground"></span>
+        <div class="segmented" role="radiogroup" data-i18n-label="spaceBackground">
+          <label><input type="radio" name="f-bg" value="none"><span data-i18n="backgroundNone"></span></label>
+          <label><input type="radio" name="f-bg" value="color"><span data-i18n="backgroundColor"></span></label>
+          <label><input type="radio" name="f-bg" value="gradient"><span data-i18n="backgroundGradient"></span></label>
+        </div>
+      </div>
+      <div class="line" id="f-color2-line">
+        <span class="line-label" data-i18n="spaceSecondColor"></span>
+        <div id="f-colors2" class="color-picker"></div>
+      </div>
+      <label class="line">
+        <span class="line-label" data-i18n="container"></span>
         <select id="f-container"></select>
       </label>
-    </div>
-    <div class="row">
-      <label class="check"><input type="checkbox" id="f-gradient"> <span data-i18n="spaceGradient"></span></label>
-      <input id="f-color2" type="color" data-i18n-label="spaceGradient">
-    </div>
-    <label><span data-i18n="spaceSites"></span>
-      <textarea id="f-sites" rows="3" data-i18n-placeholder="spaceSitesPlaceholder"></textarea>
-      <span class="hint" data-i18n="spaceSitesHint"></span>
-    </label>
-    <fieldset class="schedule">
-      <label class="check"><input type="checkbox" id="f-sched-on"> <span data-i18n="spaceSchedule"></span></label>
-      <div class="row" id="f-sched-row">
-        <select id="f-sched-days">
-          <option value="week" data-i18n="scheduleWeek"></option>
-          <option value="weekend" data-i18n="scheduleWeekend"></option>
-          <option value="all" data-i18n="scheduleAll"></option>
-        </select>
-        <input id="f-sched-from" type="time" value="09:00" data-i18n-label="scheduleFrom">
-        <span>→</span>
-        <input id="f-sched-to" type="time" value="18:00" data-i18n-label="scheduleTo">
+      <label class="line" id="f-new-container-row" hidden>
+        <span class="line-label" data-i18n="newContainerName"></span>
+        <input id="f-new-container" maxlength="40">
+      </label>
+    </section>
+
+    <section class="card">
+      <label class="stack">
+        <span class="line-label" data-i18n="spaceSites"></span>
+        <textarea id="f-sites" rows="2" data-i18n-placeholder="spaceSitesPlaceholder"></textarea>
+        <span class="hint" data-i18n="spaceSitesHint"></span>
+      </label>
+      <label class="line">
+        <span class="line-label" data-i18n="spaceSchedule"></span>
+        <input type="checkbox" class="switch" id="f-sched-on">
+      </label>
+      <div class="stack sub" id="f-sched-row">
+        <div id="f-sched-slots" class="slots"></div>
+        <div class="slot-tools">
+          <button type="button" id="f-sched-add" class="ghost" data-icon="plus" data-i18n="scheduleAddSlot"></button>
+          <span class="hint" data-i18n="scheduleHint"></span>
+        </div>
       </div>
-    </fieldset>
-    <label><span data-i18n="archiveAfter"></span>
-      <select id="f-archive"></select>
-    </label>
-    <label id="f-new-container-row" hidden><span data-i18n="newContainerName"></span><input id="f-new-container" maxlength="40"></label>
+      <label class="line">
+        <span class="line-label" data-i18n="archiveAfter"></span>
+        <select id="f-archive"></select>
+      </label>
+    </section>
+
     <div class="actions">
       <button type="button" id="f-delete" class="danger" data-i18n="delete"></button>
       <span class="grow"></span>
@@ -86,10 +119,13 @@
     </div>
   </form>
 
-  <!-- Petite fenêtre « modifier le groupe » (?group=…) -->
+  <!-- Tab group editor (?group=…) -->
   <form id="group-form" class="panel" hidden>
-    <h2 data-i18n="groupFormTitle"></h2>
-    <label><span data-i18n="name"></span><input id="g-title" maxlength="60"></label>
+    <header class="dialog-head">
+      <h2 data-i18n="groupFormTitle"></h2>
+      <button type="button" class="dialog-close" data-icon="x" data-i18n-title="close" data-i18n-label="close"></button>
+    </header>
+    <input id="g-title" class="name-input" maxlength="60" autocomplete="off" data-i18n-label="name" data-i18n-placeholder="name">
     <div id="g-colors" class="swatches" role="radiogroup" data-i18n-label="color"></div>
     <div class="actions">
       <span class="grow"></span>
@@ -98,10 +134,13 @@
     </div>
   </form>
 
-  <!-- Petite fenêtre « archive » (?archive=1) -->
+  <!-- Archive of the active space (?archive=1) -->
   <section id="archive-panel" class="panel" hidden>
-    <h2 id="archive-heading"></h2>
-    <input id="archive-search" type="search" data-i18n-placeholder="archiveSearch" data-i18n-label="archiveSearch">
+    <header class="dialog-head">
+      <h2 id="archive-heading"></h2>
+      <button type="button" class="dialog-close" data-icon="x" data-i18n-title="close" data-i18n-label="close"></button>
+    </header>
+    <input id="archive-search" type="search" autocomplete="off" data-i18n-placeholder="archiveSearch" data-i18n-label="archiveSearch">
     <ul id="archive-list" class="archive-list"></ul>
     <div class="actions">
       <button type="button" id="archive-clear" class="danger" data-i18n="archiveClear"></button>
@@ -110,34 +149,77 @@
     </div>
   </section>
 
-  <!-- Petite fenêtre « réglages » (?settings=1) -->
+  <!-- Settings (?settings=1) -->
   <section id="settings-panel" class="panel" hidden>
-    <h2>Arbalète</h2>
-    <button class="wide" id="s-new-space" data-i18n="newSpace"></button>
-    <button class="wide" id="s-clear" data-i18n="settingsClearSpace"></button>
-    <h3 data-i18n="settingsShare"></h3>
-    <button class="wide" id="s-export" data-i18n="settingsExport"></button>
-    <button class="wide" id="s-import" data-i18n="settingsImport"></button>
-    <h3 data-i18n="statsHeading"></h3>
-    <div id="s-stats" class="stats"></div>
+    <header class="dialog-head">
+      <h2 data-i18n="settings"></h2>
+      <button type="button" class="dialog-close" data-icon="x" data-i18n-title="close" data-i18n-label="close"></button>
+    </header>
+
+    <section class="card">
+      <button type="button" class="line action" id="s-new-space" data-icon="plus" data-i18n="newSpace"></button>
+      <button type="button" class="line action" id="s-clear" data-icon="brush-cleaning" data-i18n="settingsClearSpace"></button>
+    </section>
+
     <h3 data-i18n="settingsHeading"></h3>
-    <label class="check"><input type="checkbox" id="s-expand"> <span data-i18n="settingsExpand"></span></label>
-    <label class="check"><input type="checkbox" id="s-theme"> <span data-i18n="settingsTheme"></span></label>
-    <label class="check"><input type="checkbox" id="s-history"> <span data-i18n="settingsHistory"></span></label>
-    <label><span data-i18n="settingsSuggest"></span>
-      <span class="row">
-        <input id="s-suggest" class="grow" type="url" placeholder="https://…/autocompleter?q={searchTerms}">
-        <button type="button" class="wide" id="s-suggest-save" data-i18n="save"></button>
-      </span>
-      <span class="hint" data-i18n="settingsSuggestHint"></span>
-    </label>
-    <button class="wide" id="s-setup" data-i18n="settingsHideNative"></button>
-    <button class="wide" id="s-shortcuts" data-i18n="settingsShortcuts"></button>
+    <section class="card">
+      <label class="line"><span class="line-label" data-i18n="settingsExpand"></span><input type="checkbox" class="switch" id="s-expand"></label>
+      <label class="line"><span class="line-label" data-i18n="settingsTheme"></span><input type="checkbox" class="switch" id="s-theme"></label>
+      <label class="line"><span class="line-label" data-i18n="settingsHistory"></span><input type="checkbox" class="switch" id="s-history"></label>
+      <label class="line">
+        <span class="stack tight">
+          <span class="line-label" data-i18n="settingsCenter"></span>
+          <span class="hint" data-i18n="settingsCenterHint"></span>
+        </span>
+        <input type="checkbox" class="switch" id="s-center">
+      </label>
+      <div class="stack">
+        <span class="line-label" data-i18n="settingsSuggest"></span>
+        <span class="inline">
+          <input id="s-suggest" class="grow" type="url" autocomplete="off" placeholder="https://…/autocompleter?q={searchTerms}">
+          <button type="button" id="s-suggest-save" data-i18n="save"></button>
+        </span>
+        <span class="hint" data-i18n="settingsSuggestHint"></span>
+      </div>
+    </section>
+
+    <h3 data-i18n="statsHeading"></h3>
+    <section class="card">
+      <div id="s-stats" class="stats"></div>
+    </section>
+
+    <h3 data-i18n="settingsShare"></h3>
+    <section class="card">
+      <button type="button" class="line action" id="s-export" data-icon="download" data-i18n="settingsExport"></button>
+      <button type="button" class="line action" id="s-import" data-icon="upload" data-i18n="settingsImport"></button>
+    </section>
+
+    <section class="card">
+      <button type="button" class="line action" id="s-setup" data-icon="panel-left" data-i18n="settingsHideNative"></button>
+      <button type="button" class="line action" id="s-shortcuts" data-icon="keyboard" data-i18n="settingsShortcuts"></button>
+    </section>
   </section>
 
-  <!-- Petite fenêtre « une seule barre » (?setup=1) -->
+  <!-- Small window asking for an optional permission (?grant=…) -->
+  <section id="grant-panel" class="panel" hidden>
+    <header class="dialog-head">
+      <h2 id="grant-title"></h2>
+      <button type="button" class="dialog-close" data-icon="x" data-i18n-title="close" data-i18n-label="close"></button>
+    </header>
+    <p id="grant-text"></p>
+    <div class="actions">
+      <span class="grow"></span>
+      <button type="button" id="grant-cancel" data-i18n="cancel"></button>
+      <button type="button" id="grant-allow" class="primary" data-i18n="grantAllow"></button>
+    </div>
+  </section>
+
+  <!-- Hide Firefox's own tabs (?setup=1) -->
   <section id="setup-panel" class="panel" hidden>
-    <h2 data-i18n="setupTitle"></h2>
+    <header class="dialog-head">
+      <h2 data-i18n="setupTitle"></h2>
+      <button type="button" class="dialog-close" data-icon="x" data-i18n-title="close" data-i18n-label="close"></button>
+    </header>
     <p data-i18n="setupIntro"></p>
     <p class="hint" data-i18n="setupHint"></p>
 
@@ -145,6 +227,22 @@
       <button class="wide primary-wide" id="setup-download-script" data-i18n="setupDownloadScript"></button>
       <ol>
         <li data-i18n="setupStep1"></li>
+        <li data-i18n="setupStep2"></li>
+      </ol>
+      <p class="hint" data-i18n="setupRepeat"></p>
+    </div>
+
+    <div id="setup-unix" hidden>
+      <button class="wide primary-wide" id="setup-unix-download" data-i18n="setupDownloadScriptUnix"></button>
+      <ol>
+        <li>
+          <span data-i18n="setupUnixStep1"></span>
+          <span class="command">
+            <code id="setup-unix-command"></code>
+            <button type="button" id="setup-unix-copy" data-i18n="copy"></button>
+          </span>
+          <span class="hint" data-i18n="setupUnixDrag"></span>
+        </li>
         <li data-i18n="setupStep2"></li>
       </ol>
       <p class="hint" data-i18n="setupRepeat"></p>

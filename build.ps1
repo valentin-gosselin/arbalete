@@ -1,5 +1,5 @@
-# Construit arbalete-<version>.zip à envoyer sur addons.mozilla.org.
-# Vrai zip avec des chemins en « / » (le tar de Git Bash produit une archive que AMO refuse).
+# Builds arbalete-<version>.zip to upload to addons.mozilla.org.
+# A real zip with "/" paths (Git Bash's tar produces an archive that AMO refuses).
 Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.FileSystem
 
 $root = $PSScriptRoot
@@ -16,4 +16,4 @@ try {
 } finally {
   $zip.Dispose()
 }
-Write-Output "Zip pret : $zipPath"
+Write-Output "Zip ready: $zipPath"

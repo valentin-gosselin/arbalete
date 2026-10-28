@@ -161,12 +161,6 @@
   "archiveNoMatch": {
     "message": "No archived tab matches."
   },
-  "archiveConfirmClear": {
-    "message": "Empty the archive of the space \"$1\"?"
-  },
-  "spaceGradient": {
-    "message": "Gradient background with a 2nd color"
-  },
   "spaceSites": {
     "message": "Sites of this space"
   },
@@ -174,19 +168,28 @@
     "message": "example.com\nwork-site.org"
   },
   "spaceSitesHint": {
-    "message": "One site per line: tabs going there join this space (and its container)."
+    "message": "One site per line, * for any part (dev.*.example.com): tabs going there join this space (and its container)."
+  },
+  "spaceSitesRejected": {
+    "message": "Not a site address: $1"
   },
   "spaceSchedule": {
     "message": "Switch to this space automatically"
   },
-  "scheduleWeek": {
-    "message": "Monday to Friday"
+  "scheduleDays": {
+    "message": "Days"
   },
-  "scheduleWeekend": {
-    "message": "On weekends"
+  "scheduleAddSlot": {
+    "message": "Add a time slot"
   },
-  "scheduleAll": {
-    "message": "Every day"
+  "scheduleRemoveSlot": {
+    "message": "Remove this time slot"
+  },
+  "scheduleHint": {
+    "message": "Switches when each slot begins"
+  },
+  "scheduleInvalid": {
+    "message": "Each time slot needs at least one day and two different times."
   },
   "scheduleFrom": {
     "message": "From"
@@ -244,6 +247,12 @@
   },
   "settingsSuggestInvalid": {
     "message": "Invalid address: {searchTerms} must stand for the text"
+  },
+  "settingsCenter": {
+    "message": "Dialogs centered on the page"
+  },
+  "settingsCenterHint": {
+    "message": "Settings and spaces open over the page instead of under the Arbalète button. Asks for access to all websites, like split view."
   },
   "settingsHistory": {
     "message": "Also search history in quick search"
@@ -530,6 +539,15 @@
   "newSpace": {
     "message": "New space"
   },
+  "toolArchive": {
+    "message": "Archive"
+  },
+  "toolSearch": {
+    "message": "Quick search"
+  },
+  "toolSettings": {
+    "message": "Settings"
+  },
   "pinCollapse": {
     "message": "Collapse the sidebar"
   },
@@ -563,8 +581,68 @@
   "name": {
     "message": "Name"
   },
-  "chosenIcon": {
-    "message": "Selected icon"
+  "close": {
+    "message": "Close"
+  },
+  "grantAllow": {
+    "message": "Allow"
+  },
+  "grantHistoryTitle": {
+    "message": "History in quick search"
+  },
+  "grantHistoryText": {
+    "message": "Firefox will ask you to let Arbalète read your history. It is only used by quick search and never leaves your computer."
+  },
+  "grantCenterTitle": {
+    "message": "Dialogs centered on the page"
+  },
+  "grantCenterText": {
+    "message": "Firefox will ask you to let Arbalète access all websites. This lets it show its dialogs over the page; Arbalète neither reads nor sends anything. It is the same permission as for split view."
+  },
+  "grantSuggestTitle": {
+    "message": "Search suggestions"
+  },
+  "grantSuggestText": {
+    "message": "Firefox will ask you to let Arbalète reach $1, only for search suggestions."
+  },
+  "iconChange": {
+    "message": "Change the icon"
+  },
+  "iconUpload": {
+    "message": "Import an image…"
+  },
+  "iconUploadHint": {
+    "message": "SVG, PNG or JPEG, shrunk to 64 px"
+  },
+  "iconUnreadable": {
+    "message": "Unreadable or too heavy image"
+  },
+  "spaceBackground": {
+    "message": "Sidebar background"
+  },
+  "backgroundNone": {
+    "message": "None"
+  },
+  "backgroundColor": {
+    "message": "Color"
+  },
+  "backgroundGradient": {
+    "message": "Gradient"
+  },
+  "spaceSecondColor": {
+    "message": "2nd color"
+  },
+  "colorCustom": {
+    "message": "Other color"
+  },
+  "deleteArmed": {
+    "message": "Really delete?"
+  },
+  "clearArmed": {
+    "message": "Really empty it?"
+  },
+  "importArmed": {
+    "message": "Replace with the $1 spaces of the file?"
   },
   "icon": {
     "message": "Icon"
@@ -601,9 +679,6 @@
   },
   "save": {
     "message": "Save"
-  },
-  "confirmDeleteSpace": {
-    "message": "Delete the space \"$1\"? Its tabs will move to another space."
   },
   "groupFormTitle": {
     "message": "Tab group"
@@ -671,9 +746,6 @@
   "exportFileName": {
     "message": "arbalete-spaces.json"
   },
-  "confirmImport": {
-    "message": "Replace your spaces with the $1 spaces from the file?"
-  },
   "spacesImported": {
     "message": "Spaces imported"
   },
@@ -704,8 +776,26 @@
   "setupRepeat": {
     "message": "Do it once on each computer. Running the installer again simply updates the configuration."
   },
+  "setupDownloadScriptUnix": {
+    "message": "Download the installer (Linux, macOS)"
+  },
+  "setupUnixStep1": {
+    "message": "Open a terminal and run:"
+  },
+  "setupUnixDrag": {
+    "message": "Saved it elsewhere? Type sh followed by a space, drag the file into the terminal, then press Enter."
+  },
+  "setupUnixCommandHint": {
+    "message": "Run it in a terminal: sh installer-arbalete.sh"
+  },
+  "copy": {
+    "message": "Copy"
+  },
+  "copied": {
+    "message": "Copied"
+  },
   "setupManualSummary": {
-    "message": "Manual setup (Mac, Linux, or without the script)"
+    "message": "Manual setup (without the script)"
   },
   "setupManual1": {
     "message": "In about:config, set toolkit.legacyUserProfileCustomizations.stylesheets to true."
@@ -723,7 +813,7 @@
     "message": "Download userChrome.css"
   },
   "installerRunning": {
-    "message": "Setting up Firefox for Arbalete..."
+    "message": "Setting up Firefox for Arbalète…"
   },
   "installerNoFirefox": {
     "message": "Firefox was not found for this user."

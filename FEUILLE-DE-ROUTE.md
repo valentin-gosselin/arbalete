@@ -57,6 +57,20 @@ Fait en premier car tous les textes ajoutés ensuite en dépendent.
 - [x] Favoris communs à tous les espaces (« Partager avec tous les espaces », bord en pointillés, un onglet par espace), aussi dans Alt+K.
 - [ ] Dossiers de liens sous les tuiles : reporté.
 
+## Retours de la recette 0.9 (faits le 28/10/2026, version 0.10.0)
+
+- [x] Installateur « une seule barre » pour Linux et macOS : script sh qui trouve les profils de Firefox (distribution, Flatpak, Snap d'Ubuntu, macOS), commande à copier dans la fenêtre. Plus de manipulation dans about:config.
+- [x] Fenêtres (modifier l'espace, réglages, archive, groupe, une seule barre) en calque sur la page comme la recherche rapide, ou en panneau sous l'icône d'Arbalète sur les pages interdites (nouvel onglet, about:, sites de Mozilla). Nouveau style : cartes, interrupteurs, en-tête avec croix. Suppressions en deux clics (confirm() est interdit dans le panneau).
+- [x] Fond de la barre au choix par espace : aucun, couleur de l'espace, dégradé à deux couleurs.
+- [x] Icône d'espace : choix dans un pop-over au clic sur l'icône, ou image importée (SVG, PNG, JPEG), réduite à 64 px et synchronisée.
+- [x] Couleurs par pastilles et réglette de teinte (le sélecteur natif fermerait le panneau).
+- [x] Nouvel espace créé seulement à l'enregistrement de sa fenêtre.
+- [x] Bascule horaire complète : plusieurs créneaux par espace, chacun avec ses jours (L M M J V S D) et sa plage d'heures, créneaux de nuit possibles ; l'ancien réglage est converti.
+- [x] Sites d'un espace avec étoile (dev.*.behynd.app) ; une adresse invalide bloque l'enregistrement au lieu de disparaître.
+- [x] Interrupteur « Fenêtres centrées sur la page » (autorisation tous les sites, petite fenêtre d'autorisation depuis le calque).
+- [x] Clic molette sur un onglet : ferme (le défilement automatique de Firefox avalait le clic). Croix de fermeture au survol en mode compact.
+- [x] Commentaires du code en anglais (dépôt public), textes de l'interface en français et en anglais.
+
 ## Phase 8 : plusieurs PC et prise en main
 
 - [ ] Mises à jour automatiques avant publication : `update_url` vers un petit fichier JSON hébergé en HTTPS (lien public Nextcloud ou serveur personnel).

@@ -1,10 +1,10 @@
 'use strict';
 
-// Injecté dans les pages affichées par la vue scindée d'Arbalète, et seulement là :
-// split.js nomme ses cadres « arbalete-split », les autres pages sont ignorées.
+// Injected in the pages displayed by the Arbalète split view, and only there:
+// split.js names its frames "arbalete-split", other pages are ignored.
 if (window.name === 'arbalete-split' && window.parent !== window) {
-  // 1. Le lecteur intégré de YouTube exige de connaître le site qui l'intègre
-  //    (document.referrer, sinon « Erreur 153 ») ; une page d'extension n'en fournit pas.
+  // 1. YouTube's embedded player needs to know the site embedding it
+  //    (document.referrer, otherwise "Error 153"); an extension page provides none.
   if (/(^|\.)youtube(-nocookie)?\.com$/.test(location.hostname) && location.pathname.startsWith('/embed/') && !document.referrer) {
     Object.defineProperty(document.wrappedJSObject, 'referrer', {
       get: exportFunction(() => 'https://github.com/valentin-gosselin/arbalete', window),
@@ -12,8 +12,8 @@ if (window.name === 'arbalete-split' && window.parent !== window) {
     });
   }
 
-  // 2. Les applis web (YouTube, Mastodon…) changent de page sans recharger : on signale
-  //    chaque changement d'adresse ou de titre à la vue scindée.
+  // 2. Web apps (YouTube, Mastodon...) change page without reloading: each change of
+  //    address or title is reported to the split view.
   let lastUrl = '';
   let lastTitle = '';
   const report = () => {

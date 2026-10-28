@@ -1,31 +1,31 @@
-/* Arbalète : une seule barre latérale, compacte, façon Arc.
-   Installé par l'installateur d'Arbalète (Réglages > Masquer les onglets
-   natifs de Firefox), ou à copier dans <profil Firefox>/chrome/userChrome.css.
-   Vérifié sur la structure de Firefox 158.
+/* Arbalète: a single, compact sidebar, Arc-style.
+   Installed by the Arbalète installer (Settings > Hide Firefox's native
+   tabs), or to be copied into <Firefox profile>/chrome/userChrome.css.
+   Checked against the structure of Firefox 158.
 
-   La barre Arbalète est reconnue à son titre (#sidebar-title), ce qui laisse
-   intactes les autres barres latérales (historique, marque-pages…).
-   L'option « Élargir au survol » des réglages d'Arbalète ajoute un caractère
-   invisible à ce titre (et le bouton « déplier » un autre) : c'est ce qui active
-   les règles 4 et 5, sans retoucher ce fichier. */
+   The Arbalète sidebar is recognized by its title (#sidebar-title), which leaves
+   the other sidebars (history, bookmarks...) untouched.
+   The "Expand on hover" option in the Arbalète settings adds an invisible character
+   to this title (and the "expand" button another one): this is what activates
+   rules 4 and 5, without touching this file. */
 
 :root {
   --arbalete-compact: 48px;
   --arbalete-expanded: 280px;
 }
 
-/* 1. Masquer les onglets natifs de Firefox quand Arbalète est ouverte :
-      la colonne verticale de gauche et la barre horizontale du haut. */
+/* 1. Hide Firefox's native tabs when Arbalète is open:
+      the vertical column on the left and the horizontal bar at the top. */
 :root:has(#sidebar-box:not([hidden]) #sidebar-title[value^="Arbalète"]) #sidebar-container,
 :root:has(#sidebar-box:not([hidden]) #sidebar-title[value^="Arbalète"]) #sidebar-launcher-splitter,
 :root:has(#sidebar-box:not([hidden]) #sidebar-title[value^="Arbalète"]) #TabsToolbar {
   visibility: collapse !important;
 }
 
-/* 2. Masquer l'en-tête « Arbalète  ✕ » et la poignée de redimensionnement.
-      Depuis la nouvelle barre latérale de Firefox, l'en-tête des extensions
-      est dessiné dans la page du panneau (webext-panels.xhtml) : on le masque
-      là aussi. */
+/* 2. Hide the "Arbalète  ✕" header and the resize handle.
+      Since Firefox's new sidebar, the extensions' header
+      is drawn inside the panel page (webext-panels.xhtml): hide it
+      there too. */
 #sidebar-panel-header {
   display: none !important;
 }
@@ -36,7 +36,7 @@
   display: none !important;
 }
 
-/* 3. Barre compacte, à largeur fixe. */
+/* 3. Compact sidebar, fixed width. */
 #sidebar-box:has(#sidebar-title[value^="Arbalète"]) {
   position: relative !important;
   z-index: 3 !important;
@@ -52,15 +52,15 @@
   width: 100% !important;
 }
 
-/* 4. Barre dépliée (bouton en bas de la barre) : large en permanence,
-      la page se décale à côté. Marqueur : antiliant de largeur nulle. */
+/* 4. Expanded sidebar (button at the bottom of the sidebar): wide permanently,
+      the page shifts aside. Marker: zero-width non-joiner. */
 #sidebar-box:has(#sidebar-title[value="Arbalète\200C"]) {
   min-width: var(--arbalete-expanded) !important;
   max-width: var(--arbalete-expanded) !important;
   width: var(--arbalete-expanded) !important;
 }
 
-/* 5. Option « Élargir au survol » : la barre passe par-dessus la page. */
+/* 5. "Expand on hover" option: the sidebar goes over the page. */
 #sidebar-box:has(#sidebar-title[value="Arbalète\200B"]):hover {
   min-width: var(--arbalete-expanded) !important;
   max-width: var(--arbalete-expanded) !important;

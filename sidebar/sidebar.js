@@ -1,17 +1,32 @@
 'use strict';
 
-// Barre latérale d'Arbalète : affiche l'espace actif de SA fenêtre. Toute la
-// logique (masquage des onglets, synchro, menus) est dans background.js ; ici on
-// ne fait qu'afficher l'état et envoyer des messages.
-// La même page sert aussi de petite fenêtre : ?edit=<espace>&win=<fenêtre> pour
-// modifier un espace, ?settings=1&win=<fenêtre> pour les réglages.
+// Arbalète sidebar: shows the active space of ITS window. All the logic (hiding
+// tabs, sync, menus) is in background.js; here we only display the state and send
+// messages.
+// The same page also serves as a small window: ?edit=<space>&win=<window> to edit
+// a space, ?settings=1&win=<window> for the settings.
 
 const $ = (sel) => document.querySelector(sel);
 const t = (key, ...subs) => browser.i18n.getMessage(key, subs.map(String)) || key;
 const send = (type, data = {}) => browser.runtime.sendMessage({ type, windowId, ...data });
 
 const params = new URLSearchParams(location.search);
-const mode = ['edit', 'group', 'settings', 'setup', 'archive'].find((m) => params.has(m)) || 'sidebar';
+const mode = ['edit', 'group', 'settings', 'setup', 'archive', 'grant'].find((m) => params.has(m)) || 'sidebar';
+// Where a dialog is shown: overlay (frame in the page, see palette/overlay.js), panel
+// (under the toolbar button) or window (popup window). In the overlay, Firefox only gives
+// storage and messaging: anything else goes through the background script.
+const frame = params.has('overlay') ? 'overlay' : params.has('panel') ? 'panel' : 'window';
+
+function closeDialog() {
+  if (frame === 'overlay') window.parent.postMessage({ from: 'arbalete-palette', type: 'arbalete-palette-close' }, '*');
+  else window.close();
+}
+
+// Switch the dialog to another one in place (settings -> new space, setup…).
+function goToDialog(query) {
+  const keep = ['win', 'overlay', 'panel', 'token'].filter((k) => params.has(k)).map((k) => `${k}=${params.get(k)}`);
+  location.replace(`?${query}&${keep.join('&')}`);
+}
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const SPRITE = '../icons/lucide.svg';
@@ -47,9 +62,10 @@ function icon(name, className = 'ic') {
   return svg;
 }
 
-// Icône d'un espace : « lucide:nom », ou un ancien emoji (versions 0.1.x).
-function spaceIcon(space, className) {
+// Space icon: "lucide:<name>", "image" (imported, space.iconImage), or an old emoji (0.1.x).
+function spaceIcon(space, className = 'ic') {
   const value = space.icon || '';
+  if (value === 'image' && space.iconImage) return el('img', { class: `${className} space-img`, src: space.iconImage, alt: '' });
   if (value.startsWith('lucide:')) return icon(value.slice(7), className);
   return el('span', { class: 'emoji' }, value || '•');
 }
@@ -63,7 +79,7 @@ function favicon(url, label) {
   return defaultFavicon();
 }
 
-// Page sans favicon (nouvel onglet, page interne) : globe gris, comme Firefox.
+// Page without a favicon (new tab, internal page): gray globe, like Firefox.
 function defaultFavicon() {
   return icon('globe', 'ic favicon default');
 }
@@ -72,13 +88,13 @@ function currentSpace() {
   return state.spaces.find((s) => s.id === state.activeSpaceId) || state.spaces[0];
 }
 
-// --- Rendu de la barre ------------------------------------------------------------
+// --- Sidebar rendering -------------------------------------------------------
 
 function render() {
   const space = currentSpace();
   const index = state.spaces.indexOf(space);
-  document.documentElement.style.setProperty('--space', space.color);
-  document.documentElement.style.setProperty('--space2', space.color2 || space.color);
+  if (mode === 'edit') return; // the editor previews its own colors
+  previewBackground(space.color, space.color2 || space.color, spaceBackground(space));
   if (mode !== 'sidebar') return;
 
   renderFavorites(space);
@@ -88,14 +104,14 @@ function render() {
   if (previousSpaceIndex !== -1 && previousSpaceIndex !== index) {
     const list = $('#tabs');
     list.classList.remove('slide-left', 'slide-right');
-    void list.offsetWidth; // relance l'animation
+    void list.offsetWidth; // restarts the animation
     list.classList.add(index > previousSpaceIndex ? 'slide-left' : 'slide-right');
   }
   previousSpaceIndex = index;
 }
 
 function renderFavorites(space) {
-  // Favoris communs à tous les espaces d'abord (bord en pointillés), puis ceux de l'espace.
+  // Favorites shared by all spaces first (dashed border), then those of the space.
   const all = [...(state.shared || []).map((fav) => ({ fav, shared: true })), ...space.favorites.map((fav) => ({ fav, shared: false }))];
   $('#favorites').replaceChildren(
     ...all.map(({ fav, shared }) => {
@@ -128,7 +144,7 @@ function renderTabs(space) {
     if (group && group !== currentGroup) rows.push(groupRow(group));
     currentGroup = group;
     if (group && group.collapsed && !tab.active) continue;
-    // Vue scindée de Firefox : les deux onglets côte à côte, sur une seule ligne.
+    // Firefox split view: the two tabs side by side, on a single line.
     const next = own[i + 1];
     if (tab.splitViewId !== -1 && next && next.splitViewId === tab.splitViewId) {
       rows.push(el('div', { class: 'split', role: 'group' }, [tabRow(tab, group), tabRow(next, group)]));
@@ -145,7 +161,7 @@ function renderTabs(space) {
   list.setAttribute('aria-label', t('tabList', space.name));
   list.replaceChildren(...rows);
 
-  // Navigation au clavier : un seul élément de la liste reçoit Tab (« roving tabindex »).
+  // Keyboard navigation: a single element of the list receives Tab ("roving tabindex").
   const items = [...list.querySelectorAll('[data-key]')];
   const restored = focused && items.find((r) => r.dataset.key === focused.dataset.key);
   const current = restored || (focused && items[Math.min(focusedIndex, items.length - 1)])
@@ -208,8 +224,8 @@ function groupRow(group) {
   return row;
 }
 
-// Multi-sélection : c'est celle de Firefox (onglets « surlignés »), partagée avec
-// ses propres raccourcis et avec le clic droit d'Arbalète.
+// Multi-selection: it is Firefox's ("highlighted" tabs), shared with
+// its own shortcuts and with the Arbalète right click.
 const isMultiSelected = (tab) => tab.highlighted && !tab.active && state.tabs.some((x) => x.active && x.highlighted);
 
 function ownTabIds() {
@@ -233,14 +249,14 @@ function onTabClick(e, tab) {
       return send('highlight', { tabIds: [active.id, ...range] });
     }
   }
-  // Clic simple : active l'onglet et vide la sélection.
+  // Simple click: activates the tab and clears the selection.
   if (selected.length) return send('highlight', { tabIds: [tab.id] });
   return send('activateTab', { tabId: tab.id });
 }
 
-// Pastille de notifications : le nombre que les sites mettent dans leur titre,
-// « (3) Mastodon » ou « Boîte de réception (12) - Gmail ». 1 à 3 chiffres seulement,
-// pour ne pas prendre une année « (2026) » pour des messages.
+// Notification badge: the number that sites put in their title,
+// "(3) Mastodon" or "Inbox (12) - Gmail". 1 to 3 digits only,
+// so as not to mistake a year "(2026)" for messages.
 function unreadCount(title) {
   const match = /\((\d{1,3})\+?\)/.exec(title || '');
   return match ? Number(match[1]) : 0;
@@ -322,7 +338,7 @@ function renderSpaces(space) {
         'aria-pressed': String(s.id === space.id),
         draggable: true,
         onclick: () => send('switchSpace', { spaceId: s.id }),
-        ondblclick: () => send('editSpace', { spaceId: s.id }),
+        ondblclick: () => openDialog(`edit=${encodeURIComponent(s.id)}`),
         ondragstart: (e) => e.dataTransfer.setData('application/x-arbalete-space', s.id),
         ondragover: (e) => {
           if (!isTabDrag(e) && !e.dataTransfer.types.includes('application/x-arbalete-space')) return;
@@ -341,7 +357,7 @@ function renderSpaces(space) {
           ids.splice(ids.indexOf(s.id) + (i > state.spaces.findIndex((x) => x.id === movedId) ? 1 : 0), 0, movedId);
           send('reorderSpaces', { ids });
         },
-      }, spaceIcon(s));
+      }, [spaceIcon(s), el('span', { class: 'label' }, s.name)]);
       dot.style.setProperty('--dot', s.color);
       dot.menuTarget = { kind: 'space', spaceId: s.id };
       return dot;
@@ -350,15 +366,18 @@ function renderSpaces(space) {
       class: 'space-dot add',
       title: t('newSpace'),
       'aria-label': t('newSpace'),
-      onclick: async () => {
-        const spaceId = await send('createSpace');
-        send('editSpace', { spaceId });
-      },
-    }, icon('plus'))
+      onclick: () => openDialog('edit=new'),
+    }, [icon('plus'), el('span', { class: 'label' }, t('newSpace'))])
   );
 }
 
-// --- Glisser-déposer ----------------------------------------------------------------
+// Middle click closes a tab or a favorite's tab (auxclick handlers): Firefox's autoscroll
+// starts on the middle button press and would swallow the click, so it is blocked here.
+document.addEventListener('mousedown', (e) => {
+  if (e.button === 1 && mode === 'sidebar') e.preventDefault();
+});
+
+// --- Drag and drop -----------------------------------------------------------
 
 const isTabDrag = (e) => e.dataTransfer.types.includes('application/x-arbalete-tab');
 function draggedTab(e) {
@@ -367,7 +386,7 @@ function draggedTab(e) {
 }
 
 const favBox = $('#favorites');
-// Accepte un onglet de la barre, ou un lien glissé depuis une page web.
+// Accepts a tab from the sidebar, or a link dragged from a web page.
 const isLinkDrag = (e) => e.dataTransfer.types.includes('text/x-moz-url') || e.dataTransfer.types.includes('text/uri-list');
 favBox.addEventListener('dragover', (e) => {
   if (!isTabDrag(e) && !isLinkDrag(e)) return;
@@ -383,14 +402,14 @@ favBox.addEventListener('drop', (e) => {
     send('addFavorite', { tabId });
     return;
   }
-  // text/x-moz-url : « adresse » puis « titre » sur deux lignes
+  // text/x-moz-url: "address" then "title" on two lines
   const [url, title] = (e.dataTransfer.getData('text/x-moz-url') || e.dataTransfer.getData('text/uri-list')).split(/\r?\n/);
   if (!url) return;
   e.preventDefault();
   send('addFavoriteUrl', { url: url.trim(), title: (title || '').trim() });
 });
 
-// --- Clic droit : vrai menu Firefox, qui peut sortir de la barre --------------------
+// --- Right click: real Firefox menu, which can extend beyond the sidebar -----
 
 document.addEventListener('contextmenu', (e) => {
   if (mode !== 'sidebar') return;
@@ -405,28 +424,29 @@ document.addEventListener('contextmenu', (e) => {
   send('setMenuTarget', { target: { ...target, windowId } });
 });
 
-// --- Pied de barre -----------------------------------------------------------------
+// --- Sidebar footer ----------------------------------------------------------
 
 function initSidebar() {
   $('#new-tab').append(icon('plus'), el('span', { class: 'label' }, t('newTab')));
   $('#new-tab').addEventListener('click', () => send('newTab'));
-  $('#settings-button').append(icon('settings'));
-  $('#search-button').append(icon('search'));
-  $('#archive-button').append(icon('archive'));
-  $('#archive-button').addEventListener('click', () => send('openArchive'));
+  const label = (key) => el('span', { class: 'label' }, t(key));
+  $('#settings-button').append(icon('settings'), label('toolSettings'));
+  $('#search-button').append(icon('search'), label('toolSearch'));
+  $('#archive-button').append(icon('archive'), label('toolArchive'));
+  $('#archive-button').addEventListener('click', () => openDialog('archive=1'));
   $('#search-button').addEventListener('click', openPalette);
-  $('#settings-button').addEventListener('click', () => send('openSettings'));
+  $('#settings-button').addEventListener('click', () => openDialog('settings=1'));
 
-  // Bouton déplier / replier (comme le « Replier » de nombreuses applis web) : visible quand l'élargissement au
-  // survol est activé (ou quand la barre est restée dépliée).
+  // Expand / collapse button (like the "Collapse" of many web apps): visible when widening on
+  // hover is enabled (or when the sidebar was left expanded).
   const pin = $('#pin-button');
   let pinned = false;
   const updatePin = async () => {
     const s = await browser.storage.local.get(['expandOnHover', 'pinnedOpen']);
     pinned = !!s.pinnedOpen;
     pin.hidden = !s.expandOnHover && !pinned;
-    pin.replaceChildren(icon(pinned ? 'panel-left-close' : 'panel-left-open'));
     pin.title = t(pinned ? 'pinCollapse' : 'pinExpand');
+    pin.replaceChildren(icon(pinned ? 'panel-left-close' : 'panel-left-open'), el('span', { class: 'label' }, pin.title));
     pin.setAttribute('aria-label', pin.title);
     pin.setAttribute('aria-pressed', String(pinned));
   };
@@ -436,21 +456,21 @@ function initSidebar() {
   });
   updatePin();
 
-  // Barre large = userChrome.css pas encore installé : on propose de le faire.
+  // Wide sidebar = userChrome.css not installed yet: offer to do it.
   browser.storage.local.get(['setupDone', 'setupDismissed', 'pinnedOpen']).then((s) => {
     if (s.setupDone || s.setupDismissed || s.pinnedOpen || window.innerWidth <= 120) return;
     $('#setup-banner').hidden = false;
   });
   $('#banner-setup').addEventListener('click', () => {
     $('#setup-banner').hidden = true;
-    send('openSetup');
+    openDialog('setup=1');
   });
   $('#banner-later').addEventListener('click', () => {
     $('#setup-banner').hidden = true;
     browser.storage.local.set({ setupDismissed: true });
   });
 
-  // Molette : glisser horizontalement (ou Maj+molette) change d'espace, comme dans Arc.
+  // Wheel: horizontal drag (or Shift+wheel) switches space, like in Arc.
   let accumulator = 0;
   let locked = false;
   document.addEventListener('wheel', (e) => {
@@ -468,20 +488,57 @@ function initSidebar() {
   }, { passive: false });
 }
 
-// Loupe : calque dans la page si Arbalète peut y entrer (accès aux sites donné pour la
-// vue scindée), sinon panneau sous l'icône d'Arbalète. openPopup() exige d'être appelé
-// pendant le clic, d'où la décision immédiate sur l'état déjà connu.
+// Magnifier: overlay in the page if Arbalète can enter it (site access granted for the
+// split view), otherwise panel under the Arbalète icon. openPopup() must be called
+// during the click, hence the immediate decision on the already known state.
+// The permission is checked again on every press of a mouse button: the answer is known
+// before the click (or double click) that needs it, even when permissions.onAdded does not
+// reach the sidebar (seen with a permission granted from another window).
 let canReachSites = false;
-browser.permissions.contains({ origins: ['<all_urls>'] }).then((granted) => { canReachSites = granted; });
+if (mode === 'sidebar') {
+  const checkSites = () => browser.permissions.contains({ origins: ['<all_urls>'] })
+    .then((granted) => { canReachSites = granted; }, () => {});
+  checkSites();
+  browser.permissions.onAdded.addListener(checkSites);
+  browser.permissions.onRemoved.addListener(checkSites);
+  document.addEventListener('pointerdown', checkSites, true);
+  window.addEventListener('focus', checkSites);
+}
 const SPLIT_URL = browser.runtime.getURL('split/split.html');
 
-function openPalette() {
-  const active = state.tabs.find((x) => x.active);
+// The active tab is followed live: the full state arrives a little later, and a double
+// click on another space switches tabs between its two clicks.
+let activeTabId = null;
+if (mode === 'sidebar') {
+  browser.tabs.onActivated.addListener((info) => { if (info.windowId === windowId) activeTabId = info.tabId; });
+}
+
+function activeTab() {
+  return (activeTabId !== null && state.tabs.find((x) => x.id === activeTabId)) || state.tabs.find((x) => x.active);
+}
+
+function canOverlay() {
+  const active = activeTab();
   const url = active ? active.url : '';
-  if (url.startsWith(SPLIT_URL)) return send('openPalette');
   const web = /^(https?|file):/.test(url) && !/^https?:\/\/([\w-]+\.)*(mozilla\.org|firefox\.com|mozilla\.net)\//.test(url);
-  if (web && canReachSites) return send('openPalette');
+  return web && canReachSites;
+}
+
+function openPalette() {
+  const active = activeTab();
+  if (active && active.url.startsWith(SPLIT_URL)) return send('openPalette');
+  if (canOverlay()) return send('openPalette');
+  browser.browserAction.setPopup({ popup: null });
   return browser.browserAction.openPopup();
+}
+
+// Dialogs follow the same rule: overlay in the page when possible, otherwise the panel
+// under the toolbar button (or a popup window if Firefox refuses the panel).
+function openDialog(query) {
+  if (canOverlay()) return send('openDialog', { query });
+  // Absolute address: a relative one would be resolved against this page (sidebar/).
+  browser.browserAction.setPopup({ popup: browser.runtime.getURL(`sidebar/sidebar.html?${query}&win=${windowId}&panel=1`) });
+  return browser.browserAction.openPopup().catch(() => send('openDialog', { query }));
 }
 
 let toastTimer = null;
@@ -493,9 +550,9 @@ function toast(text) {
   toastTimer = setTimeout(() => { box.hidden = true; }, 1800);
 }
 
-// --- Fenêtre « modifier l'espace » --------------------------------------------------
+// --- "Edit space" window -----------------------------------------------------
 
-// Recherche en français : quelques mots courants traduits vers les mots-clés anglais de Lucide.
+// French search: a few common words mapped to Lucide's English keywords.
 const FR_WORDS = {
   maison: 'house home', accueil: 'house home', perso: 'user house', travail: 'briefcase work', boulot: 'briefcase work',
   bureau: 'briefcase building office', musique: 'music', son: 'music volume audio', argent: 'money wallet coins euro',
@@ -518,7 +575,7 @@ const FR_WORDS = {
 };
 
 let iconIndex = null;
-let selectedIcon = null;
+let selectedIcon = { name: 'sparkles' };
 
 const normalize = (text) => text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
@@ -538,30 +595,210 @@ async function renderIconGrid() {
   $('#f-icon-grid').replaceChildren(
     ...shown.map(([name]) => el('button', {
       type: 'button',
-      class: name === selectedIcon ? 'icon-choice selected' : 'icon-choice',
+      class: selectedIcon.name === name ? 'icon-choice selected' : 'icon-choice',
       title: name,
-      onclick: () => selectIcon(name),
+      onclick: () => {
+        selectIcon({ name });
+        toggleIconPopover(false);
+      },
     }, icon(name))),
     matches.length > shown.length ? el('div', { class: 'more' }, t('moreIcons', matches.length - shown.length)) : null,
     matches.length ? null : el('div', { class: 'more' }, t('noIcons')),
   );
 }
 
-function selectIcon(name) {
-  selectedIcon = name;
-  $('#f-icon-preview').replaceChildren(icon(name));
-  for (const b of document.querySelectorAll('.icon-choice')) b.classList.toggle('selected', b.title === name);
+// selectedIcon: { name } for a Lucide icon, or { image } for an imported image (data URL).
+function selectIcon(choice) {
+  selectedIcon = choice;
+  $('#f-icon-preview').replaceChildren(choice.image ? el('img', { class: 'space-img', src: choice.image, alt: '' }) : icon(choice.name));
+  for (const b of document.querySelectorAll('.icon-choice')) b.classList.toggle('selected', b.title === choice.name);
+}
+
+function toggleIconPopover(open) {
+  const popover = $('#f-icon-popover');
+  const preview = $('#f-icon-preview');
+  popover.hidden = !open;
+  popover.style.top = `${preview.offsetTop + preview.offsetHeight + 10}px`;
+  preview.setAttribute('aria-expanded', String(open));
+  if (open) {
+    renderIconGrid();
+    $('#f-icon-search').focus();
+  }
+}
+
+// An imported icon is stored with the space in storage.sync (8 KB per item): small SVGs
+// are kept as they are, anything else is redrawn as a 64 px image.
+const ICON_MAX = 7000;
+
+function readAsDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function imageToIcon(file) {
+  const original = await readAsDataUrl(file);
+  if (file.type === 'image/svg+xml' && original.length <= ICON_MAX) return original;
+  const img = new Image();
+  img.src = original;
+  await img.decode();
+  for (const size of [64, 48, 32]) {
+    const canvas = el('canvas', { width: size, height: size });
+    const ratio = Math.min(size / (img.naturalWidth || size), size / (img.naturalHeight || size));
+    const w = (img.naturalWidth || size) * ratio;
+    const h = (img.naturalHeight || size) * ratio;
+    canvas.getContext('2d').drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+    for (const [type, quality] of [['image/png'], ['image/webp', 0.9]]) {
+      const data = canvas.toDataURL(type, quality);
+      if (data.length <= ICON_MAX) return data;
+    }
+  }
+  throw new Error('too big');
+}
+
+// Color choice without the native picker (it would close the toolbar panel): a few
+// swatches, plus a hue slider for any other color.
+const COLORS = ['#7c6cf2', '#3d8bd9', '#2fb5c9', '#3fa37b', '#c9a227', '#e4834b', '#e5484d', '#d9577a', '#a35bd1', '#7d7a89'];
+
+function hueToHex(hue) {
+  const f = (n) => {
+    const k = (n + hue / 30) % 12;
+    const c = 0.55 - 0.65 * 0.45 * Math.max(-1, Math.min(k - 3, 9 - k, 1));
+    return Math.round(c * 255).toString(16).padStart(2, '0');
+  };
+  return `#${f(0)}${f(8)}${f(4)}`;
+}
+
+function hexToHue(hex) {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+  const max = Math.max(r, g, b);
+  const d = max - Math.min(r, g, b);
+  if (!d) return 0;
+  const h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return Math.round((h * 60 + 360) % 360);
+}
+
+function colorPicker(box, value, onChange) {
+  let current = value;
+  const slider = el('input', { type: 'range', class: 'hue', min: '0', max: '359', 'aria-label': t('colorCustom') });
+  const custom = el('button', { type: 'button', class: 'swatch custom', title: t('colorCustom'), 'aria-label': t('colorCustom') });
+  const swatches = COLORS.map((hex) => {
+    const swatch = el('button', { type: 'button', class: 'swatch', title: hex, 'aria-label': hex });
+    swatch.style.setProperty('--swatch', hex);
+    swatch.addEventListener('click', () => set(hex, false));
+    return swatch;
+  });
+  function set(hex, fromSlider) {
+    current = hex;
+    const known = COLORS.includes(hex);
+    for (const s of swatches) s.classList.toggle('selected', s.title === hex);
+    custom.classList.toggle('selected', !known);
+    custom.style.setProperty('--swatch', known ? '' : hex);
+    if (!fromSlider) slider.hidden = known;
+    onChange(hex);
+  }
+  custom.addEventListener('click', () => {
+    slider.hidden = !slider.hidden;
+    if (!slider.hidden) {
+      slider.value = String(hexToHue(current));
+      set(hueToHex(Number(slider.value)), true);
+    }
+  });
+  slider.addEventListener('input', () => set(hueToHex(Number(slider.value)), true));
+  box.replaceChildren(el('div', { class: 'swatches small' }, [...swatches, custom]), slider);
+  set(value, false);
+  return () => current;
+}
+
+// A destructive button asks to be clicked a second time (confirm() is not allowed in
+// the toolbar panel).
+function confirmButton(button, armedLabel, action) {
+  const label = button.textContent;
+  let timer = null;
+  button.addEventListener('click', async () => {
+    if (!button.classList.contains('armed')) {
+      button.classList.add('armed');
+      button.textContent = armedLabel;
+      timer = setTimeout(() => { button.classList.remove('armed'); button.textContent = label; }, 4000);
+      return;
+    }
+    clearTimeout(timer);
+    button.classList.remove('armed');
+    button.textContent = label;
+    await action();
+  });
+}
+
+const spaceBackground = (space) => space.background || (space.color2 ? 'gradient' : 'color');
+
+function previewBackground(color, color2, background) {
+  const root = document.documentElement;
+  root.style.setProperty('--space', color);
+  root.style.setProperty('--space2', background === 'gradient' ? color2 : color);
+  root.dataset.bg = background;
 }
 
 async function initEditForm() {
-  const space = state.spaces.find((s) => s.id === params.get('edit'));
-  if (!space) return window.close();
-  document.title = t('spaceWindowTitle', space.name);
+  const isNew = params.get('edit') === 'new';
+  const space = isNew
+    ? { id: null, name: t('newSpaceName'), icon: 'lucide:sparkles', color: state.nextColor || COLORS[0], favorites: [] }
+    : state.spaces.find((s) => s.id === params.get('edit'));
+  if (!space) return closeDialog();
+  document.title = isNew ? t('newSpace') : t('spaceWindowTitle', space.name);
+  $('#f-title').textContent = isNew ? t('newSpace') : t('spaceFormTitle');
   $('#space-form').hidden = false;
   $('#f-name').value = space.name;
-  $('#f-color').value = space.color;
-  selectedIcon = space.icon && space.icon.startsWith('lucide:') ? space.icon.slice(7) : 'sparkles';
-  selectIcon(selectedIcon);
+  selectIcon(space.icon === 'image' && space.iconImage
+    ? { image: space.iconImage }
+    : { name: space.icon && space.icon.startsWith('lucide:') ? space.icon.slice(7) : 'sparkles' });
+
+  // Icon popover: Lucide search, or an imported image.
+  $('#f-icon-preview').addEventListener('click', () => toggleIconPopover($('#f-icon-popover').hidden));
+  document.addEventListener('mousedown', (e) => {
+    if (!$('#f-icon-popover').hidden && !e.target.closest('#f-icon-popover, #f-icon-preview')) toggleIconPopover(false);
+  });
+  let searchTimer = null;
+  $('#f-icon-search').addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(renderIconGrid, 120);
+  });
+  $('#f-icon-upload').addEventListener('click', () => {
+    // A file picker would close the toolbar panel: continue in a window.
+    if (frame === 'panel') return send('openWindow', { query: `edit=${encodeURIComponent(space.id || 'new')}` }).then(closeDialog);
+    return $('#f-icon-file').click();
+  });
+  $('#f-icon-file').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      selectIcon({ image: await imageToIcon(file) });
+      toggleIconPopover(false);
+    } catch (err) {
+      toast(t('iconUnreadable'));
+    }
+  });
+
+  // Colors and sidebar background, previewed live in this dialog.
+  let background = spaceBackground(space);
+  let color = null;
+  let color2 = null;
+  const update = () => color && color2 && previewBackground(color(), color2(), background);
+  color = colorPicker($('#f-colors'), space.color, update);
+  color2 = colorPicker($('#f-colors2'), space.color2 || COLORS[(COLORS.indexOf(space.color) + 3) % COLORS.length], update);
+  for (const radio of document.querySelectorAll('input[name="f-bg"]')) {
+    radio.checked = radio.value === background;
+    radio.addEventListener('change', () => {
+      background = radio.value;
+      $('#f-color2-line').hidden = background !== 'gradient';
+      update();
+    });
+  }
+  $('#f-color2-line').hidden = background !== 'gradient';
+  update();
 
   const select = $('#f-container');
   select.replaceChildren(
@@ -572,93 +809,156 @@ async function initEditForm() {
   select.value = state.containers.some((c) => c.id === space.cookieStoreId) ? space.cookieStoreId : '';
   select.addEventListener('change', () => { $('#f-new-container-row').hidden = select.value !== '__new__'; });
   $('#f-new-container').value = space.name;
-  $('#f-delete').disabled = state.spaces.length < 2;
 
   const archive = $('#f-archive');
   const delays = await send('archiveDelays');
   archive.replaceChildren(...delays.map((h) => el('option', { value: String(h) }, t(h ? `archiveAfter${h}` : 'archiveNever'))));
   archive.value = String(space.archiveAfter || 0);
 
-  // Dégradé (2e couleur), sites de l'espace, bascule horaire.
-  $('#f-gradient').checked = !!space.color2;
-  $('#f-color2').value = space.color2 || space.color;
-  $('#f-color2').hidden = !space.color2;
-  $('#f-gradient').addEventListener('change', () => { $('#f-color2').hidden = !$('#f-gradient').checked; });
   $('#f-sites').value = (space.sites || []).join('\n');
-  const schedule = space.schedule;
-  $('#f-sched-on').checked = !!schedule;
-  if (schedule) {
-    $('#f-sched-days').value = schedule.days || 'week';
-    $('#f-sched-from').value = schedule.from || '09:00';
-    $('#f-sched-to').value = schedule.to || '18:00';
-  }
-  const toggleSchedule = () => { $('#f-sched-row').hidden = !$('#f-sched-on').checked; };
+  const slots = scheduleSlots(space.schedule);
+  $('#f-sched-on').checked = slots.length > 0;
+  for (const slot of slots.length ? slots : [{ days: [1, 2, 3, 4, 5], from: '09:00', to: '18:00' }]) addSlot(slot);
+  $('#f-sched-add').addEventListener('click', () => {
+    const rows = document.querySelectorAll('.slot');
+    const last = rows.length ? readSlot(rows[rows.length - 1]) : null;
+    addSlot(last ? { days: last.days, from: last.to, to: last.to < '23:00' ? `${String(Number(last.to.slice(0, 2)) + 1).padStart(2, '0')}${last.to.slice(2)}` : '23:59' }
+      : { days: [1, 2, 3, 4, 5], from: '09:00', to: '18:00' });
+  });
+  const toggleSchedule = () => {
+    $('#f-sched-row').hidden = !$('#f-sched-on').checked;
+    if ($('#f-sched-on').checked && !document.querySelector('.slot')) addSlot({ days: [1, 2, 3, 4, 5], from: '09:00', to: '18:00' });
+  };
   $('#f-sched-on').addEventListener('change', toggleSchedule);
   toggleSchedule();
 
-  let searchTimer = null;
-  $('#f-icon-search').addEventListener('input', () => {
-    clearTimeout(searchTimer);
-    searchTimer = setTimeout(renderIconGrid, 120);
-  });
-  await renderIconGrid();
   $('#f-name').select();
+  $('#f-cancel').addEventListener('click', closeDialog);
 
-  $('#f-cancel').addEventListener('click', () => window.close());
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') window.close(); });
-
-  $('#f-delete').addEventListener('click', async () => {
-    if (!confirm(t('confirmDeleteSpace', space.name))) return;
+  $('#f-delete').hidden = isNew;
+  $('#f-delete').disabled = state.spaces.length < 2;
+  confirmButton($('#f-delete'), t('deleteArmed'), async () => {
     await send('deleteSpace', { spaceId: space.id });
-    window.close();
+    closeDialog();
   });
 
   $('#space-form').addEventListener('submit', async (e) => {
     e.preventDefault();
+    const { sites, rejected } = parseSites($('#f-sites').value);
+    if (rejected.length) {
+      $('#f-sites').focus();
+      return toast(t('spaceSitesRejected', rejected.join(', ')));
+    }
+    const slots = [...document.querySelectorAll('.slot')].map(readSlot);
+    if ($('#f-sched-on').checked && slots.some((x) => !x.days.length || !x.from || !x.to || x.from === x.to)) {
+      return toast(t('scheduleInvalid'));
+    }
     let cookieStoreId = select.value || null;
     let containerName = null;
     if (cookieStoreId === '__new__') {
       containerName = $('#f-new-container').value.trim() || $('#f-name').value.trim();
-      const created = await browser.contextualIdentities.create({ name: containerName, color: 'purple', icon: 'circle' });
-      cookieStoreId = created.cookieStoreId;
+      cookieStoreId = await send('createContainer', { name: containerName });
     } else if (cookieStoreId) {
       containerName = state.containers.find((c) => c.id === cookieStoreId).name;
     }
-    await send('saveSpace', {
-      space: {
-        id: space.id,
-        icon: `lucide:${selectedIcon}`,
-        archiveAfter: Number($('#f-archive').value) || 0,
-        color2: $('#f-gradient').checked ? $('#f-color2').value : null,
-        sites: parseSites($('#f-sites').value),
-        schedule: $('#f-sched-on').checked
-          ? { days: $('#f-sched-days').value, from: $('#f-sched-from').value, to: $('#f-sched-to').value }
-          : null,
-        name: $('#f-name').value.trim() || t('spaceFallbackName'),
-        color: $('#f-color').value,
-        cookieStoreId,
-        containerName,
-      },
-    });
-    window.close();
+    const data = {
+      icon: selectedIcon.image ? 'image' : `lucide:${selectedIcon.name}`,
+      iconImage: selectedIcon.image || null,
+      archiveAfter: Number($('#f-archive').value) || 0,
+      background,
+      color2: background === 'gradient' ? color2() : null,
+      sites,
+      schedule: $('#f-sched-on').checked && slots.length ? { slots } : null,
+      name: $('#f-name').value.trim() || t('spaceFallbackName'),
+      color: color(),
+      cookieStoreId,
+      containerName,
+    };
+    if (isNew) await send('createSpace', { space: data });
+    else await send('saveSpace', { space: { id: space.id, ...data } });
+    closeDialog();
   });
 }
 
-// « https://www.exemple.fr/page » ou « exemple.fr » -> « exemple.fr »
-function parseSites(text) {
-  const sites = text.split(/[\s,;]+/).map((line) => line.trim().toLowerCase()
-    .replace(/^[a-z]+:\/\//, '').replace(/^www\./, '').replace(/[/?#].*$/, ''))
-    .filter((d) => /^[a-z0-9.-]+\.[a-z]{2,}$/.test(d));
-  return [...new Set(sites)];
+// "https://www.example.com/page" or "example.com" -> "example.com"
+// --- Time slots of a space (automatic switch) -------------------------------------
+// A slot: days (Date.getDay() numbers, 0 = Sunday) and a time range. Same format as
+// scheduleSlots() in background.js, which also reads the single slot of older versions.
+
+const DAY_SETS = { all: [0, 1, 2, 3, 4, 5, 6], week: [1, 2, 3, 4, 5], weekend: [0, 6] };
+const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0]; // Monday first
+
+function scheduleSlots(rule) {
+  if (!rule || typeof rule !== 'object') return [];
+  if (Array.isArray(rule.slots)) return rule.slots;
+  return [{ days: DAY_SETS[rule.days] || DAY_SETS.all, from: rule.from, to: rule.to }];
 }
 
-// --- Fenêtre « modifier le groupe » --------------------------------------------------
+// Day names in the interface language (2024-01-07 was a Sunday).
+function dayName(day, style) {
+  return new Intl.DateTimeFormat(browser.i18n.getUILanguage(), { weekday: style }).format(new Date(2024, 0, 7 + day));
+}
+
+function addSlot(slot) {
+  const days = new Set(slot.days || []);
+  const chips = WEEK_ORDER.map((day) => el('button', {
+    type: 'button',
+    class: days.has(day) ? 'day on' : 'day',
+    title: dayName(day, 'long'),
+    'aria-label': dayName(day, 'long'),
+    'aria-pressed': String(days.has(day)),
+    onclick: (e) => {
+      const on = e.currentTarget.classList.toggle('on');
+      e.currentTarget.setAttribute('aria-pressed', String(on));
+    },
+  }, dayName(day, 'narrow')));
+  chips.forEach((chip, i) => { chip.dataset.day = String(WEEK_ORDER[i]); });
+  const row = el('div', { class: 'slot' }, [
+    el('div', { class: 'days', role: 'group', 'aria-label': t('scheduleDays') }, chips),
+    el('button', {
+      type: 'button',
+      class: 'slot-remove',
+      title: t('scheduleRemoveSlot'),
+      'aria-label': t('scheduleRemoveSlot'),
+      onclick: () => {
+        row.remove();
+        if (!document.querySelector('.slot')) $('#f-sched-on').click();
+      },
+    }, icon('x')),
+    el('span', { class: 'times' }, [
+      el('input', { type: 'time', class: 'from', value: slot.from || '09:00', 'aria-label': t('scheduleFrom') }),
+      el('span', {}, '→'),
+      el('input', { type: 'time', class: 'to', value: slot.to || '18:00', 'aria-label': t('scheduleTo') }),
+    ]),
+  ]);
+  $('#f-sched-slots').append(row);
+}
+
+function readSlot(row) {
+  return {
+    days: [...row.querySelectorAll('.day.on')].map((chip) => Number(chip.dataset.day)).sort(),
+    from: row.querySelector('.from').value,
+    to: row.querySelector('.to').value,
+  };
+}
+
+// "*" stands for any part of the address: dev.*.example.com. Returns the valid sites and
+// the entries that are not an address, so that nothing disappears silently.
+function parseSites(text) {
+  const entries = text.split(/[\s,;]+/).map((line) => line.trim().toLowerCase()
+    .replace(/^[a-z]+:\/\//, '').replace(/^www\./, '').replace(/[/?#].*$/, ''))
+    .filter(Boolean);
+  const valid = (d) => /^[a-z0-9*-]+(\.[a-z0-9*-]+)+$/.test(d) && /[a-z0-9]/.test(d.replace(/\*/g, ''));
+  return { sites: [...new Set(entries.filter(valid))], rejected: entries.filter((d) => !valid(d)) };
+}
+
+// --- "Edit group" window -----------------------------------------------------
 
 
 async function initGroupForm() {
   const groupId = Number(params.get('group'));
-  const group = await browser.tabGroups.get(groupId).catch(() => null);
-  if (!group) return window.close();
+  const group = await send('getGroup', { groupId });
+  if (!group) return closeDialog();
   document.title = t('groupFormTitle');
   $('#group-form').hidden = false;
   $('#g-title').value = group.title || '';
@@ -686,16 +986,15 @@ async function initGroupForm() {
   $('#g-colors').replaceChildren(...swatches);
   $('#g-title').select();
 
-  $('#g-cancel').addEventListener('click', () => window.close());
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') window.close(); });
+  $('#g-cancel').addEventListener('click', closeDialog);
   $('#group-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    await browser.tabGroups.update(groupId, { title: $('#g-title').value.trim(), color });
-    window.close();
+    await send('updateGroup', { groupId, changes: { title: $('#g-title').value.trim(), color } });
+    closeDialog();
   });
 }
 
-// --- Fenêtre « archive » : onglets rangés automatiquement de l'espace actif ----------------
+// --- "Archive" window: tabs automatically stored from the active space -------
 
 function ago(time) {
   const minutes = Math.round((Date.now() - time) / 60000);
@@ -726,7 +1025,7 @@ async function initArchive() {
         title: x.url,
         onclick: async () => {
           await send('reopenArchived', { spaceId: space.id, url: x.url });
-          window.close();
+          closeDialog();
         },
       }, [
         favicon(x.favIconUrl, x.title),
@@ -752,14 +1051,12 @@ async function initArchive() {
   render();
   $('#archive-search').addEventListener('input', render);
   $('#archive-search').focus();
-  $('#archive-close').addEventListener('click', () => window.close());
-  $('#archive-clear').addEventListener('click', async () => {
-    if (!confirm(t('archiveConfirmClear', space.name))) return;
+  $('#archive-close').addEventListener('click', closeDialog);
+  confirmButton($('#archive-clear'), t('clearArmed'), async () => {
     await send('removeArchived', { spaceId: space.id, url: null });
     entries = [];
     render();
   });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') window.close(); });
 }
 
 function hostOf(url) {
@@ -770,26 +1067,26 @@ function hostOf(url) {
   }
 }
 
-// --- Fenêtre « réglages » ----------------------------------------------------------
+// --- "Settings" window -------------------------------------------------------
 
 function initSettings() {
   document.title = t('settings');
   $('#settings-panel').hidden = false;
-  $('#s-new-space').addEventListener('click', async () => {
-    const spaceId = await send('createSpace');
-    await send('editSpace', { spaceId });
-    window.close();
-  });
+  $('#s-new-space').addEventListener('click', () => goToDialog('edit=new'));
   $('#s-clear').addEventListener('click', async () => {
     await send('clearSpace', { spaceId: state.activeSpaceId });
     toast(t('tabsClosed'));
   });
   $('#s-export').addEventListener('click', exportSpaces);
-  $('#s-import').addEventListener('click', () => $('#import-file').click());
-  $('#s-setup').addEventListener('click', () => send('openSetup'));
+  $('#s-import').addEventListener('click', () => {
+    // A file picker would close the toolbar panel: continue in a window.
+    if (frame === 'panel') return send('openWindow', { query: 'settings=1' }).then(closeDialog);
+    return $('#import-file').click();
+  });
+  $('#s-setup').addEventListener('click', () => goToDialog('setup=1'));
 
-  // Suggestions de recherche : adresse au format OpenSearch de son moteur. Il faut le
-  // droit de contacter ce site, demandé ici (geste de l'utilisateur).
+  // Search suggestions: the OpenSearch address of one's engine. Arbalète needs the right
+  // to reach that site, asked here (user gesture).
   const suggest = $('#s-suggest');
   browser.storage.local.get('suggestUrl').then((s) => { suggest.value = s.suggestUrl || ''; });
   $('#s-suggest-save').addEventListener('click', async () => {
@@ -805,18 +1102,42 @@ function initSettings() {
       origin = null;
     }
     if (!origin || !/{searchTerms}|%s/.test(value)) return toast(t('settingsSuggestInvalid'));
-    if (!(await browser.permissions.request({ origins: [`${origin}/*`] }))) return undefined;
+    if (!(await askPermission({ origins: [`${origin}/*`] }, value))) return undefined;
     await browser.storage.local.set({ suggestUrl: value });
     return toast(t('settingsSuggestSaved'));
   });
 
-  // Historique dans la recherche rapide : permission facultative, demandée ici.
+  // History in quick search: optional permission, asked here.
   const history = $('#s-history');
   const HISTORY = { permissions: ['history'] };
-  browser.permissions.contains(HISTORY).then((granted) => { history.checked = granted; });
+  const checkHistory = () => send('hasPermission', { permissions: HISTORY }).then((granted) => { history.checked = granted; });
+  checkHistory();
+
+  // Centered dialogs: the "all sites" permission (the one split view also uses) lets the
+  // sidebar open them as an overlay over the page instead of the toolbar panel.
+  const center = $('#s-center');
+  const ALL_SITES = { origins: ['<all_urls>'] };
+  const checkCenter = () => send('hasPermission', { permissions: ALL_SITES }).then((granted) => { center.checked = granted; });
+  checkCenter();
+  center.addEventListener('change', async () => {
+    if (center.checked) center.checked = await askPermission(ALL_SITES);
+    else await send('removePermission', { permissions: ALL_SITES });
+  });
+  // Answer of the small permission window (see askPermission).
+  browser.storage.onChanged.addListener((changes, area) => {
+    if (area !== 'local') return;
+    if (changes.permissionsChangedAt) {
+      checkHistory();
+      checkCenter();
+    }
+    if (changes.suggestUrl) {
+      suggest.value = changes.suggestUrl.newValue || '';
+      toast(t('settingsSuggestSaved'));
+    }
+  });
   history.addEventListener('change', async () => {
-    if (history.checked) history.checked = await browser.permissions.request(HISTORY);
-    else await browser.permissions.remove(HISTORY);
+    if (history.checked) history.checked = await askPermission(HISTORY);
+    else await send('removePermission', { permissions: HISTORY });
   });
   const theme = $('#s-theme');
   browser.storage.local.get('tintTheme').then((s) => { theme.checked = !!s.tintTheme; });
@@ -829,16 +1150,56 @@ function initSettings() {
     browser.storage.local.set({ expandOnHover: expand.checked });
     toast(t(expand.checked ? 'expandOn' : 'expandOff'));
   });
-  if (browser.commands.openShortcutSettings) {
-    $('#s-shortcuts').addEventListener('click', () => browser.commands.openShortcutSettings());
-  } else {
-    $('#s-shortcuts').hidden = true;
-  }
+  $('#s-shortcuts').addEventListener('click', () => send('openShortcuts').then(closeDialog));
   $('#import-file').addEventListener('change', importSpaces);
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') window.close(); });
 }
 
-// Statistiques : minutes passées par espace, aujourd'hui et sur 7 jours.
+// Optional permissions can only be asked from a privileged page, during a click: not
+// from the overlay (no permissions API), nor from the toolbar panel (the prompt closes
+// it). There, a small window asks instead and reports back through storage.local.
+async function askPermission(permissions, suggestUrl = '') {
+  if (frame === 'window' && browser.permissions) return browser.permissions.request(permissions);
+  const query = `grant=${encodeURIComponent(JSON.stringify(permissions))}${suggestUrl ? `&suggest=${encodeURIComponent(suggestUrl)}` : ''}`;
+  await send('openWindow', { query, small: true });
+  return false;
+}
+
+// --- Small permission window (?grant=<permissions as JSON>) ---------------------------------
+
+function initGrant() {
+  let permissions;
+  try {
+    permissions = JSON.parse(params.get('grant'));
+  } catch (e) {
+    return closeDialog();
+  }
+  const suggestUrl = params.get('suggest') || '';
+  const origins = permissions.origins || [];
+  let kind = 'Suggest';
+  if ((permissions.permissions || []).includes('history')) kind = 'History';
+  else if (origins.includes('<all_urls>')) kind = 'Center';
+  let host = '';
+  try {
+    host = new URL(origins[0].replace('/*', '/')).host;
+  } catch (e) {
+    host = '';
+  }
+  document.title = t(`grant${kind}Title`);
+  $('#grant-panel').hidden = false;
+  $('#grant-title').textContent = document.title;
+  $('#grant-text').textContent = t(`grant${kind}Text`, host);
+  $('#grant-cancel').addEventListener('click', closeDialog);
+  $('#grant-allow').addEventListener('click', async () => {
+    if (!(await browser.permissions.request(permissions))) return;
+    const changes = { permissionsChangedAt: Date.now() };
+    if (suggestUrl) changes.suggestUrl = suggestUrl;
+    await browser.storage.local.set(changes);
+    closeDialog();
+  });
+  $('#grant-allow').focus();
+}
+
+// Statistics: minutes spent per space, today and over 7 days.
 async function renderStats() {
   const stats = await send('getStats');
   const days = Object.keys(stats).sort().slice(-7);
@@ -862,13 +1223,13 @@ async function renderStats() {
   );
 }
 
-// --- Fenêtre « une seule barre » : installe userChrome.css ---------------------------
+// --- "Single sidebar" window: installs userChrome.css ------------------------
 
-// L'installateur Windows est un .cmd qui contient son propre script PowerShell et le
-// CSS : cmd lance PowerShell, qui relit le fichier et exécute la partie après le
-// repère PS1 (les repères sont écrits en deux morceaux pour ne pas se trouver eux-mêmes).
-// Le CSS est rangé entre deux commentaires repères dans userChrome.css, ce qui
-// préserve les personnalisations existantes et permet de relancer l'installateur.
+// The Windows installer is a .cmd that contains its own PowerShell script and the
+// CSS: cmd launches PowerShell, which rereads the file and runs the part after the
+// PS1 marker (the markers are written in two pieces so they do not find themselves).
+// The CSS is stored between two marker comments in userChrome.css, which
+// preserves existing customizations and allows the installer to be run again.
 const INSTALLER_PS = String.raw`
 $ErrorActionPreference = 'Stop'
 $content = Get-Content -LiteralPath $f -Raw -Encoding UTF8
@@ -913,9 +1274,12 @@ if ($count) { Write-Host $msgDone }
 else { Write-Host $msgNoProfile }
 `;
 
-// Messages de l'installateur, en variables PowerShell (apostrophes doublées).
+// The Windows console displays accents badly: they are removed in the .cmd.
+const plain = (text) => text.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[’‘]/g, "'");
+
+// Installer messages, as PowerShell variables (apostrophes doubled).
 function installerMessages() {
-  const ps = (text) => `'${text.replace(/'/g, "''")}'`;
+  const ps = (text) => `'${plain(text).replace(/'/g, "''")}'`;
   return [
     `$msgNoFirefox = ${ps(t('installerNoFirefox'))}`,
     `$msgProfileDone = ${ps(t('installerProfileDone'))}`,
@@ -924,6 +1288,92 @@ function installerMessages() {
     '',
   ].join('\r\n');
 }
+
+// Linux and macOS installer: an sh script that contains the CSS in a here-doc (written
+// to a temporary file: macOS's bash 3.2 mishandles a here-doc inside $(...)).
+// It looks for profiles.ini in all known locations: distribution Firefox
+// (~/.mozilla or ~/.config/mozilla, depending on the version), Flatpak, Snap (Ubuntu) and macOS.
+// Same logic as on Windows: preference in user.js, CSS between the two markers.
+const INSTALLER_SH = String.raw`
+START='/* === ARBALETE DEBUT === */'
+END='/* === ARBALETE FIN === */'
+CSS=$(cat "$CSS_FILE")
+rm -f "$CSS_FILE"
+[ -n "$XDG_CONFIG_HOME" ] || XDG_CONFIG_HOME=$HOME/.config
+found=0
+count=0
+for root in \
+  "$HOME/Library/Application Support/Firefox" \
+  "$HOME/.mozilla/firefox" \
+  "$XDG_CONFIG_HOME/mozilla/firefox" \
+  "$HOME/.var/app/org.mozilla.firefox/.mozilla/firefox" \
+  "$HOME/.var/app/org.mozilla.firefox/config/mozilla/firefox" \
+  "$HOME/snap/firefox/common/.mozilla/firefox"
+do
+  [ -f "$root/profiles.ini" ] || continue
+  found=1
+  paths=$(grep '^Path=' "$root/profiles.ini" | cut -d= -f2- | tr -d '\r')
+  while IFS= read -r p; do
+    [ -n "$p" ] || continue
+    case $p in /*) dir=$p ;; *) dir=$root/$p ;; esac
+    [ -f "$dir/prefs.js" ] || continue
+
+    if ! grep -q legacyUserProfileCustomizations "$dir/user.js" 2>/dev/null; then
+      printf '\nuser_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);\n' >> "$dir/user.js"
+    fi
+
+    mkdir -p "$dir/chrome"
+    file=$dir/chrome/userChrome.css
+    old=''
+    if [ -f "$file" ]; then
+      if grep -qF "$START" "$file"; then
+        old=$(awk -v s="$START" -v e="$END" 'index($0, s) { skip = 1 } !skip { print } index($0, e) { skip = 0 }' "$file")
+      elif ! { grep -q 'Arbal' "$file" && grep -q '#sidebar-box' "$file"; }; then
+        old=$(cat "$file")
+      fi
+    fi
+    {
+      if [ -n "$(printf '%s' "$old" | tr -d ' \t\r\n')" ]; then printf '%s\n\n' "$old"; fi
+      printf '%s\n%s\n%s\n' "$START" "$CSS" "$END"
+    } > "$file"
+    echo "$MSG_PROFILE_DONE$(basename "$dir")"
+    count=$((count + 1))
+  done <<EOF
+$paths
+EOF
+done
+echo
+if [ "$found" = 0 ]; then echo "$MSG_NO_FIREFOX"
+elif [ "$count" = 0 ]; then echo "$MSG_NO_PROFILE"
+else echo "$MSG_DONE"
+fi
+exit 0
+`;
+
+function shInstaller(css) {
+  const sh = (text) => `'${text.replace(/'/g, "'\\''")}'`;
+  return [
+    '#!/bin/sh',
+    '# Arbalète: hides Firefox\'s own tabs while the Arbalète sidebar is open.',
+    `# ${t('setupUnixCommandHint')}`,
+    `echo ${sh(t('installerRunning'))}`,
+    `MSG_NO_FIREFOX=${sh(t('installerNoFirefox'))}`,
+    `MSG_PROFILE_DONE=${sh(t('installerProfileDone'))}`,
+    `MSG_DONE=${sh(t('installerDone'))}`,
+    `MSG_NO_PROFILE=${sh(t('installerNoProfile'))}`,
+    'CSS_FILE=$(mktemp)',
+    "cat > \"$CSS_FILE\" <<'ARBALETE_CSS'",
+    css.replace(/\r\n/g, '\n').trimEnd(),
+    'ARBALETE_CSS',
+    INSTALLER_SH.trim(),
+    '',
+  ].join('\n');
+}
+
+// Command to paste in a terminal (the file arrives in the download folder).
+const unixCommand = (os) => (os === 'mac'
+  ? 'sh ~/Downloads/installer-arbalete.sh'
+  : 'sh "$(xdg-user-dir DOWNLOAD)/installer-arbalete.sh"');
 
 async function userChromeCss() {
   return (await fetch('../userChrome.css')).text();
@@ -941,15 +1391,26 @@ function download(name, text, type) {
 async function initSetup() {
   document.title = t('setupWindowTitle');
   $('#setup-panel').hidden = false;
-  const { os } = await browser.runtime.getPlatformInfo();
-  if (os !== 'win') {
-    $('#setup-windows').hidden = true;
-    $('#setup-manual').open = true;
-  }
+  const os = await send('platform');
+  const unix = os === 'linux' || os === 'mac' || os === 'openbsd';
+  $('#setup-windows').hidden = os !== 'win';
+  $('#setup-unix').hidden = !unix;
+  if (!unix && os !== 'win') $('#setup-manual').open = true;
+
+  $('#setup-unix-command').textContent = unixCommand(os);
+  $('#setup-unix-download').addEventListener('click', async () => {
+    download('installer-arbalete.sh', shInstaller(await userChromeCss()), 'application/x-sh');
+    browser.storage.local.set({ setupDone: true });
+  });
+  $('#setup-unix-copy').addEventListener('click', async () => {
+    await send('copyText', { text: unixCommand(os) });
+    $('#setup-unix-copy').textContent = t('copied');
+  });
+
   $('#setup-download-script').addEventListener('click', async () => {
     const batch = [
       '@echo off',
-      `echo ${t('installerRunning')}`,
+      `echo ${plain(t('installerRunning'))}`,
       `powershell -NoProfile -ExecutionPolicy Bypass -Command "$f='%~f0'; $s=(Get-Content -LiteralPath $f -Raw -Encoding UTF8) -split ('#'+'PS1#'); iex (($s[1] -split ('#'+'CSS#'))[0])"`,
       'pause',
       'exit /b',
@@ -965,7 +1426,6 @@ async function initSetup() {
     download('userChrome.css', await userChromeCss(), 'text/css');
     browser.storage.local.set({ setupDone: true });
   });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') window.close(); });
 }
 
 async function exportSpaces() {
@@ -984,15 +1444,34 @@ async function importSpaces(e) {
   if (!file) return;
   try {
     const parsed = JSON.parse(await file.text());
-    if (!confirm(t('confirmImport', parsed.spaces.length))) return;
-    await send('importSpaces', { spaces: parsed.spaces });
-    toast(t('spacesImported'));
+    if (!Array.isArray(parsed.spaces) || !parsed.spaces.length) throw new Error('no spaces');
+    // Second click to confirm: the import replaces the current spaces.
+    const button = $('#s-import');
+    const label = button.textContent;
+    button.textContent = t('importArmed', parsed.spaces.length);
+    button.classList.add('armed');
+    const apply = async () => {
+      await send('importSpaces', { spaces: parsed.spaces });
+      toast(t('spacesImported'));
+    };
+    const reset = () => {
+      button.textContent = label;
+      button.classList.remove('armed');
+      button.removeEventListener('click', onConfirm, true);
+    };
+    const onConfirm = (event) => {
+      event.stopImmediatePropagation();
+      reset();
+      apply();
+    };
+    button.addEventListener('click', onConfirm, true);
+    setTimeout(reset, 6000);
   } catch (err) {
     toast(t('fileNotRecognized'));
   }
 }
 
-// --- Synchronisation avec le script de fond ---------------------------------------
+// --- Synchronization with the background script ------------------------------
 
 let refreshTimer = null;
 async function refresh() {
@@ -1009,18 +1488,50 @@ browser.runtime.onMessage.addListener((message) => {
   }
 });
 
-// Textes de la page : data-i18n (texte), data-i18n-title, data-i18n-placeholder, data-i18n-label.
+// Page texts: data-i18n (text), data-i18n-title, data-i18n-placeholder, data-i18n-label.
 function applyI18n() {
   document.documentElement.lang = browser.i18n.getUILanguage();
   for (const node of document.querySelectorAll('[data-i18n]')) node.textContent = t(node.dataset.i18n);
+  for (const node of document.querySelectorAll('[data-icon]')) node.prepend(icon(node.dataset.icon));
   for (const node of document.querySelectorAll('[data-i18n-title]')) node.title = t(node.dataset.i18nTitle);
   for (const node of document.querySelectorAll('[data-i18n-placeholder]')) node.placeholder = t(node.dataset.i18nPlaceholder);
   for (const node of document.querySelectorAll('[data-i18n-label]')) node.setAttribute('aria-label', t(node.dataset.i18nLabel));
 }
 
+// Dialog behavior shared by every frame: closing, height of the overlay, focus.
+async function initDialogFrame() {
+  document.body.classList.add('dialog', `frame-${frame}`);
+  if (frame === 'overlay') {
+    // Framed by a page: only go on if Arbalète opened this overlay.
+    if (!(await send('claimDialog', { token: params.get('token') }))) {
+      document.body.replaceChildren();
+      return false;
+    }
+    new ResizeObserver(() => {
+      window.parent.postMessage({ from: 'arbalete-palette', type: 'arbalete-palette-height', height: document.body.scrollHeight }, '*');
+    }).observe(document.body);
+    window.addEventListener('message', (e) => {
+      if (!e.data || e.data.type !== 'arbalete-palette-focus') return;
+      const first = document.querySelector('.panel:not([hidden]) :is(.name-input, input[type=search])');
+      if (first && !document.activeElement.matches('input, textarea, select')) first.focus();
+    });
+  }
+  // Back to quick search for the next click on the toolbar button.
+  if (frame === 'panel') browser.browserAction.setPopup({ popup: null });
+  for (const button of document.querySelectorAll('.dialog-close')) button.addEventListener('click', closeDialog);
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const popover = document.querySelector('.popover:not([hidden])');
+    if (popover) toggleIconPopover(false);
+    else closeDialog();
+  });
+  return true;
+}
+
 (async () => {
   applyI18n();
   document.body.classList.add(`mode-${mode}`);
+  if (mode !== 'sidebar' && !(await initDialogFrame())) return;
   windowId = mode === 'sidebar' ? (await browser.windows.getCurrent()).id : Number(params.get('win'));
   await refresh();
   if (mode === 'sidebar') initSidebar();
@@ -1028,5 +1539,6 @@ function applyI18n() {
   else if (mode === 'group') await initGroupForm();
   else if (mode === 'setup') await initSetup();
   else if (mode === 'archive') await initArchive();
+  else if (mode === 'grant') initGrant();
   else initSettings();
 })();

@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "__MSG_extName__",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "__MSG_extDescription__",
   "default_locale": "en",
   "author": "Valentin Gosselin",
@@ -148,6 +148,9 @@
     "default_popup": "palette/palette.html?panel=1"
   },
   "web_accessible_resources": [
+    "sidebar/sidebar.html",
+    "sidebar/sidebar.css",
+    "sidebar/sidebar.js",
     "palette/palette.html",
     "palette/palette.css",
     "palette/palette.js",

@@ -161,12 +161,6 @@
   "archiveNoMatch": {
     "message": "Aucun onglet archivé ne correspond."
   },
-  "archiveConfirmClear": {
-    "message": "Vider l’archive de l’espace « $1 » ?"
-  },
-  "spaceGradient": {
-    "message": "Fond en dégradé avec une 2e couleur"
-  },
   "spaceSites": {
     "message": "Sites de cet espace"
   },
@@ -174,19 +168,28 @@
     "message": "exemple.fr\nmon-travail.org"
   },
   "spaceSitesHint": {
-    "message": "Un site par ligne : les onglets qui y vont rejoignent cet espace (et son conteneur)."
+    "message": "Un site par ligne, * pour n’importe quelle partie (dev.*.exemple.fr) : les onglets qui y vont rejoignent cet espace (et son conteneur)."
+  },
+  "spaceSitesRejected": {
+    "message": "Pas une adresse de site : $1"
   },
   "spaceSchedule": {
     "message": "Basculer automatiquement sur cet espace"
   },
-  "scheduleWeek": {
-    "message": "Du lundi au vendredi"
+  "scheduleDays": {
+    "message": "Jours"
   },
-  "scheduleWeekend": {
-    "message": "Le week-end"
+  "scheduleAddSlot": {
+    "message": "Ajouter un créneau"
   },
-  "scheduleAll": {
-    "message": "Tous les jours"
+  "scheduleRemoveSlot": {
+    "message": "Retirer ce créneau"
+  },
+  "scheduleHint": {
+    "message": "Bascule au début de chaque créneau"
+  },
+  "scheduleInvalid": {
+    "message": "Chaque créneau a besoin d’au moins un jour et de deux heures différentes."
   },
   "scheduleFrom": {
     "message": "De"
@@ -244,6 +247,12 @@
   },
   "settingsSuggestInvalid": {
     "message": "Adresse invalide : il faut {searchTerms} à la place du texte"
+  },
+  "settingsCenter": {
+    "message": "Fenêtres centrées sur la page"
+  },
+  "settingsCenterHint": {
+    "message": "Réglages et espaces s’ouvrent par-dessus la page plutôt que sous l’icône d’Arbalète. Demande l’accès à tous les sites, comme la vue scindée."
   },
   "settingsHistory": {
     "message": "Chercher aussi dans l’historique avec la recherche rapide"
@@ -530,6 +539,15 @@
   "newSpace": {
     "message": "Nouvel espace"
   },
+  "toolArchive": {
+    "message": "Archive"
+  },
+  "toolSearch": {
+    "message": "Recherche rapide"
+  },
+  "toolSettings": {
+    "message": "Réglages"
+  },
   "pinCollapse": {
     "message": "Replier la barre"
   },
@@ -563,8 +581,68 @@
   "name": {
     "message": "Nom"
   },
-  "chosenIcon": {
-    "message": "Icône choisie"
+  "close": {
+    "message": "Fermer"
+  },
+  "grantAllow": {
+    "message": "Autoriser"
+  },
+  "grantHistoryTitle": {
+    "message": "Historique dans la recherche rapide"
+  },
+  "grantHistoryText": {
+    "message": "Firefox va vous demander d’autoriser Arbalète à lire votre historique. Il ne sert qu’à la recherche rapide et ne quitte pas votre ordinateur."
+  },
+  "grantCenterTitle": {
+    "message": "Fenêtres centrées sur la page"
+  },
+  "grantCenterText": {
+    "message": "Firefox va vous demander d’autoriser Arbalète à accéder à tous les sites. Cela lui permet d’afficher ses fenêtres par-dessus la page ; Arbalète ne lit ni n’envoie rien. C’est la même autorisation que pour la vue scindée."
+  },
+  "grantSuggestTitle": {
+    "message": "Suggestions de recherche"
+  },
+  "grantSuggestText": {
+    "message": "Firefox va vous demander d’autoriser Arbalète à contacter $1, uniquement pour les suggestions de recherche."
+  },
+  "iconChange": {
+    "message": "Changer l’icône"
+  },
+  "iconUpload": {
+    "message": "Importer une image…"
+  },
+  "iconUploadHint": {
+    "message": "SVG, PNG ou JPEG, réduite à 64 px"
+  },
+  "iconUnreadable": {
+    "message": "Image illisible ou trop lourde"
+  },
+  "spaceBackground": {
+    "message": "Fond de la barre"
+  },
+  "backgroundNone": {
+    "message": "Aucun"
+  },
+  "backgroundColor": {
+    "message": "Couleur"
+  },
+  "backgroundGradient": {
+    "message": "Dégradé"
+  },
+  "spaceSecondColor": {
+    "message": "2e couleur"
+  },
+  "colorCustom": {
+    "message": "Autre couleur"
+  },
+  "deleteArmed": {
+    "message": "Supprimer vraiment ?"
+  },
+  "clearArmed": {
+    "message": "Tout vider vraiment ?"
+  },
+  "importArmed": {
+    "message": "Remplacer par les $1 espaces du fichier ?"
   },
   "icon": {
     "message": "Icône"
@@ -601,9 +679,6 @@
   },
   "save": {
     "message": "Enregistrer"
-  },
-  "confirmDeleteSpace": {
-    "message": "Supprimer l’espace « $1 » ? Ses onglets iront dans un autre espace."
   },
   "groupFormTitle": {
     "message": "Groupe d'onglets"
@@ -671,9 +746,6 @@
   "exportFileName": {
     "message": "arbalete-espaces.json"
   },
-  "confirmImport": {
-    "message": "Remplacer vos espaces par les $1 espaces du fichier ?"
-  },
   "spacesImported": {
     "message": "Espaces importés"
   },
@@ -704,8 +776,26 @@
   "setupRepeat": {
     "message": "À refaire sur chaque PC. Relancer l'installateur met simplement à jour la configuration."
   },
+  "setupDownloadScriptUnix": {
+    "message": "Télécharger l'installateur (Linux, macOS)"
+  },
+  "setupUnixStep1": {
+    "message": "Ouvrez un terminal et lancez :"
+  },
+  "setupUnixDrag": {
+    "message": "Fichier enregistré ailleurs : tapez sh suivi d’une espace, glissez le fichier dans le terminal, puis Entrée."
+  },
+  "setupUnixCommandHint": {
+    "message": "À lancer dans un terminal : sh installer-arbalete.sh"
+  },
+  "copy": {
+    "message": "Copier"
+  },
+  "copied": {
+    "message": "Copié"
+  },
   "setupManualSummary": {
-    "message": "Installation manuelle (Mac, Linux, ou sans script)"
+    "message": "Installation manuelle (sans script)"
   },
   "setupManual1": {
     "message": "Dans about:config, passer toolkit.legacyUserProfileCustomizations.stylesheets à true."
@@ -723,18 +813,18 @@
     "message": "Télécharger userChrome.css"
   },
   "installerRunning": {
-    "message": "Configuration de Firefox pour Arbalete..."
+    "message": "Configuration de Firefox pour Arbalète…"
   },
   "installerNoFirefox": {
     "message": "Firefox introuvable pour cet utilisateur."
   },
   "installerProfileDone": {
-    "message": "Profil configure : "
+    "message": "Profil configuré : "
   },
   "installerDone": {
-    "message": "Termine. Fermez completement Firefox puis relancez-le."
+    "message": "Terminé. Fermez complètement Firefox puis relancez-le."
   },
   "installerNoProfile": {
-    "message": "Aucun profil Firefox trouve."
+    "message": "Aucun profil Firefox trouvé."
   }
 }

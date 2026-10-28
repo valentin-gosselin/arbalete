@@ -1,20 +1,20 @@
 'use strict';
 
-// Dans le calque, la palette est un cadre d'extension posé dans une page web : Firefox
-// ne lui donne qu'une partie des API (pas commands, history…). Tout ce qui demande des
-// droits passe donc par le script de fond (send).
+// In the overlay, the palette is an extension frame placed in a web page: Firefox
+// only gives it part of the APIs (no commands, history...). Everything that needs
+// rights therefore goes through the background script (send).
 //
-// Recherche rapide d'Arbalète (façon barre de commande d'Arc) : onglets de tous les
-// espaces de la fenêtre, favoris, commandes, historique (si autorisé dans les
-// réglages), adresse à ouvrir et recherche sur le Web. Entrée lance, Échap ferme.
-// « > » au début ne cherche que dans les commandes.
+// Arbalète quick search (like Arc's command bar): tabs of all the spaces of the
+// window, favorites, commands, history (if allowed in the settings), address to open
+// and Web search. Enter launches, Esc closes.
+// A leading ">" only searches in the commands.
 
 const $ = (sel) => document.querySelector(sel);
 const t = (key, ...subs) => browser.i18n.getMessage(key, subs.map(String)) || key;
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
-// overlay : cadre centré dans la page (overlay.js) ; panel : panneau sous l'icône
-// d'Arbalète, pour les pages où Firefox interdit toute extension.
+// overlay: frame centered in the page (overlay.js); panel: panel under the Arbalète
+// icon, for pages where Firefox forbids every extension.
 const params = new URLSearchParams(location.search);
 const mode = params.has('overlay') ? 'overlay' : 'panel';
 
@@ -30,6 +30,13 @@ function close() {
 }
 
 const send = (type, data = {}) => browser.runtime.sendMessage({ type, windowId, ...data });
+
+// Settings from quick search: the panel turns into the dialog itself; the overlay is
+// replaced by the dialog's overlay.
+function openDialog(query) {
+  if (mode === 'panel') location.replace(`../sidebar/sidebar.html?${query}&win=${windowId}&panel=1`);
+  else send('openDialog', { query });
+}
 const normalize = (text) => (text || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
 function el(tag, props = {}, children = []) {
@@ -56,6 +63,9 @@ function icon(name) {
 }
 
 const spaceIconName = (space) => (space && space.icon && space.icon.startsWith('lucide:') ? space.icon.slice(7) : 'layers');
+// Imported space icon (data URL), shown instead of the Lucide one.
+const spaceImage = (space) => (space && space.icon === 'image' && space.iconImage) || null;
+const spaceBadge = (space) => (space ? { icon: spaceIconName(space), image: spaceImage(space), text: space.name } : null);
 const spaceOf = (id) => state.spaces.find((s) => s.id === id);
 const activeTab = () => state.tabs.find((x) => x.active);
 
@@ -67,7 +77,7 @@ function host(url) {
   }
 }
 
-// Tous les mots tapés doivent apparaître ; le titre compte plus que l'adresse.
+// All typed words must appear; the title counts more than the address.
 function score(words, title, url) {
   const nt = normalize(title);
   const nu = normalize(url);
@@ -85,7 +95,7 @@ function looksLikeUrl(text) {
   return /^[a-z]+:\/\//i.test(text) || /^[^\s/]+\.[a-z]{2,}(\/\S*)?$/i.test(text);
 }
 
-// --- Commandes -----------------------------------------------------------------------------
+// --- Commands ----------------------------------------------------------------
 
 function commands() {
   const tab = activeTab();
@@ -99,11 +109,11 @@ function commands() {
     { label: t('paletteCloseDuplicates'), icon: 'copy-x', run: () => tab && send('tabAction', { tabId: tab.id, action: 'closedupes' }) },
     { label: t('paletteClearSpace'), icon: 'eraser', run: () => send('clearSpace', { spaceId: state.activeSpaceId }) },
     { label: t('paletteReopenClosed'), icon: 'undo-2', run: () => send('reopenClosed') },
-    { label: t('paletteSettings'), icon: 'settings', run: () => send('openSettings') },
+    { label: t('paletteSettings'), icon: 'settings', run: () => openDialog('settings=1') },
   ];
   for (const space of state.spaces) {
     if (space.id !== state.activeSpaceId) {
-      list.push({ label: t('paletteGoToSpace', space.name), icon: spaceIconName(space), run: () => send('switchSpace', { spaceId: space.id }) });
+      list.push({ label: t('paletteGoToSpace', space.name), icon: spaceIconName(space), image: spaceImage(space), run: () => send('switchSpace', { spaceId: space.id }) });
       if (tab && !tab.pinned) {
         list.push({ label: t('paletteMoveTabToSpace', space.name), icon: 'arrow-right-left', run: () => send('moveTab', { tabId: tab.id, spaceId: space.id }) });
       }
@@ -113,7 +123,7 @@ function commands() {
   return list.map((c) => ({ ...c, kind: 'command', section: t('paletteSectionCommands') }));
 }
 
-// --- Recherche -------------------------------------------------------------------------------
+// --- Search ------------------------------------------------------------------
 
 function tabResult(tab) {
   const space = spaceOf(tab.spaceId);
@@ -123,7 +133,7 @@ function tabResult(tab) {
     label: tab.title || tab.url,
     sub: host(tab.url),
     favicon: tab.favIconUrl,
-    badge: space ? { icon: spaceIconName(space), text: space.name } : null,
+    badge: spaceBadge(space),
     url: tab.url,
     run: () => send('activateTab', { tabId: tab.id }),
   };
@@ -137,7 +147,7 @@ async function search(query) {
   const list = [];
 
   if (!words.length && !commandsOnly) {
-    // Sans recherche : derniers onglets utilisés, puis quelques commandes.
+    // With no query: most recently used tabs, then a few commands.
     const recent = state.tabs.filter((x) => !x.active && /^(https?|file|moz-extension):/.test(x.url))
       .sort((a, b) => b.lastAccessed - a.lastAccessed).slice(0, 6);
     list.push(...recent.map((x) => ({ ...tabResult(x), section: t('paletteSectionRecent') })));
@@ -164,7 +174,7 @@ async function search(query) {
           sub: host(fav.url),
           favicon: fav.favIconUrl,
           url: fav.url,
-          badge: { icon: spaceIconName(space), text: space.name },
+          badge: spaceBadge(space),
           run: () => send('openFavorite', { spaceId: space.id, favId: fav.id }),
         });
       }
@@ -183,7 +193,7 @@ async function search(query) {
     }
     list.push(...scored(favorites).slice(0, 5));
 
-    // Onglets rangés dans l'archive des espaces (nettoyage automatique).
+    // Tabs stored in the spaces' archive (automatic cleanup).
     const archive = await send('getArchive').catch(() => ({}));
     if (id !== searchId) return;
     const archived = [];
@@ -197,7 +207,7 @@ async function search(query) {
           sub: host(x.url),
           favicon: x.favIconUrl,
           url: x.url,
-          badge: space ? { icon: spaceIconName(space), text: space.name } : null,
+          badge: spaceBadge(space),
           run: () => send('reopenArchived', { spaceId, url: x.url }),
         });
       }
@@ -208,7 +218,7 @@ async function search(query) {
 
   if (!commandsOnly) {
     const web = { kind: 'web', section: t('paletteSectionWeb'), label: t('paletteSearchWeb', text), icon: 'search', run: () => send('webSearch', { text }) };
-    // Rien de précis (onglet, favori, commande) : la recherche Web passe en tête, Entrée la lance.
+    // Nothing specific (tab, favorite, command): Web search comes first, Enter launches it.
     const precise = list.some((r) => r.kind !== 'open');
     if (precise) list.push(web);
     else list.splice(list[0] && list[0].kind === 'open' ? 1 : 0, 0, web);
@@ -216,8 +226,8 @@ async function search(query) {
   show(list, id);
   if (commandsOnly) return;
 
-  // Suggestions du moteur de recherche (réglage) et historique (permission), ajoutés
-  // juste après la recherche Web dès qu'ils arrivent.
+  // Suggestions from the search engine (setting) and history (permission), added
+  // right after the Web search as soon as they arrive.
   const [suggestions, visits] = await Promise.all([
     send('suggest', { text }).catch(() => []),
     send('searchHistory', { text }).catch(() => []),
@@ -245,10 +255,10 @@ async function search(query) {
   show(list, id);
 }
 
-// --- Affichage et clavier ----------------------------------------------------------------------
+// --- Display and keyboard ----------------------------------------------------
 
 function show(list, id) {
-  if (id !== searchId) return; // une frappe plus récente a pris le relais
+  if (id !== searchId) return; // a more recent keystroke took over
   results = list;
   selected = Math.min(selected, Math.max(0, list.length - 1));
   const rows = [];
@@ -258,8 +268,9 @@ function show(list, id) {
       section = r.section;
       rows.push(el('li', { class: 'section', role: 'presentation' }, section));
     }
-    const visual = el('span', { class: 'visual' }, r.favicon
-      ? el('img', { src: r.favicon, alt: '', onerror: (e) => e.target.replaceWith(icon('globe')) })
+    const picture = r.favicon || r.image;
+    const visual = el('span', { class: 'visual' }, picture
+      ? el('img', { src: picture, alt: '', onerror: (e) => e.target.replaceWith(icon('globe')) })
       : icon(r.icon || 'globe'));
     rows.push(el('li', {
       class: i === selected ? 'item selected' : 'item',
@@ -274,7 +285,7 @@ function show(list, id) {
         el('span', { class: 'title' }, r.label),
         r.sub ? el('span', { class: 'sub' }, r.sub) : null,
       ]),
-      r.badge ? el('span', { class: 'badge' }, [icon(r.badge.icon), r.badge.text]) : null,
+      r.badge ? el('span', { class: 'badge' }, [r.badge.image ? el('img', { class: 'ic', src: r.badge.image, alt: '' }) : icon(r.badge.icon), r.badge.text]) : null,
       el('span', { class: 'enter', 'aria-hidden': 'true' }, '↵'),
     ]));
   });
@@ -303,24 +314,24 @@ async function run(i) {
 
 $('#query').addEventListener('input', (e) => {
   selected = 0;
-  if (state) safeSearch(e.target.value); // sinon, le chargement lancera la recherche
+  if (state) safeSearch(e.target.value); // otherwise, the load will start the search
 });
 
-// Une erreur de recherche s'affiche dans la palette au lieu de la laisser vide.
+// A search error is shown in the palette instead of leaving it empty.
 function safeSearch(query) {
   search(query).catch((error) => {
     $('#results').replaceChildren(el('li', { class: 'section' }, `Arbalète : ${error && error.message ? error.message : error}`));
   });
 }
 
-// Fenêtre de la palette. Dans le calque, la palette est un cadre posé sur une page web :
-// on passe par l'onglet qui l'héberge, plus fiable que windows.getCurrent() dans ce cas.
+// Palette window. In the overlay, the palette is a frame placed on a web page:
+// we go through the tab that hosts it, more reliable than windows.getCurrent() here.
 async function currentWindowId() {
   try {
     const tab = await browser.tabs.getCurrent();
     if (tab) return tab.windowId;
   } catch (e) {
-    // pas d'onglet (panneau de la barre d'outils)
+    // no tab (toolbar panel)
   }
   try {
     return (await browser.windows.getCurrent()).id;
@@ -342,7 +353,7 @@ $('#query').addEventListener('keydown', (e) => {
   e.preventDefault();
 });
 
-// Focus immédiat dans le champ, et à chaque fois que le cadre reçoit le focus.
+// Immediate focus in the field, and every time the frame receives focus.
 const focusQuery = () => $('#query').focus();
 focusQuery();
 window.addEventListener('focus', focusQuery);
@@ -363,7 +374,7 @@ window.addEventListener('message', (e) => {
   try {
     windowId = params.get('win') ? Number(params.get('win')) : await currentWindowId();
     state = await send('getState');
-    if (!state || !state.tabs) throw new Error('état vide');
+    if (!state || !state.tabs) throw new Error('empty state');
   } catch (error) {
     $('#results').replaceChildren(el('li', { class: 'section' }, `Arbalète : ${error && error.message ? error.message : error}`));
     return;
@@ -371,7 +382,7 @@ window.addEventListener('message', (e) => {
   const space = state.spaces.find((x) => x.id === state.activeSpaceId);
   if (space) document.documentElement.style.setProperty('--accent', space.color);
 
-  // Le calque ajuste la hauteur de son cadre au contenu.
+  // The overlay adjusts its frame's height to the content.
   if (mode === 'overlay') {
     new ResizeObserver(() => {
       window.parent.postMessage({ from: 'arbalete-palette', type: 'arbalete-palette-height', height: document.body.scrollHeight }, '*');
