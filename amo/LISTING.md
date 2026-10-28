@@ -11,7 +11,7 @@ it has no `update_url`, which AMO refuses on listed versions.
 | Name | Arbalète |
 | Add-on URL | `arbalete` |
 | Categories | Tabs, Appearance |
-| Tags | tab, productivity, container |
+| Tags | container (AMO only accepts its own fixed list; privacy also fits) |
 | Homepage | https://github.com/valentin-gosselin/arbalete |
 | Support site | https://github.com/valentin-gosselin/arbalete/issues |
 | License | Mozilla Public License 2.0 |
@@ -27,70 +27,66 @@ it has no `update_url`, which AMO refuses on listed versions.
 
 ## Description (fr)
 
-```html
-<b>Arbalète</b> range vos onglets en <b>espaces</b>, comme le navigateur Arc, sans quitter Firefox. Un espace pour le perso, un pour le travail, un par projet : chacun garde ses onglets, ses favoris, sa couleur, son icône et, si vous voulez, son propre conteneur (comptes connectés séparés). Changer d'espace masque les onglets des autres, dans la même fenêtre.
+AMO uses a limited Markdown in this field.
 
-<b>Espaces</b>
-<ul>
-<li>Barre latérale verticale et compacte, qui peut se déployer au survol. Un petit installateur (Windows, Linux, macOS) masque les onglets natifs de Firefox quand la barre est ouverte.</li>
-<li>Favoris en tuiles, propres à un espace ou communs à tous.</li>
-<li>Sites d'un espace : un lien vers vos sites de travail (l'étoile est acceptée, dev.*.exemple.fr) rejoint tout seul le bon espace et son conteneur.</li>
-<li>Bascule horaire : des créneaux par jour (du lundi au vendredi de 9 h à 18 h, par exemple) pour passer automatiquement sur un espace.</li>
-<li>Une couleur, un fond de barre (uni, dégradé ou sans), une icône parmi 1 900 ou votre propre image.</li>
-</ul>
+```markdown
+**Arbalète** range vos onglets en **espaces**, comme le navigateur Arc, sans quitter Firefox. Un espace pour le perso, un pour le travail, un par projet : chacun garde ses onglets, ses favoris, sa couleur, son icône et, si vous voulez, son propre conteneur (comptes connectés séparés). Changer d'espace masque les onglets des autres, dans la même fenêtre.
 
-<b>Onglets</b>
-<ul>
-<li>Recherche rapide (Alt+K) : onglets de tous les espaces, favoris, archive, commandes, historique et recherche sur le Web.</li>
-<li>Vue scindée : deux sites côte à côte dans un seul onglet.</li>
-<li>Archive automatique des onglets inactifs (après 12 h, 24 h ou 7 jours), réouverture en un clic.</li>
-<li>Groupes d'onglets, sélection multiple, menu d'onglet de Firefox, clic molette pour fermer, pastilles de messages non lus.</li>
-</ul>
+**Espaces**
 
-<b>D'un PC à l'autre</b>
-<ul>
-<li>Vos espaces vous suivent par Firefox Sync.</li>
-<li>Modèles d'espaces : exportez une sélection d'espaces et ajoutez-la chez quelqu'un d'autre.</li>
-<li>Un assistant de démarrage crée vos espaces en une minute.</li>
-</ul>
+- Barre latérale verticale et compacte, qui peut se déployer au survol. Un petit installateur (Windows, Linux, macOS) masque les onglets natifs de Firefox quand la barre est ouverte.
+- Favoris en tuiles, propres à un espace ou communs à tous.
+- Sites d'un espace : un lien vers vos sites de travail (l'étoile est acceptée, dev.\*.exemple.fr) rejoint tout seul le bon espace et son conteneur.
+- Bascule horaire : des créneaux par jour (du lundi au vendredi de 9 h à 18 h, par exemple) pour passer automatiquement sur un espace.
+- Une couleur, un fond de barre (uni, dégradé ou sans), une icône parmi 1 900 ou votre propre image.
 
-<b>Vie privée</b> : aucune donnée collectée ni envoyée, aucun pistage. Code ouvert, licence MPL 2.0 : <a href="https://github.com/valentin-gosselin/arbalete">github.com/valentin-gosselin/arbalete</a>
+**Onglets**
 
-<i>Arbalète est un projet indépendant, sans lien avec The Browser Company ni avec le navigateur Arc.</i>
+- Recherche rapide (Alt+K) : onglets de tous les espaces, favoris, archive, commandes, historique et recherche sur le Web.
+- Vue scindée : deux sites côte à côte dans un seul onglet.
+- Archive automatique des onglets inactifs (après 12 h, 24 h ou 7 jours), réouverture en un clic.
+- Groupes d'onglets, sélection multiple, menu d'onglet de Firefox, clic molette pour fermer, pastilles de messages non lus.
+
+**D'un PC à l'autre**
+
+- Vos espaces vous suivent par Firefox Sync.
+- Modèles d'espaces : exportez une sélection d'espaces et ajoutez-la chez quelqu'un d'autre.
+- Un assistant de démarrage crée vos espaces en une minute.
+
+**Vie privée** : aucune donnée collectée ni envoyée, aucun pistage. Code ouvert, licence MPL 2.0 : [github.com/valentin-gosselin/arbalete](https://github.com/valentin-gosselin/arbalete)
+
+*Arbalète est un projet indépendant, sans lien avec The Browser Company ni avec le navigateur Arc.*
 ```
 
 ## Description (en)
 
-```html
-<b>Arbalète</b> sorts your tabs into <b>spaces</b>, like the Arc browser, without leaving Firefox. One space for personal browsing, one for work, one per project: each keeps its own tabs, favorites, color, icon and, if you like, its own container (separate logins). Switching spaces hides the other spaces' tabs, in the same window.
+```markdown
+**Arbalète** sorts your tabs into **spaces**, like the Arc browser, without leaving Firefox. One space for personal browsing, one for work, one per project: each keeps its own tabs, favorites, color, icon and, if you like, its own container (separate logins). Switching spaces hides the other spaces' tabs, in the same window.
 
-<b>Spaces</b>
-<ul>
-<li>Compact vertical sidebar that can expand on hover. A small installer (Windows, Linux, macOS) hides Firefox's own tab strip while the sidebar is open.</li>
-<li>Favorites as tiles, for one space or shared by all of them.</li>
-<li>Space sites: a link to your work sites (wildcards work, dev.*.example.com) joins the right space and its container by itself.</li>
-<li>Scheduled switching: time slots per day (Monday to Friday, 9 am to 6 pm for instance) to switch to a space automatically.</li>
-<li>A color, a sidebar background (plain, gradient or none), an icon among 1,900 or your own image.</li>
-</ul>
+**Spaces**
 
-<b>Tabs</b>
-<ul>
-<li>Quick search (Alt+K): tabs of every space, favorites, archive, commands, history and web search.</li>
-<li>Split view: two sites side by side in a single tab.</li>
-<li>Automatic archive of inactive tabs (after 12 h, 24 h or 7 days), reopened in one click.</li>
-<li>Tab groups, multi-selection, Firefox's tab menu, middle click to close, unread badges.</li>
-</ul>
+- Compact vertical sidebar that can expand on hover. A small installer (Windows, Linux, macOS) hides Firefox's own tab strip while the sidebar is open.
+- Favorites as tiles, for one space or shared by all of them.
+- Space sites: a link to your work sites (wildcards work, dev.\*.example.com) joins the right space and its container by itself.
+- Scheduled switching: time slots per day (Monday to Friday, 9 am to 6 pm for instance) to switch to a space automatically.
+- A color, a sidebar background (plain, gradient or none), an icon among 1,900 or your own image.
 
-<b>Across your computers</b>
-<ul>
-<li>Your spaces follow you through Firefox Sync.</li>
-<li>Space templates: export a selection of spaces and add it to someone else's.</li>
-<li>A first run assistant sets up your spaces in a minute.</li>
-</ul>
+**Tabs**
 
-<b>Privacy</b>: no data collected or sent, no tracking. Open source, MPL 2.0 license: <a href="https://github.com/valentin-gosselin/arbalete">github.com/valentin-gosselin/arbalete</a>
+- Quick search (Alt+K): tabs of every space, favorites, archive, commands, history and web search.
+- Split view: two sites side by side in a single tab.
+- Automatic archive of inactive tabs (after 12 h, 24 h or 7 days), reopened in one click.
+- Tab groups, multi-selection, Firefox's tab menu, middle click to close, unread badges.
 
-<i>Arbalète is an independent project, not affiliated with The Browser Company or the Arc browser.</i>
+**Across your computers**
+
+- Your spaces follow you through Firefox Sync.
+- Space templates: export a selection of spaces and add it to someone else's.
+- A first run assistant sets up your spaces in a minute.
+
+**Privacy**: no data collected or sent, no tracking. Open source, MPL 2.0 license: [github.com/valentin-gosselin/arbalete](https://github.com/valentin-gosselin/arbalete)
+
+*Arbalète is an independent project, not affiliated with The Browser Company or the Arc browser.*
 ```
 
 ## Notes to reviewers
