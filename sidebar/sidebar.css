@@ -241,22 +241,27 @@ body:not(.mode-sidebar) > .footer { display: none; }
 .tab .audio.muted { color: var(--muted); }
 .tab .audio .ic { width: 14px; height: 14px; }
 .tab .audio:hover { background: var(--row-hover); }
+/* Close button, as in Firefox's own vertical tabs: a 24 px target with a 12 px cross,
+   always shown on the active tab, on hover for the others. */
 .tab .close {
   visibility: hidden;
   display: grid;
   place-items: center;
+  flex: none;
   border: 0;
   background: none;
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
+  margin-inline-end: -3px;
   padding: 0;
-  border-radius: 5px;
+  border-radius: 6px;
   cursor: pointer;
   color: var(--muted);
 }
-.tab .close .ic { width: 14px; height: 14px; }
-.tab:hover .close { visibility: visible; }
-.tab .close:hover { background: var(--row-hover); color: var(--fg); }
+.tab .close .ic { width: 12px; height: 12px; stroke-width: 2.4; }
+.tab:hover .close, .tab.active .close { visibility: visible; }
+.tab .close:hover { background: color-mix(in srgb, var(--fg) 12%, transparent); color: var(--fg); }
+.tab .close:active { background: color-mix(in srgb, var(--fg) 20%, transparent); }
 
 /* Firefox tab groups */
 .group {
@@ -832,22 +837,26 @@ body.mode-welcome { background: var(--bg); }
   .tabs { padding: 0 6px 6px; scrollbar-width: none; }
   .tab { justify-content: center; padding: 7px 0; }
   .tab .title, .tab .badge { display: none; }
-  /* Close button: a small badge on the favicon corner, on hover */
+  /* Close button, as in Firefox's collapsed vertical tabs: a 15 px round badge on the
+     top left corner of the icon, opaque, shown on hover. */
   .tab .close {
     display: none;
+    visibility: visible;
     position: absolute;
-    top: 0;
-    right: 0;
-    width: 16px;
-    height: 16px;
+    top: -3px;
+    left: 2px;
+    width: 15px;
+    height: 15px;
+    margin: 0;
     padding: 0;
     border-radius: 50%;
-    background: var(--bg);
-    box-shadow: 0 0 0 1px var(--border);
+    background: var(--card);
+    box-shadow: 0 0 0 1px var(--border), 0 1px 3px rgba(0, 0, 0, 0.25);
     color: var(--fg);
   }
   .tab:hover .close { display: grid; }
-  .tab .close .ic { width: 10px; height: 10px; }
+  .tab .close:hover { background: color-mix(in srgb, var(--fg) 12%, var(--card)); }
+  .tab .close .ic { width: 8px; height: 8px; stroke-width: 3; }
   .tab .favicon { width: 18px; height: 18px; }
   .split { flex-direction: column; gap: 0; padding: 1px; }
   /* Speaker as a badge on the favicon corner */

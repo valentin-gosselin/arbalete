@@ -436,7 +436,28 @@ browser.windows.onCreated.addListener(async (win) => {
 
 browser.windows.onRemoved.addListener((windowId) => activeByWindow.delete(windowId));
 
+// Links opened from another application (mail, chat...) arrive while no Firefox window
+// has the focus, or right after Firefox takes it back (on Wayland the system raises the
+// window before the tab exists). They can go to a chosen space (setting externalSpace,
+// on this computer) instead of the displayed one; the sites of a space still win.
+const EXTERNAL_DELAY = 1500; // ms after Firefox comes back to the front
+let firefoxFocused = true;
+let focusedAgainAt = 0;
+let externalSpaceId = null;
+browser.windows.onFocusChanged.addListener((windowId) => {
+  const focused = windowId !== browser.windows.WINDOW_ID_NONE;
+  if (focused && !firefoxFocused) focusedAgainAt = Date.now();
+  firefoxFocused = focused;
+});
+browser.storage.local.get('externalSpace').then((s) => { externalSpaceId = s.externalSpace || null; });
+browser.storage.onChanged.addListener((changes, area) => {
+  if (area === 'local' && changes.externalSpace) externalSpaceId = changes.externalSpace.newValue || null;
+});
+
 browser.tabs.onCreated.addListener(async (tab) => {
+  // Read before any await: the focus may change right after.
+  const outside = !firefoxFocused || Date.now() - focusedAgainAt < EXTERNAL_DELAY;
+  const external = outside && !tab.openerTabId && !BLANK_URLS.includes(tab.url);
   await ready;
   if (tab.pinned || tabSpace.has(tab.id)) return notify();
   // Small windows (space editing, login popups): outside the spaces.
@@ -448,6 +469,7 @@ browser.tabs.onCreated.addListener(async (tab) => {
   if (tabSpace.has(tab.id)) return notify(); // assigned in the meantime by newTab()
   let spaceId = getSpace(saved) ? saved : activeSpace(tab.windowId);
   if (!saved && tab.openerTabId && tabSpace.has(tab.openerTabId)) spaceId = tabSpace.get(tab.openerTabId);
+  if (!saved && external && getSpace(externalSpaceId)) spaceId = externalSpaceId;
   assign(tab.id, spaceId);
 
   // Ctrl+T in a space bound to a container: reopen the tab in that container.
@@ -469,7 +491,10 @@ browser.tabs.onCreated.addListener(async (tab) => {
   }
 
   if (spaceId !== activeSpace(tab.windowId)) {
-    if (tab.active) await switchSpace(tab.windowId, spaceId);
+    // The tab may have been activated while we were deciding (links from another
+    // application): read its current state, not the one it was created with.
+    const now = await browser.tabs.get(tab.id).catch(() => tab);
+    if (now.active) await switchSpace(tab.windowId, spaceId);
     else await browser.tabs.hide(tab.id).catch(() => {});
   }
   notify();

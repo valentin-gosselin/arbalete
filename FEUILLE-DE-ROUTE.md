@@ -77,6 +77,12 @@ Fait en premier car tous les textes ajoutés ensuite en dépendent.
 - [x] Modèles d'espaces : fenêtre « Partager des espaces » (Réglages) : export d'une sélection, avec ou sans favoris ; import d'un fichier en choisissant les espaces, ajoutés aux siens (modèle) ou à leur place (autre PC).
 - [x] Assistant de premier lancement (onglet à l'installation, à revoir depuis les Réglages) : espaces de départ à choisir et renommer, ou fichier modèle, ou espaces déjà synchronisés détectés ; installateur « une seule barre » ; fenêtres centrées, teinte, historique, raccourcis.
 
+## Après la 0.11.1 (version 0.11.2)
+
+- [x] Réglage « Liens venant d'autres applications » : un lien sans règle ouvert depuis la messagerie ou une autre application va dans l'espace choisi (Perso…) au lieu de l'espace affiché ; les sites d'un espace restent prioritaires. Détection : Firefox au second plan ou revenu au premier plan depuis moins de 1,5 s (Wayland), onglet sans parent.
+- [x] Correctif : un onglet activé pendant qu'Arbalète choisit son espace fait bien basculer la fenêtre.
+- [x] Croix de fermeture reprises des onglets verticaux de Firefox 158 : pastille ronde en haut à gauche en compact, bouton de 24 px toujours visible sur l'onglet actif en déplié.
+
 ## Phase 9 : publication publique
 
 - [x] Fiche AMO en français et en anglais prête dans `amo/LISTING.md` (nom, résumés, descriptions, catégories, notes pour la relecture, plan des captures), icône `amo/icon-128.png`, politique de confidentialité à jour.

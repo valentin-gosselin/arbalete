@@ -1134,6 +1134,17 @@ function initSettings() {
     if (history.checked) history.checked = await askPermission(HISTORY);
     else await send('removePermission', { permissions: HISTORY });
   });
+  // Links from other applications: displayed space, or a chosen one.
+  const external = $('#s-external');
+  external.replaceChildren(
+    el('option', { value: '' }, t('externalDisplayed')),
+    ...state.spaces.map((s) => el('option', { value: s.id }, s.name)),
+  );
+  browser.storage.local.get('externalSpace').then((s) => {
+    external.value = state.spaces.some((x) => x.id === s.externalSpace) ? s.externalSpace : '';
+  });
+  external.addEventListener('change', () => browser.storage.local.set({ externalSpace: external.value || null }));
+
   const theme = $('#s-theme');
   browser.storage.local.get('tintTheme').then((s) => { theme.checked = !!s.tintTheme; });
   theme.addEventListener('change', () => browser.storage.local.set({ tintTheme: theme.checked }));

@@ -87,6 +87,9 @@ const M = [
   ['settingsSuggestSaved', 'Suggestions enregistrées', 'Suggestions saved'],
   ['settingsSuggestInvalid', 'Adresse invalide : il faut {searchTerms} à la place du texte', 'Invalid address: {searchTerms} must stand for the text'],
   ['settingsCenter', 'Fenêtres centrées sur la page', 'Dialogs centered on the page'],
+  ['settingsExternal', 'Liens venant d’autres applications', 'Links from other applications'],
+  ['settingsExternalHint', 'Messagerie, discussion… Les sites d’un espace restent prioritaires.', 'Mail, chat… The sites of a space still win.'],
+  ['externalDisplayed', 'Espace affiché', 'Displayed space'],
   ['settingsCenterHint', 'Réglages et espaces s’ouvrent par-dessus la page plutôt que sous l’icône d’Arbalète. Demande l’accès à tous les sites, comme la vue scindée.', 'Settings and spaces open over the page instead of under the Arbalète button. Asks for access to all websites, like split view.'],
   ['settingsHistory', 'Chercher aussi dans l’historique avec la recherche rapide', 'Also search history in quick search'],
 

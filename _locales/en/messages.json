@@ -251,6 +251,15 @@
   "settingsCenter": {
     "message": "Dialogs centered on the page"
   },
+  "settingsExternal": {
+    "message": "Links from other applications"
+  },
+  "settingsExternalHint": {
+    "message": "Mail, chat… The sites of a space still win."
+  },
+  "externalDisplayed": {
+    "message": "Displayed space"
+  },
   "settingsCenterHint": {
     "message": "Settings and spaces open over the page instead of under the Arbalète button. Asks for access to all websites, like split view."
   },

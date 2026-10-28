@@ -251,6 +251,15 @@
   "settingsCenter": {
     "message": "Fenêtres centrées sur la page"
   },
+  "settingsExternal": {
+    "message": "Liens venant d’autres applications"
+  },
+  "settingsExternalHint": {
+    "message": "Messagerie, discussion… Les sites d’un espace restent prioritaires."
+  },
+  "externalDisplayed": {
+    "message": "Espace affiché"
+  },
   "settingsCenterHint": {
     "message": "Réglages et espaces s’ouvrent par-dessus la page plutôt que sous l’icône d’Arbalète. Demande l’accès à tous les sites, comme la vue scindée."
   },
