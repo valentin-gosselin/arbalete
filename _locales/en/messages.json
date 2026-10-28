@@ -395,6 +395,15 @@
   "menuTabSelectAll": {
     "message": "Select all tabs of the space"
   },
+  "menuTabArchive": {
+    "message": "Archive tab"
+  },
+  "menuTabsArchive": {
+    "message": "Archive $1 tabs"
+  },
+  "paletteArchiveTab": {
+    "message": "Archive tab"
+  },
   "menuTabClose": {
     "message": "Close tab"
   },

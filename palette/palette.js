@@ -94,6 +94,7 @@ function commands() {
     { label: t('paletteNewSpace'), icon: 'layers', run: async () => send('editSpace', { spaceId: await send('createSpace') }) },
     { label: t('paletteSplit'), icon: 'columns-2', run: () => tab && send('tabAction', { tabId: tab.id, action: 'split' }) },
     { label: t('paletteCopyUrl'), icon: 'link', run: () => tab && send('tabAction', { tabId: tab.id, action: 'copyurl' }) },
+    { label: t('paletteArchiveTab'), icon: 'archive', run: () => tab && send('tabAction', { tabId: tab.id, action: 'archive' }) },
     { label: t('paletteDuplicate'), icon: 'copy', run: () => tab && send('tabAction', { tabId: tab.id, action: 'duplicate' }) },
     { label: t('paletteCloseDuplicates'), icon: 'copy-x', run: () => tab && send('tabAction', { tabId: tab.id, action: 'closedupes' }) },
     { label: t('paletteClearSpace'), icon: 'eraser', run: () => send('clearSpace', { spaceId: state.activeSpaceId }) },

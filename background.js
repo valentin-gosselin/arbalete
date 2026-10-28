@@ -685,6 +685,7 @@ const TAB_ITEMS = [
   { id: 'arb-tab-container', key: 'menuTabContainer', native: true },
   { id: 'arb-tab-selectall', key: 'menuTabSelectAll', native: true },
   null,
+  { id: 'arb-tab-archive', key: 'menuTabArchive', native: true },
   { id: 'arb-tab-close', key: 'menuTabClose', native: true },
   { id: 'arb-tab-closedupes', key: 'menuTabCloseDuplicates', native: true },
   { id: 'arb-tab-closeopts', key: 'menuTabCloseOptions', native: true },
@@ -779,7 +780,8 @@ async function updateTabMenu(tab, fromSidebar) {
     updates['arb-tab-reload'] = { visible: true, title: count('menuTabReload', 'menuTabsReload') };
     updates['arb-tab-mute'] = { visible: true, title: count(tab.mutedInfo.muted ? 'menuTabUnmute' : 'menuTabMute', tab.mutedInfo.muted ? 'menuTabsUnmute' : 'menuTabsMute') };
     updates['arb-tab-pin'] = { visible: true, title: count(tab.pinned ? 'menuTabUnpin' : 'menuTabPin', tab.pinned ? 'menuTabsUnpin' : 'menuTabsPin') };
-    updates['arb-tab-discard'] = { visible: true, title: count('menuTabDiscard', 'menuTabsDiscard'), enabled: targets.some((x) => !x.active && !x.discarded) };
+    updates['arb-tab-discard'] = { visible: true, title: count('menuTabDiscard', 'menuTabsDiscard'), enabled: targets.some((x) => !x.discarded) };
+    updates['arb-tab-archive'] = { visible: true, title: count('menuTabArchive', 'menuTabsArchive'), enabled: targets.some(archivable) };
     updates['arb-tab-split'] = {
       visible: true,
       title: t(targets.length >= 2 ? 'menuTabsSplit' : 'menuTabSplit'),
@@ -840,7 +842,13 @@ async function tabAction(id, tab) {
     case 'reload': return Promise.all(ids.map((x) => browser.tabs.reload(x)));
     case 'mute': return Promise.all(ids.map((x) => browser.tabs.update(x, { muted: !tab.mutedInfo.muted })));
     case 'pin': return Promise.all(ids.map((x) => browser.tabs.update(x, { pinned: !tab.pinned })));
-    case 'discard': return browser.tabs.discard(targets.filter((x) => !x.active).map((x) => x.id));
+    case 'discard':
+      // Firefox ne décharge pas l'onglet affiché : on passe d'abord à un autre onglet de l'espace.
+      await leaveTabs(tab, ids);
+      return browser.tabs.discard(ids);
+    case 'archive':
+      await leaveTabs(tab, ids);
+      return archiveTabs(targets.filter(archivable));
     case 'duplicate': return Promise.all(ids.map((x) => browser.tabs.duplicate(x)));
     case 'copyurl': {
       await navigator.clipboard.writeText(targets.map((x) => x.url).join('\n'));
@@ -1110,6 +1118,18 @@ function openPalette(windowId) {
 browser.commands.onCommand.addListener((command) => {
   if (command === 'open-palette' && focusedWindowId !== null) openPalette(focusedWindowId);
 });
+
+// Si l'onglet affiché fait partie de ceux qu'on va décharger ou archiver, on active
+// d'abord le plus récent des autres onglets de l'espace (sinon Firefox choisirait un
+// onglet voisin, peut-être d'un autre espace), ou un nouvel onglet.
+async function leaveTabs(tab, ids) {
+  const [active] = await browser.tabs.query({ windowId: tab.windowId, active: true });
+  if (!active || !ids.includes(active.id)) return;
+  const others = (await spaceTabs(active)).filter((x) => !ids.includes(x.id))
+    .sort((a, b) => b.lastAccessed - a.lastAccessed);
+  if (others.length) await browser.tabs.update(others[0].id, { active: true });
+  else await newTab(tab.windowId, tabSpace.get(active.id) || activeSpace(tab.windowId));
+}
 
 // Multi-sélection : celle de Firefox (onglets « surlignés »). Le premier de la
 // liste doit être l'onglet actif, sinon Firefox active un autre onglet.

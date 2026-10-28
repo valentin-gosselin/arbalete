@@ -395,6 +395,15 @@
   "menuTabSelectAll": {
     "message": "Sélectionner tous les onglets de l’espace"
   },
+  "menuTabArchive": {
+    "message": "Archiver l’onglet"
+  },
+  "menuTabsArchive": {
+    "message": "Archiver $1 onglets"
+  },
+  "paletteArchiveTab": {
+    "message": "Archiver l’onglet"
+  },
   "menuTabClose": {
     "message": "Fermer l’onglet"
   },
