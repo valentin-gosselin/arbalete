@@ -18,6 +18,7 @@ const PALETTE_PAGE = browser.runtime.getURL('palette/palette.html');
 const BLANK_URLS = ['about:newtab', 'about:home'];
 
 let spaces = [];
+let shared = []; // favoris communs à tous les espaces
 const activeByWindow = new Map(); // windowId -> spaceId
 const tabSpace = new Map(); // tabId -> spaceId
 const tabFav = new Map(); // tabId -> favId (onglet ouvert depuis un favori)
@@ -55,7 +56,7 @@ function toStored(space) {
 }
 
 async function saveSpaces() {
-  const payload = { order: spaces.map((s) => s.id) };
+  const payload = { order: spaces.map((s) => s.id), shared: shared.map((f) => toStored({ favorites: [f] }).favorites[0]) };
   for (const s of spaces) payload['space:' + s.id] = toStored(s);
   saving = true;
   try {
@@ -97,6 +98,7 @@ async function loadSpaces() {
   let loaded = Array.isArray(data.order) ? data.order.map((id) => data['space:' + id]).filter(Boolean) : [];
   if (!loaded.length) loaded = DEFAULT_SPACES.map((s) => ({ ...s, favorites: [] }));
   spaces = loaded;
+  shared = Array.isArray(data.shared) ? data.shared : [];
   await resolveContainers();
   if (!data.order) await saveSpaces();
   else buildMenus();
@@ -177,17 +179,26 @@ async function moveTab(tabId, spaceId) {
 
 // --- Favoris (onglets « épinglés » propres à chaque espace) -------------------
 
-async function openFavorite(windowId, spaceId, favId) {
+// Favoris : ceux de l'espace, plus les favoris communs à tous les espaces (shared).
+// Un favori commun s'ouvre dans l'espace où on clique : un onglet par espace.
+function findFavorite(spaceId, favId) {
   const space = getSpace(spaceId);
-  const fav = space && space.favorites.find((f) => f.id === favId);
-  if (!fav) return;
+  const own = space && space.favorites.find((f) => f.id === favId);
+  if (own) return { fav: own, shared: false };
+  const common = shared.find((f) => f.id === favId);
+  return common ? { fav: common, shared: true } : null;
+}
+
+async function openFavorite(windowId, spaceId, favId) {
+  const found = findFavorite(spaceId, favId);
+  if (!found) return;
   const tabs = await browser.tabs.query({ windowId });
-  const existing = tabs.find((t) => tabFav.get(t.id) === favId);
+  const existing = tabs.find((t) => tabFav.get(t.id) === favId && tabSpace.get(t.id) === spaceId);
   if (existing) {
     await browser.tabs.update(existing.id, { active: true });
     return;
   }
-  const tab = await newTab(windowId, spaceId, fav.url);
+  const tab = await newTab(windowId, spaceId, found.fav.url);
   setFav(tab.id, favId);
   notify();
 }
@@ -202,19 +213,57 @@ async function addFavorite(tabId) {
   await saveSpaces();
 }
 
+// Lien glissé depuis une page web vers les tuiles.
+async function addFavoriteUrl(windowId, url, title) {
+  if (!/^https?:|^file:/.test(url || '')) return;
+  const space = getSpace(activeSpace(windowId));
+  let name = title;
+  try {
+    name = name || new URL(url).hostname.replace(/^www\./, '');
+  } catch (e) {
+    name = url;
+  }
+  space.favorites.push({ id: uid(), url, title: name, favIconUrl: '' });
+  await saveSpaces();
+}
+
 async function removeFavorite(spaceId, favId) {
   const space = getSpace(spaceId);
-  if (!space) return;
-  space.favorites = space.favorites.filter((f) => f.id !== favId);
+  if (space) space.favorites = space.favorites.filter((f) => f.id !== favId);
+  shared = shared.filter((f) => f.id !== favId);
   for (const [tabId, id] of tabFav) if (id === favId) setFav(tabId, null);
+  await saveSpaces();
+}
+
+// « Mettre à jour le favori avec cette page » : le favori pointe désormais sur la page
+// actuelle de son onglet.
+async function updateFavorite(spaceId, favId, tabId) {
+  const found = findFavorite(spaceId, favId);
+  const tab = await browser.tabs.get(tabId).catch(() => null);
+  if (!found || !tab || !/^https?:|^file:/.test(tab.url)) return;
+  Object.assign(found.fav, { url: tab.url, title: tab.title || found.fav.title, favIconUrl: tab.favIconUrl || found.fav.favIconUrl });
+  await saveSpaces();
+}
+
+// Favori commun <-> favori de l'espace.
+async function toggleSharedFavorite(spaceId, favId) {
+  const space = getSpace(spaceId);
+  const found = findFavorite(spaceId, favId);
+  if (!space || !found) return;
+  if (found.shared) {
+    shared = shared.filter((f) => f !== found.fav);
+    space.favorites.push(found.fav);
+  } else {
+    space.favorites = space.favorites.filter((f) => f !== found.fav);
+    shared.push(found.fav);
+  }
   await saveSpaces();
 }
 
 // Si l'onglet d'un favori a changé de page, on le remet sur l'adresse du favori.
 async function resetFavorite(tabId) {
-  const space = getSpace(tabSpace.get(tabId));
-  const fav = space && space.favorites.find((f) => f.id === tabFav.get(tabId));
-  if (fav) await browser.tabs.update(tabId, { url: fav.url });
+  const found = findFavorite(tabSpace.get(tabId), tabFav.get(tabId));
+  if (found) await browser.tabs.update(tabId, { url: found.fav.url });
 }
 
 // --- Gestion des espaces --------------------------------------------------------
@@ -288,6 +337,7 @@ async function getState(windowId) {
   }
   return {
     spaces,
+    shared,
     groups,
     activeSpaceId: activeSpace(windowId),
     containers: containers.map((c) => ({ id: c.cookieStoreId, name: c.name, color: c.colorCode })),
@@ -824,6 +874,8 @@ let lastMenuTarget = null; // { kind: 'fav' | 'space' | 'group' | 'global', wind
 const SIDE_ITEMS = {
   'arb-fav-reset': 'menuFavReset',
   'arb-fav-close': 'menuFavClose',
+  'arb-fav-update': 'menuFavUpdate',
+  'arb-fav-share': 'menuFavShare',
   'arb-fav-remove': 'menuFavRemove',
   'arb-space-edit': 'menuSpaceEdit',
   'arb-space-left': 'menuSpaceLeft',
@@ -978,6 +1030,8 @@ browser.menus.onShown.addListener(async (info, tab) => {
   const visible = {
     'arb-fav-reset': kind === 'fav' && !!t.tabId,
     'arb-fav-close': kind === 'fav' && !!t.tabId,
+    'arb-fav-update': kind === 'fav' && !!t.tabId,
+    'arb-fav-share': kind === 'fav',
     'arb-fav-remove': kind === 'fav',
     'arb-space-edit': kind === 'space',
     'arb-space-left': kind === 'space' && index > 0,
@@ -993,6 +1047,10 @@ browser.menus.onShown.addListener(async (info, tab) => {
     'arb-settings': kind === 'space' || kind === 'global',
   };
   await Promise.all(Object.entries(visible).map(([id, v]) => browser.menus.update(id, { visible: v }).catch(() => {})));
+  if (kind === 'fav') {
+    // (t est ici la cible du menu : on traduit sans passer par t())
+    await browser.menus.update('arb-fav-share', { title: browser.i18n.getMessage(t.shared ? 'menuFavUnshare' : 'menuFavShare') }).catch(() => {});
+  }
   browser.menus.refresh();
 });
 
@@ -1334,6 +1392,8 @@ browser.menus.onClicked.addListener(async (info, tab) => {
     case 'arb-fav-reset': return resetFavorite(t.tabId);
     case 'arb-fav-close': return browser.tabs.remove(t.tabId);
     case 'arb-fav-remove': return removeFavorite(t.spaceId, t.favId);
+    case 'arb-fav-update': return updateFavorite(t.spaceId, t.favId, t.tabId);
+    case 'arb-fav-share': return toggleSharedFavorite(t.spaceId, t.favId);
     case 'arb-space-edit': return editSpace(t.windowId, t.spaceId);
     case 'arb-space-left':
     case 'arb-space-right': {
@@ -1462,6 +1522,7 @@ const handlers = {
   reopenArchived: (m) => reopenArchived(m.windowId, m.spaceId, m.url),
   removeArchived: (m) => removeArchived(m.spaceId, m.url),
   archiveDelays: () => ARCHIVE_DELAYS,
+  addFavoriteUrl: (m) => addFavoriteUrl(m.windowId, m.url, m.title),
   getStats: async () => (await browser.storage.local.get('stats')).stats || {},
 };
 

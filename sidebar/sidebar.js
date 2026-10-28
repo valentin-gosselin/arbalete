@@ -95,10 +95,12 @@ function render() {
 }
 
 function renderFavorites(space) {
+  // Favoris communs à tous les espaces d'abord (bord en pointillés), puis ceux de l'espace.
+  const all = [...(state.shared || []).map((fav) => ({ fav, shared: true })), ...space.favorites.map((fav) => ({ fav, shared: false }))];
   $('#favorites').replaceChildren(
-    ...space.favorites.map((fav) => {
-      const tab = state.tabs.find((t) => t.favId === fav.id);
-      const classes = ['fav', tab && 'open', tab && tab.active && 'active'].filter(Boolean).join(' ');
+    ...all.map(({ fav, shared }) => {
+      const tab = state.tabs.find((t) => t.favId === fav.id && t.spaceId === space.id);
+      const classes = ['fav', shared && 'shared', tab && 'open', tab && tab.active && 'active'].filter(Boolean).join(' ');
       const node = el('button', {
         class: classes,
         title: fav.title,
@@ -106,7 +108,7 @@ function renderFavorites(space) {
         onclick: () => send('openFavorite', { spaceId: space.id, favId: fav.id }),
         onauxclick: (e) => { if (e.button === 1 && tab) send('closeTab', { tabId: tab.id }); },
       }, favicon(tab ? tab.favIconUrl || fav.favIconUrl : fav.favIconUrl, fav.title));
-      node.menuTarget = { kind: 'fav', spaceId: space.id, favId: fav.id, tabId: tab ? tab.id : null };
+      node.menuTarget = { kind: 'fav', spaceId: space.id, favId: fav.id, tabId: tab ? tab.id : null, shared };
       return node;
     })
   );
@@ -236,6 +238,15 @@ function onTabClick(e, tab) {
   return send('activateTab', { tabId: tab.id });
 }
 
+// Pastille de notifications : le nombre que les sites mettent dans leur titre,
+// « (3) Mastodon » ou « Boîte de réception (12) - Gmail ». 1 à 3 chiffres seulement,
+// pour ne pas prendre une année « (2026) » pour des messages.
+function unreadCount(title) {
+  const match = /\((\d{1,3})\+?\)/.exec(title || '');
+  return match ? Number(match[1]) : 0;
+}
+const formatCount = (n) => (n > 99 ? '99+' : String(n));
+
 function tabRow(tab, group) {
   const classes = ['tab', tab.active && 'active', isMultiSelected(tab) && 'selected', tab.discarded && 'discarded',
     tab.status === 'loading' && 'loading', group && 'in-group']
@@ -270,7 +281,10 @@ function tabRow(tab, group) {
       send('reorderTab', { tabId, index });
     },
   }, [
-    favicon(tab.favIconUrl, tab.title),
+    el('span', { class: 'fav-wrap' }, [
+      favicon(tab.favIconUrl, tab.title),
+      unreadCount(tab.title) ? el('span', { class: 'count', 'aria-label': t('unreadCount', unreadCount(tab.title)) }, formatCount(unreadCount(tab.title))) : null,
+    ]),
     el('span', { class: 'title' }, tab.title || tab.url),
     tab.audible || tab.muted
       ? el('button', {
@@ -353,8 +367,10 @@ function draggedTab(e) {
 }
 
 const favBox = $('#favorites');
+// Accepte un onglet de la barre, ou un lien glissé depuis une page web.
+const isLinkDrag = (e) => e.dataTransfer.types.includes('text/x-moz-url') || e.dataTransfer.types.includes('text/uri-list');
 favBox.addEventListener('dragover', (e) => {
-  if (!isTabDrag(e)) return;
+  if (!isTabDrag(e) && !isLinkDrag(e)) return;
   e.preventDefault();
   favBox.classList.add('drop-target');
 });
@@ -362,9 +378,16 @@ favBox.addEventListener('dragleave', () => favBox.classList.remove('drop-target'
 favBox.addEventListener('drop', (e) => {
   favBox.classList.remove('drop-target');
   const tabId = draggedTab(e);
-  if (tabId == null) return;
+  if (tabId != null) {
+    e.preventDefault();
+    send('addFavorite', { tabId });
+    return;
+  }
+  // text/x-moz-url : « adresse » puis « titre » sur deux lignes
+  const [url, title] = (e.dataTransfer.getData('text/x-moz-url') || e.dataTransfer.getData('text/uri-list')).split(/\r?\n/);
+  if (!url) return;
   e.preventDefault();
-  send('addFavorite', { tabId });
+  send('addFavoriteUrl', { url: url.trim(), title: (title || '').trim() });
 });
 
 // --- Clic droit : vrai menu Firefox, qui peut sortir de la barre --------------------

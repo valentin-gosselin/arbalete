@@ -287,6 +287,21 @@
   "menuFavClose": {
     "message": "Fermer l'onglet"
   },
+  "menuFavUpdate": {
+    "message": "Mettre à jour le favori avec cette page"
+  },
+  "menuFavShare": {
+    "message": "Partager avec tous les espaces"
+  },
+  "menuFavUnshare": {
+    "message": "Garder seulement dans cet espace"
+  },
+  "sharedFavorite": {
+    "message": "Tous les espaces"
+  },
+  "unreadCount": {
+    "message": "$1 non lus"
+  },
   "menuFavRemove": {
     "message": "Retirer des favoris"
   },

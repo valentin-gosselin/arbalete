@@ -89,6 +89,7 @@ body:not(.mode-sidebar) > .footer { display: none; }
   position: relative;
 }
 .fav:hover { border-color: var(--space); }
+.fav.shared { border-style: dashed; }
 .fav.open::after {
   content: "";
   position: absolute;
@@ -169,8 +170,37 @@ body:not(.mode-sidebar) > .footer { display: none; }
   border: 1px solid var(--border);
 }
 .split > .tab { flex: 1; min-width: 0; }
-.tab.loading .favicon { animation: pulse 1s infinite alternate; }
-@keyframes pulse { to { opacity: 0.3; } }
+/* Icône de l'onglet : anneau qui tourne pendant le chargement, pastille de notifications */
+.fav-wrap { position: relative; display: grid; place-items: center; flex: none; }
+.tab.loading .fav-wrap::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: var(--space);
+  border-right-color: var(--space);
+  animation: spin 0.8s linear infinite;
+}
+.tab.loading .favicon { opacity: 0.6; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .tab.loading .fav-wrap::after { animation-duration: 3s; } }
+.count {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: #e5484d;
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 15px;
+  text-align: center;
+  box-shadow: 0 0 0 2px var(--bg);
+}
 
 .tab .title {
   flex: 1;

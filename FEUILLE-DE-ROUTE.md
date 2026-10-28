@@ -44,18 +44,18 @@ Fait en premier car tous les textes ajoutés ensuite en dépendent.
 - [x] Thème : option des réglages qui teinte Firefox (cadre, barre d'outils, champ d'adresse) aux couleurs de l'espace ; fond de la barre en dégradé avec une 2e couleur facultative. (Image de fond : non retenue.)
 - [x] Statistiques : temps passé par espace (fenêtre au premier plan), barres sur 7 jours dans les réglages, 14 jours gardés, propre au PC.
 
-## Phase 6 : onglets
+## Phase 6 : onglets (faite le 28/10/2026, version 0.9.0)
 
-- [ ] Aperçu au survol (vignette de la page) en mode compact.
-- [ ] Pastilles de notifications : nombre de non-lus lu dans le titre des pages (« (3) Boîte de réception »), affiché sur l'icône.
-- [ ] Indicateur de chargement plus visible (anneau autour du favicon).
+- [ ] ~~Aperçu au survol~~ : écarté, une extension ne peut rien afficher hors de sa barre de 48 px.
+- [x] Pastilles de notifications : nombre entre parenthèses dans le titre (1 à 3 chiffres, « (3) Mastodon », « Boîte de réception (12) »), pastille rouge sur l'icône.
+- [x] Anneau qui tourne autour de l'icône pendant le chargement.
 
-## Phase 7 : favoris
+## Phase 7 : favoris (faite le 28/10/2026, version 0.9.0)
 
-- [ ] Comportement réglable par favori : revenir à l'adresse d'origine ou garder la dernière page.
-- [ ] Glisser un lien d'une page web vers les tuiles pour créer un favori.
-- [ ] Favoris communs à tous les espaces (petite rangée au-dessus des espaces).
-- [ ] Dossiers de liens sous les tuiles, comme les onglets épinglés d'Arc.
+- [x] Clic droit sur un favori : « Revenir à l'adresse du favori » ou « Mettre à jour le favori avec cette page ».
+- [x] Glisser un lien d'une page web vers les tuiles crée un favori.
+- [x] Favoris communs à tous les espaces (« Partager avec tous les espaces », bord en pointillés, un onglet par espace), aussi dans Alt+K.
+- [ ] Dossiers de liens sous les tuiles : reporté.
 
 ## Phase 8 : plusieurs PC et prise en main
 

@@ -169,6 +169,18 @@ async function search(query) {
         });
       }
     }
+    for (const fav of state.shared || []) {
+      favorites.push({
+        kind: 'favorite',
+        section: t('paletteSectionFavorites'),
+        label: fav.title,
+        sub: host(fav.url),
+        favicon: fav.favIconUrl,
+        url: fav.url,
+        badge: { icon: 'layers', text: t('sharedFavorite') },
+        run: () => send('openFavorite', { spaceId: state.activeSpaceId, favId: fav.id }),
+      });
+    }
     list.push(...scored(favorites).slice(0, 5));
 
     // Onglets rangés dans l'archive des espaces (nettoyage automatique).
