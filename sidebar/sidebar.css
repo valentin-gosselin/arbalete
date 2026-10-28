@@ -73,31 +73,42 @@ body:not(.mode-sidebar) > #tabs,
 body:not(.mode-sidebar) > .footer { display: none; }
 
 /* Favorites in a grid, like Arc's top tiles */
+/* Favorites: one column whatever the width, like spaces and tools; expanding the sidebar
+   only adds their titles (the favicon stays centered on the 48 px of the compact sidebar). */
 .favorites {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
-  gap: 6px;
-  padding: 10px 8px 8px;
+  grid-template-columns: 1fr;
+  gap: 4px;
+  padding: 8px 6px 6px;
   min-height: 12px;
 }
 .favorites.drop-target { outline: 2px dashed var(--space); outline-offset: -2px; border-radius: 10px; }
 
 .fav {
-  height: 44px;
+  height: 36px;
+  min-width: 0;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--card);
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px 0 7px;
+  color: var(--fg);
+  font-size: 12.5px;
+  text-align: left;
+  white-space: nowrap;
   cursor: pointer;
   position: relative;
 }
+.fav .label { overflow: hidden; text-overflow: ellipsis; }
 .fav:hover { border-color: var(--space); }
 .fav.shared { border-style: dashed; }
 .fav.open::after {
   content: "";
   position: absolute;
-  bottom: 4px;
+  left: 15px;
+  bottom: 2px;
   width: 4px;
   height: 4px;
   border-radius: 50%;
@@ -782,8 +793,8 @@ body.mode-setup .panel, body.mode-archive .panel { user-select: text; }
 /* Compact mode: when the sidebar is narrow, only the icons are kept,
    the titles turning into tooltips. */
 @media (max-width: 120px) {
-  .favorites { grid-template-columns: 1fr; padding: 8px 6px 6px; gap: 4px; }
-  .fav { height: 36px; }
+  .fav { justify-content: center; padding: 0; }
+  .fav .label { display: none; }
 
   .new-tab { justify-content: center; margin: 4px 6px; padding: 7px 0; }
   .new-tab .label { display: none; }

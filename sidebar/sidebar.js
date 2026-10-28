@@ -123,7 +123,7 @@ function renderFavorites(space) {
         'aria-label': fav.title,
         onclick: () => send('openFavorite', { spaceId: space.id, favId: fav.id }),
         onauxclick: (e) => { if (e.button === 1 && tab) send('closeTab', { tabId: tab.id }); },
-      }, favicon(tab ? tab.favIconUrl || fav.favIconUrl : fav.favIconUrl, fav.title));
+      }, [favicon(tab ? tab.favIconUrl || fav.favIconUrl : fav.favIconUrl, fav.title), el('span', { class: 'label' }, fav.title)]);
       node.menuTarget = { kind: 'fav', spaceId: space.id, favId: fav.id, tabId: tab ? tab.id : null, shared };
       return node;
     })
