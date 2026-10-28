@@ -1,0 +1,119 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Arbalète</title>
+  <link rel="stylesheet" href="sidebar.css">
+</head>
+<body>
+  <!-- Les textes viennent de _locales : data-i18n (texte), data-i18n-title,
+       data-i18n-placeholder, data-i18n-label (aria-label). -->
+
+  <!-- Barre latérale -->
+  <section id="favorites" class="favorites" data-i18n-label="favoriteList"></section>
+
+  <main id="tabs" class="tabs" role="list"></main>
+
+  <div id="setup-banner" class="setup-banner" hidden>
+    <p data-i18n="bannerText"></p>
+    <div class="banner-actions">
+      <button id="banner-later" data-i18n="bannerLater"></button>
+      <button id="banner-setup" class="primary" data-i18n="bannerSetup"></button>
+    </div>
+  </div>
+
+  <button id="new-tab" class="new-tab" data-i18n-title="newTab" data-i18n-label="newTab"></button>
+
+  <footer class="footer">
+    <div id="spaces" class="spaces" role="toolbar" data-i18n-label="spaceList"></div>
+    <div class="tools">
+      <button id="pin-button" class="tool" hidden></button>
+      <button id="settings-button" class="tool" data-i18n-title="settings" data-i18n-label="settings"></button>
+    </div>
+  </footer>
+
+  <div id="toast" class="toast" role="status" hidden></div>
+
+  <!-- Petite fenêtre « modifier l'espace » (?edit=…) -->
+  <form id="space-form" class="panel" hidden>
+    <h2 data-i18n="spaceFormTitle"></h2>
+    <div class="row">
+      <button type="button" id="f-icon-preview" class="icon-preview" data-i18n-title="chosenIcon" data-i18n-label="chosenIcon"></button>
+      <label class="grow"><span data-i18n="name"></span><input id="f-name" required maxlength="40"></label>
+    </div>
+    <label><span data-i18n="icon"></span>
+      <input id="f-icon-search" type="search" data-i18n-placeholder="iconSearch">
+    </label>
+    <div id="f-icon-grid" class="icon-grid"></div>
+    <div class="row">
+      <label><span data-i18n="color"></span><input id="f-color" type="color"></label>
+      <label class="grow"><span data-i18n="container"></span>
+        <select id="f-container"></select>
+      </label>
+    </div>
+    <label id="f-new-container-row" hidden><span data-i18n="newContainerName"></span><input id="f-new-container" maxlength="40"></label>
+    <div class="actions">
+      <button type="button" id="f-delete" class="danger" data-i18n="delete"></button>
+      <span class="grow"></span>
+      <button type="button" id="f-cancel" data-i18n="cancel"></button>
+      <button type="submit" class="primary" data-i18n="save"></button>
+    </div>
+  </form>
+
+  <!-- Petite fenêtre « modifier le groupe » (?group=…) -->
+  <form id="group-form" class="panel" hidden>
+    <h2 data-i18n="groupFormTitle"></h2>
+    <label><span data-i18n="name"></span><input id="g-title" maxlength="60"></label>
+    <div id="g-colors" class="swatches" role="radiogroup" data-i18n-label="color"></div>
+    <div class="actions">
+      <span class="grow"></span>
+      <button type="button" id="g-cancel" data-i18n="cancel"></button>
+      <button type="submit" class="primary" data-i18n="save"></button>
+    </div>
+  </form>
+
+  <!-- Petite fenêtre « réglages » (?settings=1) -->
+  <section id="settings-panel" class="panel" hidden>
+    <h2>Arbalète</h2>
+    <button class="wide" id="s-new-space" data-i18n="newSpace"></button>
+    <button class="wide" id="s-clear" data-i18n="settingsClearSpace"></button>
+    <h3 data-i18n="settingsShare"></h3>
+    <button class="wide" id="s-export" data-i18n="settingsExport"></button>
+    <button class="wide" id="s-import" data-i18n="settingsImport"></button>
+    <h3 data-i18n="settingsHeading"></h3>
+    <label class="check"><input type="checkbox" id="s-expand"> <span data-i18n="settingsExpand"></span></label>
+    <button class="wide" id="s-setup" data-i18n="settingsHideNative"></button>
+    <button class="wide" id="s-shortcuts" data-i18n="settingsShortcuts"></button>
+  </section>
+
+  <!-- Petite fenêtre « une seule barre » (?setup=1) -->
+  <section id="setup-panel" class="panel" hidden>
+    <h2 data-i18n="setupTitle"></h2>
+    <p data-i18n="setupIntro"></p>
+    <p class="hint" data-i18n="setupHint"></p>
+
+    <div id="setup-windows">
+      <button class="wide primary-wide" id="setup-download-script" data-i18n="setupDownloadScript"></button>
+      <ol>
+        <li data-i18n="setupStep1"></li>
+        <li data-i18n="setupStep2"></li>
+      </ol>
+      <p class="hint" data-i18n="setupRepeat"></p>
+    </div>
+
+    <details id="setup-manual">
+      <summary data-i18n="setupManualSummary"></summary>
+      <ol>
+        <li data-i18n="setupManual1"></li>
+        <li data-i18n="setupManual2"></li>
+        <li data-i18n="setupManual3"></li>
+        <li data-i18n="setupManual4"></li>
+      </ol>
+      <button class="wide" id="setup-download-css" data-i18n="setupDownloadCss"></button>
+    </details>
+  </section>
+
+  <input id="import-file" type="file" accept="application/json,.json" hidden>
+  <script src="sidebar.js"></script>
+</body>
+</html>

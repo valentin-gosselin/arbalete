@@ -1,0 +1,439 @@
+:root {
+  --space: #7c6cf2;
+  --bg: #f4f3f8;
+  --fg: #1d1b26;
+  --muted: #6c6879;
+  --row-hover: rgba(0, 0, 0, 0.06);
+  --row-active: #ffffff;
+  --card: #ffffff;
+  --border: rgba(0, 0, 0, 0.1);
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1c1b22;
+    --fg: #ecebf2;
+    --muted: #a3a0b0;
+    --row-hover: rgba(255, 255, 255, 0.07);
+    --row-active: rgba(255, 255, 255, 0.13);
+    --card: #2a2933;
+    --border: rgba(255, 255, 255, 0.12);
+  }
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; margin: 0; }
+
+body {
+  display: flex;
+  flex-direction: column;
+  font: 13px/1.3 system-ui, "Segoe UI", sans-serif;
+  color: var(--fg);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--space) 22%, transparent), transparent 220px),
+    var(--bg);
+  transition: background 0.25s;
+  overflow: hidden;
+  user-select: none;
+}
+
+button { font: inherit; color: inherit; }
+
+/* Focus clavier bien visible, sans gêner la souris */
+:focus { outline: none; }
+:focus-visible {
+  outline: 2px solid var(--space);
+  outline-offset: -2px;
+  border-radius: 8px;
+}
+
+/* Icônes Lucide (sprite SVG) */
+.ic {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.emoji { font-size: 15px; line-height: 1; }
+
+/* Les éléments propres à chaque mode */
+body:not(.mode-sidebar) > #favorites,
+body:not(.mode-sidebar) > #new-tab,
+body:not(.mode-sidebar) > #tabs,
+body:not(.mode-sidebar) > .footer { display: none; }
+
+/* Favoris en grille, comme les tuiles du haut d'Arc */
+.favorites {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+  gap: 6px;
+  padding: 10px 8px 8px;
+  min-height: 12px;
+}
+.favorites.drop-target { outline: 2px dashed var(--space); outline-offset: -2px; border-radius: 10px; }
+
+.fav {
+  height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  position: relative;
+}
+.fav:hover { border-color: var(--space); }
+.fav.open::after {
+  content: "";
+  position: absolute;
+  bottom: 4px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+.fav.active { border-color: var(--space); box-shadow: 0 0 0 1px var(--space); }
+.fav.active::after { background: var(--space); }
+
+.favicon {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  border-radius: 3px;
+}
+.favicon.default { color: var(--muted); stroke-width: 1.75; }
+.fav .favicon { width: 20px; height: 20px; }
+
+.new-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 8px;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+.new-tab:hover { background: var(--row-hover); color: var(--fg); }
+
+.tabs {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 8px 8px;
+  scrollbar-width: thin;
+}
+.tabs.slide-left { animation: slide-left 0.2s ease-out; }
+.tabs.slide-right { animation: slide-right 0.2s ease-out; }
+@keyframes slide-left { from { transform: translateX(30px); opacity: 0; } }
+@keyframes slide-right { from { transform: translateX(-30px); opacity: 0; } }
+
+.separator {
+  height: 1px;
+  background: var(--border);
+  margin: 6px 4px;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 6px 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  position: relative;
+}
+.tab:hover { background: var(--row-hover); }
+.tab.active { background: var(--row-active); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12); }
+.tab.drop-before { box-shadow: inset 0 2px 0 var(--space); }
+.tab.loading .favicon { animation: pulse 1s infinite alternate; }
+@keyframes pulse { to { opacity: 0.3; } }
+
+.tab .title {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tab .badge { color: var(--muted); width: 13px; height: 13px; }
+.tab .audio {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: none;
+  color: var(--space);
+  cursor: pointer;
+}
+.tab .audio.muted { color: var(--muted); }
+.tab .audio .ic { width: 14px; height: 14px; }
+.tab .audio:hover { background: var(--row-hover); }
+.tab .close {
+  visibility: hidden;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: none;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border-radius: 5px;
+  cursor: pointer;
+  color: var(--muted);
+}
+.tab .close .ic { width: 14px; height: 14px; }
+.tab:hover .close { visibility: visible; }
+.tab .close:hover { background: var(--row-hover); color: var(--fg); }
+
+/* Groupes d'onglets Firefox */
+.group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 4px 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--group);
+  font-weight: 600;
+  font-size: 12px;
+}
+.group:hover { background: var(--row-hover); }
+.group .chevron { width: 14px; height: 14px; transition: transform 0.15s; }
+.group.collapsed .chevron { transform: rotate(-90deg); }
+.group-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tab.in-group { margin-left: 8px; }
+/* Trait continu le long des onglets d'un même groupe : arrondi seulement
+   au premier et au dernier onglet du groupe. */
+.tab.in-group::before {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--group);
+}
+.group + .tab.in-group::before { top: 4px; border-top-left-radius: 2px; border-top-right-radius: 2px; }
+.tab.in-group:not(:has(+ .tab.in-group))::before { bottom: 4px; border-bottom-left-radius: 2px; border-bottom-right-radius: 2px; }
+
+.empty { color: var(--muted); padding: 12px 8px; text-align: center; }
+
+/* Pied : espaces, puis réglages et fermeture */
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  border-top: 1px solid var(--border);
+}
+.spaces {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+.tools { display: flex; gap: 2px; }
+
+.space-dot, .tool {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 8px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.space-dot { color: var(--dot, var(--muted)); opacity: 0.55; }
+.space-dot .ic { width: 17px; height: 17px; }
+.space-dot:hover { opacity: 1; background: var(--row-hover); }
+.space-dot.active { opacity: 1; background: color-mix(in srgb, var(--dot) 25%, transparent); }
+.space-dot.add { color: var(--muted); }
+.space-dot.drop-target { outline: 2px solid var(--dot); }
+.tool { color: var(--muted); }
+.tool:hover { background: var(--row-hover); color: var(--fg); }
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 56px;
+  transform: translateX(-50%);
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: var(--fg);
+  color: var(--bg);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* Petites fenêtres : modifier un espace, réglages */
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  height: 100%;
+  overflow-y: auto;
+}
+.panel[hidden] { display: none; }
+.panel h2 { margin: 0; font-size: 16px; }
+.panel h3 { margin: 6px 0 0; font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.panel label { display: flex; flex-direction: column; gap: 4px; color: var(--muted); font-size: 12px; }
+.panel input, .panel select {
+  font: inherit;
+  color: var(--fg);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 7px;
+}
+.panel input[type="color"] { padding: 2px; height: 34px; width: 64px; }
+.row { display: flex; gap: 10px; align-items: flex-end; }
+.grow { flex: 1; }
+
+.icon-preview {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  flex: none;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--space) 18%, var(--card));
+  color: var(--space);
+}
+.icon-preview .ic { width: 24px; height: 24px; }
+
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(38px, 1fr));
+  gap: 4px;
+  min-height: 120px;
+  max-height: 210px;
+  overflow-y: auto;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+}
+.icon-choice {
+  display: grid;
+  place-items: center;
+  height: 38px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+}
+.icon-choice .ic { width: 20px; height: 20px; }
+.icon-choice:hover { background: var(--row-hover); }
+.icon-choice.selected { background: var(--space); color: #fff; }
+/* Bandeau « masquer les onglets natifs » (barre large uniquement) */
+.setup-banner {
+  margin: 4px 8px;
+  padding: 10px;
+  border-radius: 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  font-size: 12px;
+}
+.setup-banner p { margin: 0 0 8px; }
+.banner-actions { display: flex; justify-content: flex-end; gap: 6px; }
+.banner-actions button {
+  border: 1px solid var(--border);
+  background: none;
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+.banner-actions .primary { background: var(--space); border-color: var(--space); color: #fff; }
+@media (max-width: 120px) { .setup-banner { display: none; } }
+
+.panel p, .panel ol { margin: 0; font-size: 12.5px; line-height: 1.45; }
+.panel ol { padding-left: 20px; display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+.panel .hint { color: var(--muted); margin-top: 8px; }
+.panel code { font-size: 11.5px; background: var(--row-hover); padding: 1px 4px; border-radius: 4px; }
+.panel label.check { flex-direction: row; align-items: flex-start; gap: 8px; color: var(--fg); font-size: 12.5px; }
+.panel details summary { cursor: pointer; color: var(--muted); font-size: 12.5px; }
+.panel details[open] summary { margin-bottom: 4px; }
+.panel details .wide { margin-top: 8px; }
+.panel .primary-wide { background: var(--space); border-color: var(--space); color: #fff; text-align: center; font-weight: 600; }
+body.mode-setup .panel { user-select: text; }
+
+.swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+.swatch {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  background: var(--swatch);
+  cursor: pointer;
+}
+.swatch.selected { border-color: var(--fg); box-shadow: inset 0 0 0 2px var(--bg); }
+
+.more { grid-column: 1 / -1; color: var(--muted); font-size: 12px; text-align: center; padding: 6px; }
+
+.actions { display: flex; gap: 6px; align-items: center; margin-top: auto; }
+.actions button, .panel .wide {
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 6px;
+  padding: 7px 12px;
+  cursor: pointer;
+}
+.panel .wide { text-align: left; }
+.panel .wide:hover, .actions button:hover { border-color: var(--space); }
+.actions .primary { background: var(--space); border-color: var(--space); color: #fff; }
+.actions .danger { color: #d64545; }
+.actions .danger:disabled { opacity: 0.4; cursor: default; }
+
+/* Mode compact : quand la barre est étroite, on ne garde que les icônes,
+   les titres passant en infobulle. */
+@media (max-width: 120px) {
+  .favorites { grid-template-columns: 1fr; padding: 8px 6px 6px; gap: 4px; }
+  .fav { height: 36px; }
+
+  .new-tab { justify-content: center; margin: 4px 6px; padding: 7px 0; }
+  .new-tab .label { display: none; }
+
+  .tabs { padding: 0 6px 6px; scrollbar-width: none; }
+  .tab { justify-content: center; padding: 7px 0; }
+  .tab .title, .tab .close, .tab .badge { display: none; }
+  .tab .favicon { width: 18px; height: 18px; }
+  /* Haut-parleur en pastille sur le coin du favicon */
+  .tab .audio {
+    position: absolute;
+    right: 2px;
+    bottom: 1px;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: var(--bg);
+    box-shadow: 0 0 0 1px var(--border);
+  }
+  .tab .audio .ic { width: 10px; height: 10px; }
+  .tab.in-group { margin-left: 4px; }
+  .tab.in-group::before { left: -3px; }
+  .group { justify-content: center; padding: 3px 0; }
+  .group-title { display: none; }
+  .empty { display: none; }
+
+  .footer { flex-direction: column; padding: 6px 4px; }
+  .spaces, .tools { flex-direction: column; }
+  .tools { border-top: 1px solid var(--border); padding-top: 4px; }
+}

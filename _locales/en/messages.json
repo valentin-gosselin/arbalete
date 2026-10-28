@@ -1,0 +1,356 @@
+{
+  "extName": {
+    "message": "Arbalète"
+  },
+  "extDescription": {
+    "message": "Arc-style spaces in a compact sidebar: each space has its own tabs, pinned favorites, color and container."
+  },
+  "cmdSidebar": {
+    "message": "Show or hide the Arbalète sidebar"
+  },
+  "cmdSpace1": {
+    "message": "Go to space 1"
+  },
+  "cmdSpace2": {
+    "message": "Go to space 2"
+  },
+  "cmdSpace3": {
+    "message": "Go to space 3"
+  },
+  "cmdSpace4": {
+    "message": "Go to space 4"
+  },
+  "cmdSpace5": {
+    "message": "Go to space 5"
+  },
+  "cmdSpaceNext": {
+    "message": "Next space"
+  },
+  "cmdSpacePrev": {
+    "message": "Previous space"
+  },
+  "cmdCopyUrl": {
+    "message": "Copy the tab address"
+  },
+  "spacePersonal": {
+    "message": "Personal"
+  },
+  "spaceWork": {
+    "message": "Work"
+  },
+  "newSpaceName": {
+    "message": "New space"
+  },
+  "spaceFallbackName": {
+    "message": "Space"
+  },
+  "urlCopied": {
+    "message": "Address copied"
+  },
+  "menuAddFavorite": {
+    "message": "Add to space favorites"
+  },
+  "menuMoveTab": {
+    "message": "Move to space"
+  },
+  "menuNewGroup": {
+    "message": "Add to new group"
+  },
+  "menuAddToGroup": {
+    "message": "Add to group"
+  },
+  "menuUngroupTab": {
+    "message": "Remove from group"
+  },
+  "unnamedGroup": {
+    "message": "Unnamed group"
+  },
+  "menuFavReset": {
+    "message": "Go back to the favorite address"
+  },
+  "menuFavClose": {
+    "message": "Close tab"
+  },
+  "menuFavRemove": {
+    "message": "Remove from favorites"
+  },
+  "menuSpaceEdit": {
+    "message": "Edit space…"
+  },
+  "menuSpaceLeft": {
+    "message": "Move left"
+  },
+  "menuSpaceRight": {
+    "message": "Move right"
+  },
+  "menuGroupEdit": {
+    "message": "Rename / change color…"
+  },
+  "menuGroupNewTab": {
+    "message": "New tab in group"
+  },
+  "menuGroupCollapse": {
+    "message": "Collapse / expand group"
+  },
+  "menuGroupUngroup": {
+    "message": "Ungroup tabs"
+  },
+  "menuGroupMove": {
+    "message": "Move group to space"
+  },
+  "menuGroupClose": {
+    "message": "Close group"
+  },
+  "menuNewSpace": {
+    "message": "New space"
+  },
+  "menuClearSpace": {
+    "message": "Close the tabs of this space"
+  },
+  "menuSettings": {
+    "message": "Arbalète settings…"
+  },
+  "newTab": {
+    "message": "New tab"
+  },
+  "settings": {
+    "message": "Arbalète settings"
+  },
+  "emptySpace": {
+    "message": "No tabs in this space"
+  },
+  "group": {
+    "message": "Group"
+  },
+  "groupExpand": {
+    "message": "$1 (expand)"
+  },
+  "groupCollapse": {
+    "message": "$1 (collapse)"
+  },
+  "mute": {
+    "message": "Mute tab"
+  },
+  "unmute": {
+    "message": "Unmute tab"
+  },
+  "closeTab": {
+    "message": "Close"
+  },
+  "pinnedTab": {
+    "message": "Pinned tab"
+  },
+  "spaceButton": {
+    "message": "$1 (Alt+$2)"
+  },
+  "newSpace": {
+    "message": "New space"
+  },
+  "pinCollapse": {
+    "message": "Collapse the sidebar"
+  },
+  "pinExpand": {
+    "message": "Keep the sidebar expanded"
+  },
+  "tabList": {
+    "message": "Tabs of space $1"
+  },
+  "spaceList": {
+    "message": "Spaces"
+  },
+  "favoriteList": {
+    "message": "Space favorites"
+  },
+  "bannerText": {
+    "message": "Hide Firefox's own tabs and keep only Arbalète?"
+  },
+  "bannerLater": {
+    "message": "Later"
+  },
+  "bannerSetup": {
+    "message": "Set up"
+  },
+  "spaceFormTitle": {
+    "message": "Space"
+  },
+  "spaceWindowTitle": {
+    "message": "Space: $1"
+  },
+  "name": {
+    "message": "Name"
+  },
+  "chosenIcon": {
+    "message": "Selected icon"
+  },
+  "icon": {
+    "message": "Icon"
+  },
+  "iconSearch": {
+    "message": "Search: home, work, music, bank…"
+  },
+  "moreIcons": {
+    "message": "$1 more, refine your search"
+  },
+  "noIcons": {
+    "message": "No icon found, try another word"
+  },
+  "color": {
+    "message": "Color"
+  },
+  "container": {
+    "message": "Container (separate logins)"
+  },
+  "containerNone": {
+    "message": "None"
+  },
+  "containerCreate": {
+    "message": "Create a container…"
+  },
+  "newContainerName": {
+    "message": "New container name"
+  },
+  "delete": {
+    "message": "Delete"
+  },
+  "cancel": {
+    "message": "Cancel"
+  },
+  "save": {
+    "message": "Save"
+  },
+  "confirmDeleteSpace": {
+    "message": "Delete the space \"$1\"? Its tabs will move to another space."
+  },
+  "groupFormTitle": {
+    "message": "Tab group"
+  },
+  "colorGrey": {
+    "message": "Grey"
+  },
+  "colorBlue": {
+    "message": "Blue"
+  },
+  "colorRed": {
+    "message": "Red"
+  },
+  "colorYellow": {
+    "message": "Yellow"
+  },
+  "colorGreen": {
+    "message": "Green"
+  },
+  "colorPink": {
+    "message": "Pink"
+  },
+  "colorPurple": {
+    "message": "Purple"
+  },
+  "colorCyan": {
+    "message": "Cyan"
+  },
+  "colorOrange": {
+    "message": "Orange"
+  },
+  "settingsClearSpace": {
+    "message": "Close the tabs of the current space"
+  },
+  "settingsShare": {
+    "message": "Share between computers"
+  },
+  "settingsExport": {
+    "message": "Export spaces (file)"
+  },
+  "settingsImport": {
+    "message": "Import spaces"
+  },
+  "settingsHeading": {
+    "message": "Settings"
+  },
+  "settingsExpand": {
+    "message": "Expand the sidebar on mouse hover (otherwise: icons only, titles as tooltips)"
+  },
+  "settingsHideNative": {
+    "message": "Hide Firefox's own tabs…"
+  },
+  "settingsShortcuts": {
+    "message": "Keyboard shortcuts"
+  },
+  "tabsClosed": {
+    "message": "Tabs closed"
+  },
+  "expandOn": {
+    "message": "Expand on hover enabled"
+  },
+  "expandOff": {
+    "message": "Fixed compact sidebar"
+  },
+  "exportFileName": {
+    "message": "arbalete-spaces.json"
+  },
+  "confirmImport": {
+    "message": "Replace your spaces with the $1 spaces from the file?"
+  },
+  "spacesImported": {
+    "message": "Spaces imported"
+  },
+  "fileNotRecognized": {
+    "message": "File not recognized"
+  },
+  "setupTitle": {
+    "message": "A single sidebar"
+  },
+  "setupWindowTitle": {
+    "message": "Arbalète: a single sidebar"
+  },
+  "setupIntro": {
+    "message": "Firefox does not let extensions hide its own tabs. A small customization file (userChrome.css) does it once and for all, without administrator rights. Firefox's tabs are only hidden while the Arbalète sidebar is open."
+  },
+  "setupHint": {
+    "message": "Afterwards, \"Expand the sidebar on hover\" is set in the Arbalète settings."
+  },
+  "setupDownloadScript": {
+    "message": "Download the installer (Windows)"
+  },
+  "setupStep1": {
+    "message": "Open the downloaded file. If Windows shows \"Windows protected your PC\", click \"More info\" then \"Run anyway\"."
+  },
+  "setupStep2": {
+    "message": "Close Firefox completely, then start it again."
+  },
+  "setupRepeat": {
+    "message": "Do it once on each computer. Running the installer again simply updates the configuration."
+  },
+  "setupManualSummary": {
+    "message": "Manual setup (Mac, Linux, or without the script)"
+  },
+  "setupManual1": {
+    "message": "In about:config, set toolkit.legacyUserProfileCustomizations.stylesheets to true."
+  },
+  "setupManual2": {
+    "message": "In about:support, on the \"Profile Folder\" row, click \"Open Folder\"."
+  },
+  "setupManual3": {
+    "message": "Create a folder named chrome there and put the file below in it, named userChrome.css."
+  },
+  "setupManual4": {
+    "message": "Restart Firefox."
+  },
+  "setupDownloadCss": {
+    "message": "Download userChrome.css"
+  },
+  "installerRunning": {
+    "message": "Setting up Firefox for Arbalete..."
+  },
+  "installerNoFirefox": {
+    "message": "Firefox was not found for this user."
+  },
+  "installerProfileDone": {
+    "message": "Profile configured: "
+  },
+  "installerDone": {
+    "message": "Done. Close Firefox completely, then start it again."
+  },
+  "installerNoProfile": {
+    "message": "No Firefox profile found."
+  }
+}

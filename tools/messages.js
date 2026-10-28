@@ -1,0 +1,148 @@
+// Source des traductions : node tools/messages.js écrit _locales/{fr,en}/messages.json.
+// [clé, français, anglais]
+const M = [
+  ['extName', 'Arbalète', 'Arbalète'],
+  ['extDescription', 'Des espaces façon Arc dans une barre latérale compacte : chaque espace a ses onglets, ses favoris, sa couleur et son conteneur.', 'Arc-style spaces in a compact sidebar: each space has its own tabs, pinned favorites, color and container.'],
+  ['cmdSidebar', 'Afficher ou masquer la barre Arbalète', 'Show or hide the Arbalète sidebar'],
+  ['cmdSpace1', "Aller à l'espace 1", 'Go to space 1'],
+  ['cmdSpace2', "Aller à l'espace 2", 'Go to space 2'],
+  ['cmdSpace3', "Aller à l'espace 3", 'Go to space 3'],
+  ['cmdSpace4', "Aller à l'espace 4", 'Go to space 4'],
+  ['cmdSpace5', "Aller à l'espace 5", 'Go to space 5'],
+  ['cmdSpaceNext', 'Espace suivant', 'Next space'],
+  ['cmdSpacePrev', 'Espace précédent', 'Previous space'],
+  ['cmdCopyUrl', "Copier l'adresse de l'onglet", 'Copy the tab address'],
+
+  // Espaces par défaut
+  ['spacePersonal', 'Perso', 'Personal'],
+  ['spaceWork', 'Boulot', 'Work'],
+  ['newSpaceName', 'Nouvel espace', 'New space'],
+  ['spaceFallbackName', 'Espace', 'Space'],
+  ['urlCopied', 'Adresse copiée', 'Address copied'],
+
+  // Menus (clic droit)
+  ['menuAddFavorite', "Ajouter aux favoris de l'espace", 'Add to space favorites'],
+  ['menuMoveTab', "Déplacer vers l'espace", 'Move to space'],
+  ['menuNewGroup', 'Ajouter à un nouveau groupe', 'Add to new group'],
+  ['menuAddToGroup', 'Ajouter au groupe', 'Add to group'],
+  ['menuUngroupTab', 'Retirer du groupe', 'Remove from group'],
+  ['unnamedGroup', 'Groupe sans nom', 'Unnamed group'],
+  ['menuFavReset', "Revenir à l'adresse du favori", 'Go back to the favorite address'],
+  ['menuFavClose', "Fermer l'onglet", 'Close tab'],
+  ['menuFavRemove', 'Retirer des favoris', 'Remove from favorites'],
+  ['menuSpaceEdit', "Modifier l'espace…", 'Edit space…'],
+  ['menuSpaceLeft', 'Déplacer à gauche', 'Move left'],
+  ['menuSpaceRight', 'Déplacer à droite', 'Move right'],
+  ['menuGroupEdit', 'Renommer / changer la couleur…', 'Rename / change color…'],
+  ['menuGroupNewTab', 'Nouvel onglet dans le groupe', 'New tab in group'],
+  ['menuGroupCollapse', 'Replier / déplier le groupe', 'Collapse / expand group'],
+  ['menuGroupUngroup', 'Dissocier le groupe', 'Ungroup tabs'],
+  ['menuGroupMove', "Déplacer le groupe vers l'espace", 'Move group to space'],
+  ['menuGroupClose', 'Fermer le groupe', 'Close group'],
+  ['menuNewSpace', 'Nouvel espace', 'New space'],
+  ['menuClearSpace', "Fermer les onglets de l'espace", 'Close the tabs of this space'],
+  ['menuSettings', "Réglages d'Arbalète…", 'Arbalète settings…'],
+
+  // Barre
+  ['newTab', 'Nouvel onglet', 'New tab'],
+  ['settings', "Réglages d'Arbalète", 'Arbalète settings'],
+  ['emptySpace', 'Aucun onglet dans cet espace', 'No tabs in this space'],
+  ['group', 'Groupe', 'Group'],
+  ['groupExpand', '$1 (déplier)', '$1 (expand)'],
+  ['groupCollapse', '$1 (replier)', '$1 (collapse)'],
+  ['mute', 'Couper le son', 'Mute tab'],
+  ['unmute', 'Réactiver le son', 'Unmute tab'],
+  ['closeTab', 'Fermer', 'Close'],
+  ['pinnedTab', 'Onglet épinglé', 'Pinned tab'],
+  ['spaceButton', '$1 (Alt+$2)', '$1 (Alt+$2)'],
+  ['newSpace', 'Nouvel espace', 'New space'],
+  ['pinCollapse', 'Replier la barre', 'Collapse the sidebar'],
+  ['pinExpand', 'Garder la barre dépliée', 'Keep the sidebar expanded'],
+  ['tabList', 'Onglets de l’espace $1', 'Tabs of space $1'],
+  ['spaceList', 'Espaces', 'Spaces'],
+  ['favoriteList', 'Favoris de l’espace', 'Space favorites'],
+  ['bannerText', "Masquer les onglets natifs de Firefox pour n'avoir qu'Arbalète ?", "Hide Firefox's own tabs and keep only Arbalète?"],
+  ['bannerLater', 'Plus tard', 'Later'],
+  ['bannerSetup', 'Configurer', 'Set up'],
+
+  // Fenêtre espace
+  ['spaceFormTitle', 'Espace', 'Space'],
+  ['spaceWindowTitle', 'Espace : $1', 'Space: $1'],
+  ['name', 'Nom', 'Name'],
+  ['chosenIcon', 'Icône choisie', 'Selected icon'],
+  ['icon', 'Icône', 'Icon'],
+  ['iconSearch', 'Chercher : maison, travail, musique, banque…', 'Search: home, work, music, bank…'],
+  ['moreIcons', '$1 autres, précisez la recherche', '$1 more, refine your search'],
+  ['noIcons', 'Aucune icône, essayez un mot en anglais', 'No icon found, try another word'],
+  ['color', 'Couleur', 'Color'],
+  ['container', 'Conteneur (comptes séparés)', 'Container (separate logins)'],
+  ['containerNone', 'Aucun', 'None'],
+  ['containerCreate', 'Créer un conteneur…', 'Create a container…'],
+  ['newContainerName', 'Nom du nouveau conteneur', 'New container name'],
+  ['delete', 'Supprimer', 'Delete'],
+  ['cancel', 'Annuler', 'Cancel'],
+  ['save', 'Enregistrer', 'Save'],
+  ['confirmDeleteSpace', 'Supprimer l’espace « $1 » ? Ses onglets iront dans un autre espace.', 'Delete the space "$1"? Its tabs will move to another space.'],
+
+  // Fenêtre groupe
+  ['groupFormTitle', "Groupe d'onglets", 'Tab group'],
+  ['colorGrey', 'Gris', 'Grey'],
+  ['colorBlue', 'Bleu', 'Blue'],
+  ['colorRed', 'Rouge', 'Red'],
+  ['colorYellow', 'Jaune', 'Yellow'],
+  ['colorGreen', 'Vert', 'Green'],
+  ['colorPink', 'Rose', 'Pink'],
+  ['colorPurple', 'Violet', 'Purple'],
+  ['colorCyan', 'Cyan', 'Cyan'],
+  ['colorOrange', 'Orange', 'Orange'],
+
+  // Réglages
+  ['settingsClearSpace', "Fermer les onglets de l'espace actuel", 'Close the tabs of the current space'],
+  ['settingsShare', 'Partager entre PC', 'Share between computers'],
+  ['settingsExport', 'Exporter les espaces (fichier)', 'Export spaces (file)'],
+  ['settingsImport', 'Importer des espaces', 'Import spaces'],
+  ['settingsHeading', 'Réglages', 'Settings'],
+  ['settingsExpand', 'Élargir la barre au survol de la souris (sinon : icônes seules, titres en infobulle)', 'Expand the sidebar on mouse hover (otherwise: icons only, titles as tooltips)'],
+  ['settingsHideNative', 'Masquer les onglets natifs de Firefox…', "Hide Firefox's own tabs…"],
+  ['settingsShortcuts', 'Raccourcis clavier', 'Keyboard shortcuts'],
+  ['tabsClosed', 'Onglets fermés', 'Tabs closed'],
+  ['expandOn', 'Élargissement au survol activé', 'Expand on hover enabled'],
+  ['expandOff', 'Barre compacte fixe', 'Fixed compact sidebar'],
+  ['exportFileName', 'arbalete-espaces.json', 'arbalete-spaces.json'],
+  ['confirmImport', 'Remplacer vos espaces par les $1 espaces du fichier ?', 'Replace your spaces with the $1 spaces from the file?'],
+  ['spacesImported', 'Espaces importés', 'Spaces imported'],
+  ['fileNotRecognized', 'Fichier non reconnu', 'File not recognized'],
+
+  // Fenêtre « une seule barre »
+  ['setupTitle', 'Une seule barre', 'A single sidebar'],
+  ['setupWindowTitle', 'Arbalète : une seule barre', 'Arbalète: a single sidebar'],
+  ['setupIntro', "Firefox n'autorise pas les extensions à masquer ses propres onglets. Un petit fichier de personnalisation (userChrome.css) le fait une fois pour toutes, sans droits administrateur. Les onglets natifs ne sont masqués que lorsque la barre Arbalète est ouverte.", "Firefox does not let extensions hide its own tabs. A small customization file (userChrome.css) does it once and for all, without administrator rights. Firefox's tabs are only hidden while the Arbalète sidebar is open."],
+  ['setupHint', "Ensuite, l'option « Élargir la barre au survol » se règle dans les réglages d'Arbalète.", 'Afterwards, "Expand the sidebar on hover" is set in the Arbalète settings.'],
+  ['setupDownloadScript', "Télécharger l'installateur (Windows)", 'Download the installer (Windows)'],
+  ['setupStep1', 'Ouvrez le fichier téléchargé. Si Windows affiche « Windows a protégé votre ordinateur », cliquez sur « Informations complémentaires » puis « Exécuter quand même ».', 'Open the downloaded file. If Windows shows "Windows protected your PC", click "More info" then "Run anyway".'],
+  ['setupStep2', 'Fermez complètement Firefox puis relancez-le.', 'Close Firefox completely, then start it again.'],
+  ['setupRepeat', "À refaire sur chaque PC. Relancer l'installateur met simplement à jour la configuration.", 'Do it once on each computer. Running the installer again simply updates the configuration.'],
+  ['setupManualSummary', 'Installation manuelle (Mac, Linux, ou sans script)', 'Manual setup (Mac, Linux, or without the script)'],
+  ['setupManual1', 'Dans about:config, passer toolkit.legacyUserProfileCustomizations.stylesheets à true.', 'In about:config, set toolkit.legacyUserProfileCustomizations.stylesheets to true.'],
+  ['setupManual2', 'Dans about:support, ligne « Dossier du profil », cliquer « Ouvrir le dossier ».', 'In about:support, on the "Profile Folder" row, click "Open Folder".'],
+  ['setupManual3', 'Y créer un dossier chrome et y mettre le fichier ci-dessous, nommé userChrome.css.', 'Create a folder named chrome there and put the file below in it, named userChrome.css.'],
+  ['setupManual4', 'Redémarrer Firefox.', 'Restart Firefox.'],
+  ['setupDownloadCss', 'Télécharger userChrome.css', 'Download userChrome.css'],
+  // Messages de l'installateur Windows (console : sans accents)
+  ['installerRunning', 'Configuration de Firefox pour Arbalete...', 'Setting up Firefox for Arbalete...'],
+  ['installerNoFirefox', 'Firefox introuvable pour cet utilisateur.', 'Firefox was not found for this user.'],
+  ['installerProfileDone', 'Profil configure : ', 'Profile configured: '],
+  ['installerDone', 'Termine. Fermez completement Firefox puis relancez-le.', 'Done. Close Firefox completely, then start it again.'],
+  ['installerNoProfile', 'Aucun profil Firefox trouve.', 'No Firefox profile found.'],
+];
+
+const fs = require('fs');
+const path = require('path');
+for (const [lang, col] of [['fr', 1], ['en', 2]]) {
+  const out = {};
+  for (const row of M) out[row[0]] = { message: row[col] };
+  const dir = path.join(__dirname, '..', '_locales', lang);
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, 'messages.json'), JSON.stringify(out, null, 2) + '\n');
+}
+console.log(M.length, 'messages');

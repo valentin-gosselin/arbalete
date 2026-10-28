@@ -1,0 +1,356 @@
+{
+  "extName": {
+    "message": "Arbalète"
+  },
+  "extDescription": {
+    "message": "Des espaces façon Arc dans une barre latérale compacte : chaque espace a ses onglets, ses favoris, sa couleur et son conteneur."
+  },
+  "cmdSidebar": {
+    "message": "Afficher ou masquer la barre Arbalète"
+  },
+  "cmdSpace1": {
+    "message": "Aller à l'espace 1"
+  },
+  "cmdSpace2": {
+    "message": "Aller à l'espace 2"
+  },
+  "cmdSpace3": {
+    "message": "Aller à l'espace 3"
+  },
+  "cmdSpace4": {
+    "message": "Aller à l'espace 4"
+  },
+  "cmdSpace5": {
+    "message": "Aller à l'espace 5"
+  },
+  "cmdSpaceNext": {
+    "message": "Espace suivant"
+  },
+  "cmdSpacePrev": {
+    "message": "Espace précédent"
+  },
+  "cmdCopyUrl": {
+    "message": "Copier l'adresse de l'onglet"
+  },
+  "spacePersonal": {
+    "message": "Perso"
+  },
+  "spaceWork": {
+    "message": "Boulot"
+  },
+  "newSpaceName": {
+    "message": "Nouvel espace"
+  },
+  "spaceFallbackName": {
+    "message": "Espace"
+  },
+  "urlCopied": {
+    "message": "Adresse copiée"
+  },
+  "menuAddFavorite": {
+    "message": "Ajouter aux favoris de l'espace"
+  },
+  "menuMoveTab": {
+    "message": "Déplacer vers l'espace"
+  },
+  "menuNewGroup": {
+    "message": "Ajouter à un nouveau groupe"
+  },
+  "menuAddToGroup": {
+    "message": "Ajouter au groupe"
+  },
+  "menuUngroupTab": {
+    "message": "Retirer du groupe"
+  },
+  "unnamedGroup": {
+    "message": "Groupe sans nom"
+  },
+  "menuFavReset": {
+    "message": "Revenir à l'adresse du favori"
+  },
+  "menuFavClose": {
+    "message": "Fermer l'onglet"
+  },
+  "menuFavRemove": {
+    "message": "Retirer des favoris"
+  },
+  "menuSpaceEdit": {
+    "message": "Modifier l'espace…"
+  },
+  "menuSpaceLeft": {
+    "message": "Déplacer à gauche"
+  },
+  "menuSpaceRight": {
+    "message": "Déplacer à droite"
+  },
+  "menuGroupEdit": {
+    "message": "Renommer / changer la couleur…"
+  },
+  "menuGroupNewTab": {
+    "message": "Nouvel onglet dans le groupe"
+  },
+  "menuGroupCollapse": {
+    "message": "Replier / déplier le groupe"
+  },
+  "menuGroupUngroup": {
+    "message": "Dissocier le groupe"
+  },
+  "menuGroupMove": {
+    "message": "Déplacer le groupe vers l'espace"
+  },
+  "menuGroupClose": {
+    "message": "Fermer le groupe"
+  },
+  "menuNewSpace": {
+    "message": "Nouvel espace"
+  },
+  "menuClearSpace": {
+    "message": "Fermer les onglets de l'espace"
+  },
+  "menuSettings": {
+    "message": "Réglages d'Arbalète…"
+  },
+  "newTab": {
+    "message": "Nouvel onglet"
+  },
+  "settings": {
+    "message": "Réglages d'Arbalète"
+  },
+  "emptySpace": {
+    "message": "Aucun onglet dans cet espace"
+  },
+  "group": {
+    "message": "Groupe"
+  },
+  "groupExpand": {
+    "message": "$1 (déplier)"
+  },
+  "groupCollapse": {
+    "message": "$1 (replier)"
+  },
+  "mute": {
+    "message": "Couper le son"
+  },
+  "unmute": {
+    "message": "Réactiver le son"
+  },
+  "closeTab": {
+    "message": "Fermer"
+  },
+  "pinnedTab": {
+    "message": "Onglet épinglé"
+  },
+  "spaceButton": {
+    "message": "$1 (Alt+$2)"
+  },
+  "newSpace": {
+    "message": "Nouvel espace"
+  },
+  "pinCollapse": {
+    "message": "Replier la barre"
+  },
+  "pinExpand": {
+    "message": "Garder la barre dépliée"
+  },
+  "tabList": {
+    "message": "Onglets de l’espace $1"
+  },
+  "spaceList": {
+    "message": "Espaces"
+  },
+  "favoriteList": {
+    "message": "Favoris de l’espace"
+  },
+  "bannerText": {
+    "message": "Masquer les onglets natifs de Firefox pour n'avoir qu'Arbalète ?"
+  },
+  "bannerLater": {
+    "message": "Plus tard"
+  },
+  "bannerSetup": {
+    "message": "Configurer"
+  },
+  "spaceFormTitle": {
+    "message": "Espace"
+  },
+  "spaceWindowTitle": {
+    "message": "Espace : $1"
+  },
+  "name": {
+    "message": "Nom"
+  },
+  "chosenIcon": {
+    "message": "Icône choisie"
+  },
+  "icon": {
+    "message": "Icône"
+  },
+  "iconSearch": {
+    "message": "Chercher : maison, travail, musique, banque…"
+  },
+  "moreIcons": {
+    "message": "$1 autres, précisez la recherche"
+  },
+  "noIcons": {
+    "message": "Aucune icône, essayez un mot en anglais"
+  },
+  "color": {
+    "message": "Couleur"
+  },
+  "container": {
+    "message": "Conteneur (comptes séparés)"
+  },
+  "containerNone": {
+    "message": "Aucun"
+  },
+  "containerCreate": {
+    "message": "Créer un conteneur…"
+  },
+  "newContainerName": {
+    "message": "Nom du nouveau conteneur"
+  },
+  "delete": {
+    "message": "Supprimer"
+  },
+  "cancel": {
+    "message": "Annuler"
+  },
+  "save": {
+    "message": "Enregistrer"
+  },
+  "confirmDeleteSpace": {
+    "message": "Supprimer l’espace « $1 » ? Ses onglets iront dans un autre espace."
+  },
+  "groupFormTitle": {
+    "message": "Groupe d'onglets"
+  },
+  "colorGrey": {
+    "message": "Gris"
+  },
+  "colorBlue": {
+    "message": "Bleu"
+  },
+  "colorRed": {
+    "message": "Rouge"
+  },
+  "colorYellow": {
+    "message": "Jaune"
+  },
+  "colorGreen": {
+    "message": "Vert"
+  },
+  "colorPink": {
+    "message": "Rose"
+  },
+  "colorPurple": {
+    "message": "Violet"
+  },
+  "colorCyan": {
+    "message": "Cyan"
+  },
+  "colorOrange": {
+    "message": "Orange"
+  },
+  "settingsClearSpace": {
+    "message": "Fermer les onglets de l'espace actuel"
+  },
+  "settingsShare": {
+    "message": "Partager entre PC"
+  },
+  "settingsExport": {
+    "message": "Exporter les espaces (fichier)"
+  },
+  "settingsImport": {
+    "message": "Importer des espaces"
+  },
+  "settingsHeading": {
+    "message": "Réglages"
+  },
+  "settingsExpand": {
+    "message": "Élargir la barre au survol de la souris (sinon : icônes seules, titres en infobulle)"
+  },
+  "settingsHideNative": {
+    "message": "Masquer les onglets natifs de Firefox…"
+  },
+  "settingsShortcuts": {
+    "message": "Raccourcis clavier"
+  },
+  "tabsClosed": {
+    "message": "Onglets fermés"
+  },
+  "expandOn": {
+    "message": "Élargissement au survol activé"
+  },
+  "expandOff": {
+    "message": "Barre compacte fixe"
+  },
+  "exportFileName": {
+    "message": "arbalete-espaces.json"
+  },
+  "confirmImport": {
+    "message": "Remplacer vos espaces par les $1 espaces du fichier ?"
+  },
+  "spacesImported": {
+    "message": "Espaces importés"
+  },
+  "fileNotRecognized": {
+    "message": "Fichier non reconnu"
+  },
+  "setupTitle": {
+    "message": "Une seule barre"
+  },
+  "setupWindowTitle": {
+    "message": "Arbalète : une seule barre"
+  },
+  "setupIntro": {
+    "message": "Firefox n'autorise pas les extensions à masquer ses propres onglets. Un petit fichier de personnalisation (userChrome.css) le fait une fois pour toutes, sans droits administrateur. Les onglets natifs ne sont masqués que lorsque la barre Arbalète est ouverte."
+  },
+  "setupHint": {
+    "message": "Ensuite, l'option « Élargir la barre au survol » se règle dans les réglages d'Arbalète."
+  },
+  "setupDownloadScript": {
+    "message": "Télécharger l'installateur (Windows)"
+  },
+  "setupStep1": {
+    "message": "Ouvrez le fichier téléchargé. Si Windows affiche « Windows a protégé votre ordinateur », cliquez sur « Informations complémentaires » puis « Exécuter quand même »."
+  },
+  "setupStep2": {
+    "message": "Fermez complètement Firefox puis relancez-le."
+  },
+  "setupRepeat": {
+    "message": "À refaire sur chaque PC. Relancer l'installateur met simplement à jour la configuration."
+  },
+  "setupManualSummary": {
+    "message": "Installation manuelle (Mac, Linux, ou sans script)"
+  },
+  "setupManual1": {
+    "message": "Dans about:config, passer toolkit.legacyUserProfileCustomizations.stylesheets à true."
+  },
+  "setupManual2": {
+    "message": "Dans about:support, ligne « Dossier du profil », cliquer « Ouvrir le dossier »."
+  },
+  "setupManual3": {
+    "message": "Y créer un dossier chrome et y mettre le fichier ci-dessous, nommé userChrome.css."
+  },
+  "setupManual4": {
+    "message": "Redémarrer Firefox."
+  },
+  "setupDownloadCss": {
+    "message": "Télécharger userChrome.css"
+  },
+  "installerRunning": {
+    "message": "Configuration de Firefox pour Arbalete..."
+  },
+  "installerNoFirefox": {
+    "message": "Firefox introuvable pour cet utilisateur."
+  },
+  "installerProfileDone": {
+    "message": "Profil configure : "
+  },
+  "installerDone": {
+    "message": "Termine. Fermez completement Firefox puis relancez-le."
+  },
+  "installerNoProfile": {
+    "message": "Aucun profil Firefox trouve."
+  }
+}

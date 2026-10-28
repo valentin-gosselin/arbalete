@@ -1,0 +1,69 @@
+/* Arbalète : une seule barre latérale, compacte, façon Arc.
+   Installé par l'installateur d'Arbalète (Réglages > Masquer les onglets
+   natifs de Firefox), ou à copier dans <profil Firefox>/chrome/userChrome.css.
+   Vérifié sur la structure de Firefox 158.
+
+   La barre Arbalète est reconnue à son titre (#sidebar-title), ce qui laisse
+   intactes les autres barres latérales (historique, marque-pages…).
+   L'option « Élargir au survol » des réglages d'Arbalète ajoute un caractère
+   invisible à ce titre (et le bouton « déplier » un autre) : c'est ce qui active
+   les règles 4 et 5, sans retoucher ce fichier. */
+
+:root {
+  --arbalete-compact: 48px;
+  --arbalete-expanded: 280px;
+}
+
+/* 1. Masquer les onglets natifs de Firefox quand Arbalète est ouverte :
+      la colonne verticale de gauche et la barre horizontale du haut. */
+:root:has(#sidebar-box:not([hidden]) #sidebar-title[value^="Arbalète"]) #sidebar-container,
+:root:has(#sidebar-box:not([hidden]) #sidebar-title[value^="Arbalète"]) #sidebar-launcher-splitter,
+:root:has(#sidebar-box:not([hidden]) #sidebar-title[value^="Arbalète"]) #TabsToolbar {
+  visibility: collapse !important;
+}
+
+/* 2. Masquer l'en-tête « Arbalète  ✕ » et la poignée de redimensionnement.
+      Depuis la nouvelle barre latérale de Firefox, l'en-tête des extensions
+      est dessiné dans la page du panneau (webext-panels.xhtml) : on le masque
+      là aussi. */
+#sidebar-panel-header {
+  display: none !important;
+}
+#sidebar-box:has(#sidebar-title[value^="Arbalète"]) #sidebar-header {
+  display: none !important;
+}
+:root:has(#sidebar-title[value^="Arbalète"]) #sidebar-splitter {
+  display: none !important;
+}
+
+/* 3. Barre compacte, à largeur fixe. */
+#sidebar-box:has(#sidebar-title[value^="Arbalète"]) {
+  position: relative !important;
+  z-index: 3 !important;
+  min-width: var(--arbalete-compact) !important;
+  max-width: var(--arbalete-compact) !important;
+  width: var(--arbalete-compact) !important;
+  padding: 0 !important;
+  transition: min-width 0.15s ease, max-width 0.15s ease, width 0.15s ease, margin-inline-end 0.15s ease !important;
+}
+
+#sidebar-box:has(#sidebar-title[value^="Arbalète"]) #sidebar {
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+/* 4. Barre dépliée (bouton en bas de la barre) : large en permanence,
+      la page se décale à côté. Marqueur : antiliant de largeur nulle. */
+#sidebar-box:has(#sidebar-title[value="Arbalète\200C"]) {
+  min-width: var(--arbalete-expanded) !important;
+  max-width: var(--arbalete-expanded) !important;
+  width: var(--arbalete-expanded) !important;
+}
+
+/* 5. Option « Élargir au survol » : la barre passe par-dessus la page. */
+#sidebar-box:has(#sidebar-title[value="Arbalète\200B"]):hover {
+  min-width: var(--arbalete-expanded) !important;
+  max-width: var(--arbalete-expanded) !important;
+  width: var(--arbalete-expanded) !important;
+  margin-inline-end: calc(var(--arbalete-compact) - var(--arbalete-expanded)) !important;
+}
