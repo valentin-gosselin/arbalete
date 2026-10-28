@@ -17,6 +17,9 @@ Version française : [LISEZMOI.md](LISEZMOI.md).
 - **Compact mode**: icons only, titles as tooltips. Optional expand on hover, and a button to keep the sidebar expanded.
 - **A single sidebar**: a small userChrome.css (installed from the extension settings, no admin rights needed) hides Firefox's own tabs while Arbalète is open.
 - **Sync**: spaces and favorites follow you through Firefox Sync, or through an export file.
+- **Space templates**: export a selection of spaces (with or without favorites) and add them to someone else's spaces, or move all of them to another computer.
+- **First run assistant**: pick and rename starting spaces, hide Firefox's own tabs, set a few useful options.
+- **Automatic updates** for self-distributed builds, through `updates.json` and GitHub releases (`sh tools/release.sh <signed.xpi>`).
 - **Keyboard and screen readers**: arrow keys, Enter and Delete in the tab list, labels on every control.
 - Icons by [Lucide](https://lucide.dev) (1,900+ icons, ISC license), French and English interface.
 

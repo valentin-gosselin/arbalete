@@ -190,14 +190,97 @@
 
     <h3 data-i18n="settingsShare"></h3>
     <section class="card">
-      <button type="button" class="line action" id="s-export" data-icon="download" data-i18n="settingsExport"></button>
-      <button type="button" class="line action" id="s-import" data-icon="upload" data-i18n="settingsImport"></button>
+      <button type="button" class="line action" id="s-share" data-icon="share-2" data-i18n="settingsShareSpaces"></button>
     </section>
 
     <section class="card">
       <button type="button" class="line action" id="s-setup" data-icon="panel-left" data-i18n="settingsHideNative"></button>
       <button type="button" class="line action" id="s-shortcuts" data-icon="keyboard" data-i18n="settingsShortcuts"></button>
+      <button type="button" class="line action" id="s-welcome" data-icon="sparkles" data-i18n="settingsWelcome"></button>
     </section>
+  </section>
+
+  <!-- First run assistant, in a tab (?welcome=1) -->
+  <section id="welcome-panel" class="panel welcome" hidden>
+    <div class="welcome-hero">
+      <img src="../icons/arbalete.svg" width="72" height="72" alt="">
+      <h1 data-i18n="welcomeTitle"></h1>
+      <p data-i18n="welcomeIntro"></p>
+    </div>
+    <ol class="steps" aria-hidden="true"><li class="current"></li><li></li><li></li></ol>
+
+    <section class="step" id="w-step-1">
+      <h2 data-i18n="welcomeSpacesTitle"></h2>
+      <div id="w-synced" hidden>
+        <p data-i18n="welcomeSynced"></p>
+        <section class="card"><div id="w-synced-list" class="pick-list"></div></section>
+      </div>
+      <div id="w-fresh">
+        <p data-i18n="welcomeSpacesIntro"></p>
+        <section class="card"><div id="w-starters" class="pick-list"></div></section>
+      </div>
+      <button type="button" id="w-import" class="ghost" data-icon="upload" data-i18n="welcomeImport"></button>
+    </section>
+
+    <section class="step" id="w-step-2" hidden>
+      <div id="w-setup-slot"></div>
+    </section>
+
+    <section class="step" id="w-step-3" hidden>
+      <h2 data-i18n="welcomeOptionsTitle"></h2>
+      <section class="card">
+        <label class="line">
+          <span class="stack tight">
+            <span class="line-label" data-i18n="settingsCenter"></span>
+            <span class="hint" data-i18n="settingsCenterHint"></span>
+          </span>
+          <input type="checkbox" class="switch" id="w-center">
+        </label>
+        <label class="line"><span class="line-label" data-i18n="settingsTheme"></span><input type="checkbox" class="switch" id="w-theme"></label>
+        <label class="line"><span class="line-label" data-i18n="settingsHistory"></span><input type="checkbox" class="switch" id="w-history"></label>
+      </section>
+      <h3 data-i18n="welcomeShortcuts"></h3>
+      <section class="card">
+        <div class="line"><span class="line-label" data-i18n="cmdPalette"></span><kbd>Alt+K</kbd></div>
+        <div class="line"><span class="line-label" data-i18n="welcomeShortcutSpaces"></span><kbd>Alt+1 … Alt+5</kbd></div>
+        <div class="line"><span class="line-label" data-i18n="cmdSidebar"></span><kbd data-i18n="welcomeSidebarKey"></kbd></div>
+      </section>
+    </section>
+
+    <div class="actions">
+      <button type="button" id="w-back" data-icon="arrow-left" data-i18n="welcomeBack" hidden></button>
+      <span class="grow"></span>
+      <button type="button" id="w-next" class="primary" data-i18n="welcomeNext"></button>
+    </div>
+  </section>
+
+  <!-- Share spaces: export a selection, import a file as a template or a replacement (?share=1) -->
+  <section id="share-panel" class="panel" hidden>
+    <header class="dialog-head">
+      <h2 data-i18n="shareTitle"></h2>
+      <button type="button" class="dialog-close" data-icon="x" data-i18n-title="close" data-i18n-label="close"></button>
+    </header>
+
+    <h3 data-i18n="shareExport"></h3>
+    <section class="card">
+      <div id="share-export-list" class="pick-list"></div>
+      <label class="line"><span class="line-label" data-i18n="shareWithFavorites"></span><input type="checkbox" class="switch" id="share-favorites" checked></label>
+    </section>
+    <div class="actions">
+      <span class="hint grow" data-i18n="shareExportHint"></span>
+      <button type="button" id="share-export" class="primary" data-i18n="shareExportButton"></button>
+    </div>
+
+    <h3 data-i18n="shareImport"></h3>
+    <section class="card">
+      <button type="button" class="line action" id="share-pick" data-icon="upload" data-i18n="sharePick"></button>
+      <div id="share-import-list" class="pick-list" hidden></div>
+    </section>
+    <div class="actions" id="share-import-actions" hidden>
+      <button type="button" id="share-replace" class="danger" data-i18n="shareReplace"></button>
+      <span class="grow"></span>
+      <button type="button" id="share-add" class="primary" data-i18n="shareAdd"></button>
+    </div>
   </section>
 
   <!-- Small window asking for an optional permission (?grant=…) -->
@@ -260,7 +343,6 @@
     </details>
   </section>
 
-  <input id="import-file" type="file" accept="application/json,.json" hidden>
   <script src="sidebar.js"></script>
 </body>
 </html>

@@ -11,7 +11,7 @@ const t = (key, ...subs) => browser.i18n.getMessage(key, subs.map(String)) || ke
 const send = (type, data = {}) => browser.runtime.sendMessage({ type, windowId, ...data });
 
 const params = new URLSearchParams(location.search);
-const mode = ['edit', 'group', 'settings', 'setup', 'archive', 'grant'].find((m) => params.has(m)) || 'sidebar';
+const mode = ['edit', 'group', 'settings', 'setup', 'archive', 'grant', 'share', 'welcome'].find((m) => params.has(m)) || 'sidebar';
 // Where a dialog is shown: overlay (frame in the page, see palette/overlay.js), panel
 // (under the toolbar button) or window (popup window). In the overlay, Firefox only gives
 // storage and messaging: anything else goes through the background script.
@@ -1077,12 +1077,7 @@ function initSettings() {
     await send('clearSpace', { spaceId: state.activeSpaceId });
     toast(t('tabsClosed'));
   });
-  $('#s-export').addEventListener('click', exportSpaces);
-  $('#s-import').addEventListener('click', () => {
-    // A file picker would close the toolbar panel: continue in a window.
-    if (frame === 'panel') return send('openWindow', { query: 'settings=1' }).then(closeDialog);
-    return $('#import-file').click();
-  });
+  $('#s-share').addEventListener('click', () => goToDialog('share=1'));
   $('#s-setup').addEventListener('click', () => goToDialog('setup=1'));
 
   // Search suggestions: the OpenSearch address of one's engine. Arbalète needs the right
@@ -1151,7 +1146,7 @@ function initSettings() {
     toast(t(expand.checked ? 'expandOn' : 'expandOff'));
   });
   $('#s-shortcuts').addEventListener('click', () => send('openShortcuts').then(closeDialog));
-  $('#import-file').addEventListener('change', importSpaces);
+  $('#s-welcome').addEventListener('click', () => send('openWelcome').then(closeDialog));
 }
 
 // Optional permissions can only be asked from a privileged page, during a click: not
@@ -1428,47 +1423,197 @@ async function initSetup() {
   });
 }
 
-async function exportSpaces() {
-  const data = await send('exportSpaces');
-  const blob = new Blob([JSON.stringify({ arbalete: 1, spaces: data }, null, 2)], { type: 'application/json' });
-  const link = el('a', { href: URL.createObjectURL(blob), download: t('exportFileName') });
+// --- First run assistant (?welcome=1, in a tab) --------------------------------------------
+// 1. spaces: starters to pick and rename, a template file, or the spaces already synced by
+// Firefox Sync; 2. a single sidebar (the setup dialog, moved here); 3. useful settings.
+
+const STARTERS = [
+  { key: 'spacePersonal', icon: 'house', color: '#7c6cf2', on: true },
+  { key: 'spaceWork', icon: 'briefcase', color: '#e4834b', on: true },
+  { key: 'starterStudies', icon: 'graduation-cap', color: '#3d8bd9' },
+  { key: 'starterProjects', icon: 'rocket', color: '#3fa37b' },
+  { key: 'starterHobbies', icon: 'gamepad-2', color: '#d9577a' },
+  { key: 'starterShopping', icon: 'shopping-cart', color: '#c9a227' },
+];
+
+// The two spaces created on install, untouched: nothing came through Firefox Sync.
+const onlyDefaultSpaces = (spaces) => spaces.length === 2
+  && spaces.every((s) => ['perso', 'boulot'].includes(s.id) && !s.favorites.length && !(s.sites || []).length && !s.schedule);
+
+async function initWelcome() {
+  document.title = t('welcomeTitle');
+  $('#welcome-panel').hidden = false;
+  let step = 1;
+
+  const showSynced = () => {
+    $('#w-fresh').hidden = true;
+    $('#w-synced').hidden = false;
+    $('#w-synced-list').replaceChildren(...state.spaces.map((s) => el('div', { class: 'line' }, el('span', { class: 'pick-name' }, [spaceIcon(s), el('span', {}, s.name)]))));
+  };
+  const starters = STARTERS.map((starter) => {
+    const toggle = el('input', { type: 'checkbox', class: 'switch', checked: !!starter.on, 'aria-label': t(starter.key) });
+    const name = el('input', { value: t(starter.key), maxLength: 40, 'aria-label': t('name') });
+    const swatch = icon(starter.icon);
+    swatch.style.color = starter.color;
+    $('#w-starters').append(el('div', { class: 'line starter' }, [el('span', { class: 'pick-name' }, [swatch, name]), toggle]));
+    return { starter, toggle, name };
+  });
+  if (!onlyDefaultSpaces(state.spaces)) showSynced();
+
+  // A template file replaces the starting spaces (nothing to keep yet).
+  const file = el('input', { type: 'file', accept: 'application/json,.json', hidden: true });
+  document.body.append(file);
+  $('#w-import').addEventListener('click', () => file.click());
+  file.addEventListener('change', async () => {
+    try {
+      const spaces = JSON.parse(await file.files[0].text()).spaces;
+      if (!Array.isArray(spaces) || !spaces.length) throw new Error('no spaces');
+      await send('importSpaces', { spaces, mode: onlyDefaultSpaces(state.spaces) ? 'replace' : 'add' });
+      state = await send('getState');
+      showSynced();
+      toast(t('spacesImported'));
+    } catch (err) {
+      toast(t('fileNotRecognized'));
+    }
+    file.value = '';
+  });
+
+  // Step 2: the setup dialog, moved into the assistant.
+  $('#w-setup-slot').append($('#setup-panel'));
+  await initSetup();
+  document.title = t('welcomeTitle');
+
+  // Step 3: settings (a tab: the permission requests work here).
+  const ALL_SITES = { origins: ['<all_urls>'] };
+  const HISTORY = { permissions: ['history'] };
+  const center = $('#w-center');
+  const history = $('#w-history');
+  const theme = $('#w-theme');
+  const perms = browser.permissions; // always there in the tab
+  center.checked = perms ? await perms.contains(ALL_SITES) : false;
+  history.checked = perms ? await perms.contains(HISTORY) : false;
+  theme.checked = !!(await browser.storage.local.get('tintTheme')).tintTheme;
+  center.addEventListener('change', async () => {
+    if (center.checked) center.checked = await browser.permissions.request(ALL_SITES);
+    else await browser.permissions.remove(ALL_SITES);
+  });
+  history.addEventListener('change', async () => {
+    if (history.checked) history.checked = await browser.permissions.request(HISTORY);
+    else await browser.permissions.remove(HISTORY);
+  });
+  theme.addEventListener('change', () => browser.storage.local.set({ tintTheme: theme.checked }));
+
+  const show = () => {
+    for (let i = 1; i <= 3; i++) $(`#w-step-${i}`).hidden = i !== step;
+    document.querySelectorAll('.steps li').forEach((li, i) => {
+      li.className = i + 1 === step ? 'current' : i + 1 < step ? 'done' : '';
+    });
+    $('#w-back').hidden = step === 1;
+    $('#w-next').textContent = t(step === 3 ? 'welcomeDone' : 'welcomeNext');
+    window.scrollTo(0, 0);
+  };
+  $('#w-back').addEventListener('click', () => { step -= 1; show(); });
+  $('#w-next').addEventListener('click', async () => {
+    if (step === 1 && $('#w-synced').hidden) {
+      const picked = starters.filter((s) => s.toggle.checked);
+      if (!picked.length) return toast(t('shareNothing'));
+      await send('importSpaces', {
+        mode: 'replace',
+        spaces: picked.map(({ starter, name }) => ({
+          name: name.value.trim() || t(starter.key), icon: `lucide:${starter.icon}`, color: starter.color, favorites: [],
+        })),
+      });
+      state = await send('getState');
+      showSynced();
+    }
+    if (step < 3) {
+      step += 1;
+      return show();
+    }
+    await browser.storage.local.set({ setupDismissed: true });
+    const tab = await browser.tabs.getCurrent();
+    return tab ? browser.tabs.remove(tab.id) : window.close();
+  });
+  show();
+}
+
+// --- "Share spaces" dialog (?share=1) ------------------------------------------------
+// Export: a selection of spaces, with or without their favorites, to a file. Import: the
+// spaces of a file, chosen one by one, added next to the current ones (a template) or
+// replacing them (moving to another PC).
+
+// One row per space, with a switch; returns a function giving the chosen spaces.
+function spacePicker(box, list) {
+  const rows = list.map((space) => {
+    const input = el('input', { type: 'checkbox', class: 'switch', checked: true });
+    box.append(el('label', { class: 'line' }, [
+      el('span', { class: 'pick-name' }, [spaceIcon(space), el('span', {}, space.name)]),
+      input,
+    ]));
+    return { space, input };
+  });
+  return () => rows.filter((r) => r.input.checked).map((r) => r.space);
+}
+
+function saveFile(name, data) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const link = el('a', { href: URL.createObjectURL(blob), download: name });
   document.body.append(link);
   link.click();
   link.remove();
   setTimeout(() => URL.revokeObjectURL(link.href), 5000);
 }
 
-async function importSpaces(e) {
-  const file = e.target.files[0];
-  e.target.value = '';
-  if (!file) return;
-  try {
-    const parsed = JSON.parse(await file.text());
-    if (!Array.isArray(parsed.spaces) || !parsed.spaces.length) throw new Error('no spaces');
-    // Second click to confirm: the import replaces the current spaces.
-    const button = $('#s-import');
-    const label = button.textContent;
-    button.textContent = t('importArmed', parsed.spaces.length);
-    button.classList.add('armed');
-    const apply = async () => {
-      await send('importSpaces', { spaces: parsed.spaces });
-      toast(t('spacesImported'));
-    };
-    const reset = () => {
-      button.textContent = label;
-      button.classList.remove('armed');
-      button.removeEventListener('click', onConfirm, true);
-    };
-    const onConfirm = (event) => {
-      event.stopImmediatePropagation();
-      reset();
-      apply();
-    };
-    button.addEventListener('click', onConfirm, true);
-    setTimeout(reset, 6000);
-  } catch (err) {
-    toast(t('fileNotRecognized'));
-  }
+const fileSlug = (name) => name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'espace';
+
+function initShare() {
+  document.title = t('shareTitle');
+  $('#share-panel').hidden = false;
+
+  const chosen = spacePicker($('#share-export-list'), state.spaces);
+  $('#share-export').addEventListener('click', async () => {
+    const picked = chosen();
+    if (!picked.length) return toast(t('shareNothing'));
+    const spaces = await send('exportSpaces', { ids: picked.map((s) => s.id), withFavorites: $('#share-favorites').checked });
+    saveFile(picked.length === 1 ? `arbalete-${fileSlug(picked[0].name)}.json` : t('exportFileName'), { arbalete: 1, spaces });
+    return toast(t('shareExported', picked.length));
+  });
+
+  const input = el('input', { type: 'file', accept: 'application/json,.json', hidden: true });
+  document.body.append(input);
+  $('#share-pick').addEventListener('click', () => {
+    // A file picker would close the toolbar panel: continue in a window.
+    if (frame === 'panel') return send('openWindow', { query: 'share=1' }).then(closeDialog);
+    return input.click();
+  });
+  let fromFile = null;
+  input.addEventListener('change', async () => {
+    const file = input.files[0];
+    input.value = '';
+    if (!file) return;
+    let spaces;
+    try {
+      spaces = JSON.parse(await file.text()).spaces;
+      if (!Array.isArray(spaces) || !spaces.length) throw new Error('no spaces');
+    } catch (err) {
+      toast(t('fileNotRecognized'));
+      return;
+    }
+    $('#share-import-list').replaceChildren();
+    $('#share-import-list').hidden = false;
+    $('#share-import-actions').hidden = false;
+    $('#share-pick').lastChild.textContent = file.name;
+    fromFile = spacePicker($('#share-import-list'), spaces.map((s) => ({ ...s, name: String(s.name || t('spaceFallbackName')) })));
+  });
+  const apply = async (importMode) => {
+    const picked = fromFile ? fromFile() : [];
+    if (!picked.length) return toast(t('shareNothing'));
+    await send('importSpaces', { spaces: picked, mode: importMode });
+    toast(t('spacesImported'));
+    return setTimeout(closeDialog, 700);
+  };
+  $('#share-add').addEventListener('click', () => apply('add'));
+  confirmButton($('#share-replace'), t('replaceArmed'), () => apply('replace'));
 }
 
 // --- Synchronization with the background script ------------------------------
@@ -1520,7 +1665,7 @@ async function initDialogFrame() {
   if (frame === 'panel') browser.browserAction.setPopup({ popup: null });
   for (const button of document.querySelectorAll('.dialog-close')) button.addEventListener('click', closeDialog);
   document.addEventListener('keydown', (e) => {
-    if (e.key !== 'Escape') return;
+    if (e.key !== 'Escape' || mode === 'welcome') return;
     const popover = document.querySelector('.popover:not([hidden])');
     if (popover) toggleIconPopover(false);
     else closeDialog();
@@ -1540,5 +1685,7 @@ async function initDialogFrame() {
   else if (mode === 'setup') await initSetup();
   else if (mode === 'archive') await initArchive();
   else if (mode === 'grant') initGrant();
+  else if (mode === 'share') initShare();
+  else if (mode === 'welcome') await initWelcome();
   else initSettings();
 })();

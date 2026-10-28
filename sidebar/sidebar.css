@@ -516,6 +516,29 @@ body.mode-setup .panel, body.mode-archive .panel { user-select: text; }
 .inline { display: flex; gap: 8px; }
 .stack.tight { gap: 2px; padding: 0; }
 
+/* First run assistant (in a tab) */
+body.mode-welcome { background: var(--bg); }
+.panel.welcome { max-width: 600px; margin: 0 auto; padding: 48px 24px 64px; gap: 20px; }
+.welcome-hero { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+.welcome-hero h1 { margin: 6px 0 0; font-size: 28px; letter-spacing: -0.02em; }
+.welcome-hero p { max-width: 460px; color: var(--muted); font-size: 14px; }
+.panel .steps { display: flex; flex-direction: row; justify-content: center; gap: 8px; padding: 0; margin: 0; list-style: none; }
+.steps li { width: 28px; height: 5px; border-radius: 3px; background: var(--border); }
+.steps li.current, .steps li.done { background: var(--space); }
+.step { display: flex; flex-direction: column; gap: 14px; }
+.step h2 { margin: 0; font-size: 19px; }
+.step > p, .step > div > p { color: var(--muted); }
+.step .ghost { align-self: flex-start; }
+.starter .pick-name input { width: 180px; padding: 5px 8px !important; }
+.welcome kbd { padding: 3px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--field); font: 12px ui-monospace, monospace; }
+#w-setup-slot > .panel { padding: 0; }
+#w-setup-slot .dialog-close { display: none; }
+.pick-list { display: flex; flex-direction: column; }
+.pick-list > .line + .line { border-top: 1px solid var(--border); }
+.pick-name { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.pick-name .ic, .pick-name .space-img { width: 17px; height: 17px; flex: none; color: var(--space); }
+.pick-name span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 /* Time slots of a space */
 .card > .stack.sub { border-top: 0; padding-top: 0; }
 .slots { display: flex; flex-direction: column; gap: 8px; }
@@ -745,6 +768,8 @@ body.mode-setup .panel, body.mode-archive .panel { user-select: text; }
 
 /* Buttons */
 .actions { display: flex; gap: 8px; align-items: center; margin-top: 2px; }
+.actions button { display: inline-flex; align-items: center; gap: 6px; }
+.actions button .ic { width: 15px; height: 15px; }
 .actions button, .inline button, .command button, .ghost, .panel .wide, .primary-wide {
   padding: 7px 14px;
   border: 1px solid var(--border);

@@ -641,9 +641,6 @@
   "clearArmed": {
     "message": "Tout vider vraiment ?"
   },
-  "importArmed": {
-    "message": "Remplacer par les $1 espaces du fichier ?"
-  },
   "icon": {
     "message": "Icône"
   },
@@ -716,12 +713,6 @@
   "settingsShare": {
     "message": "Partager entre PC"
   },
-  "settingsExport": {
-    "message": "Exporter les espaces (fichier)"
-  },
-  "settingsImport": {
-    "message": "Importer des espaces"
-  },
   "settingsHeading": {
     "message": "Réglages"
   },
@@ -742,6 +733,99 @@
   },
   "expandOff": {
     "message": "Barre compacte fixe"
+  },
+  "settingsShareSpaces": {
+    "message": "Partager des espaces (fichier, modèles)"
+  },
+  "shareTitle": {
+    "message": "Partager des espaces"
+  },
+  "shareExport": {
+    "message": "Exporter"
+  },
+  "shareWithFavorites": {
+    "message": "Avec leurs favoris"
+  },
+  "shareExportHint": {
+    "message": "Le fichier sert aussi de modèle : il s’ajoute aux espaces existants."
+  },
+  "shareExportButton": {
+    "message": "Exporter"
+  },
+  "shareExported": {
+    "message": "$1 espace(s) exporté(s)"
+  },
+  "shareImport": {
+    "message": "Importer"
+  },
+  "sharePick": {
+    "message": "Choisir un fichier d’espaces…"
+  },
+  "shareAdd": {
+    "message": "Ajouter à mes espaces"
+  },
+  "shareReplace": {
+    "message": "Remplacer mes espaces"
+  },
+  "replaceArmed": {
+    "message": "Remplacer vraiment ?"
+  },
+  "shareNothing": {
+    "message": "Aucun espace choisi"
+  },
+  "settingsWelcome": {
+    "message": "Revoir l’assistant de démarrage"
+  },
+  "welcomeTitle": {
+    "message": "Bienvenue dans Arbalète"
+  },
+  "welcomeIntro": {
+    "message": "Des espaces façon Arc dans Firefox : chaque espace a ses onglets, ses favoris, sa couleur et, si vous voulez, ses comptes séparés. Trois petites étapes pour démarrer."
+  },
+  "welcomeSpacesTitle": {
+    "message": "Vos espaces"
+  },
+  "welcomeSpacesIntro": {
+    "message": "Choisissez les espaces de départ et renommez-les si besoin. Vous pourrez tout changer ensuite (double-clic sur un espace)."
+  },
+  "welcomeSynced": {
+    "message": "Vos espaces sont déjà là, arrivés par Firefox Sync ou par un fichier :"
+  },
+  "welcomeImport": {
+    "message": "Importer un fichier d’espaces (modèle)…"
+  },
+  "welcomeOptionsTitle": {
+    "message": "Réglages utiles"
+  },
+  "welcomeShortcuts": {
+    "message": "Raccourcis"
+  },
+  "welcomeShortcutSpaces": {
+    "message": "Aller à l’espace 1 à 5"
+  },
+  "welcomeSidebarKey": {
+    "message": "Alt+Maj+S"
+  },
+  "welcomeBack": {
+    "message": "Retour"
+  },
+  "welcomeNext": {
+    "message": "Continuer"
+  },
+  "welcomeDone": {
+    "message": "Terminer"
+  },
+  "starterStudies": {
+    "message": "Études"
+  },
+  "starterProjects": {
+    "message": "Projets"
+  },
+  "starterHobbies": {
+    "message": "Loisirs"
+  },
+  "starterShopping": {
+    "message": "Courses"
   },
   "exportFileName": {
     "message": "arbalete-espaces.json"

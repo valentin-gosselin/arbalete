@@ -31,7 +31,11 @@ English version: [README.md](README.md).
 ## Retrouver ses espaces sur un autre PC
 
 - **Firefox Sync** : si Firefox est connecté au même compte avec « Modules complémentaires » coché, les espaces, icônes, couleurs, favoris et conteneurs (retrouvés par leur nom) suivent tout seuls.
-- **Par fichier** : Réglages, « Exporter les espaces », puis « Importer des espaces » sur l'autre PC.
+- **Par fichier** : Réglages, « Partager des espaces » : exporter tout ou une sélection, puis importer sur l'autre PC, à la place des espaces existants ou en plus (un fichier sert ainsi de modèle d'espaces à donner à quelqu'un).
+
+## Mises à jour automatiques (versions non listées)
+
+Firefox vérifie `updates.json` du dépôt GitHub. Pour publier une version : l'envoyer sur AMO, télécharger le `.xpi` signé, puis `sh tools/release.sh <fichier.xpi>` crée la Release GitHub, ajoute la version à `updates.json`, commite et pousse.
 
 Les onglets ouverts restent propres à chaque PC.
 

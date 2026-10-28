@@ -541,10 +541,14 @@ browser.storage.onChanged.addListener(async (changes, area) => {
 });
 
 // Import of an exported file (for example dropped in Nextcloud): replaces the spaces.
-async function importSpaces(imported) {
+// mode "replace": the file's spaces replace the current ones (moving to another PC);
+// mode "add": they are added next to them, with new ids (a space template).
+async function importSpaces(imported, mode = 'replace') {
   if (!Array.isArray(imported) || !imported.length) throw new Error('Invalid file');
-  spaces = imported.map((s) => ({
-    id: String(s.id || uid()),
+  const adding = mode === 'add';
+  const taken = new Set(adding ? spaces.map((s) => s.id) : []);
+  const read = imported.map((s) => ({
+    id: adding || !s.id || taken.has(String(s.id)) ? uid() : String(s.id),
     name: String(s.name || t('spaceFallbackName')),
     icon: s.icon === 'image' && validIconImage(s.iconImage) ? 'image' : String(s.icon && s.icon !== 'image' ? s.icon : 'lucide:sparkles'),
     iconImage: validIconImage(s.iconImage),
@@ -556,8 +560,9 @@ async function importSpaces(imported) {
     sites: Array.isArray(s.sites) ? s.sites.map(String) : [],
     schedule: s.schedule && typeof s.schedule === 'object' ? s.schedule : null,
     color2: s.color2 || null,
-    favorites: (s.favorites || []).map((f) => ({ id: f.id || uid(), url: f.url, title: f.title || f.url, favIconUrl: f.favIconUrl || '' })),
+    favorites: (s.favorites || []).filter((f) => f && f.url).map((f) => ({ id: adding ? uid() : f.id || uid(), url: f.url, title: f.title || f.url, favIconUrl: f.favIconUrl || '' })),
   }));
+  spaces = adding ? [...spaces, ...read] : read;
   await resolveContainers();
   // The tabs of the vanished spaces join the first space.
   for (const [tabId, id] of tabSpace) if (!getSpace(id)) assign(tabId, spaces[0].id);
@@ -653,12 +658,15 @@ function dialogFromMenu(windowId, query) {
   return browser.browserAction.openPopup().catch(() => openDialog(windowId, query));
 }
 
-// First install: offer right away to hide Firefox's own tabs.
+// First install: the first run assistant, in a tab (spaces, single sidebar, settings).
+const openWelcome = async () => {
+  const win = await browser.windows.getLastFocused();
+  return browser.tabs.create({ url: `${SIDEBAR_PAGE}?welcome=1&win=${win.id}`, windowId: win.id });
+};
 browser.runtime.onInstalled.addListener(async ({ reason }) => {
   if (reason !== 'install') return;
   await ready;
-  const win = await browser.windows.getLastFocused();
-  openPopup(`setup=1&win=${win.id}`, 560);
+  openWelcome();
 });
 
 // --- Per-site rules ----------------------------------------------------------
@@ -1544,6 +1552,7 @@ const handlers = {
   openSettings: (m) => openSettings(m.windowId).then(() => undefined),
   openSetup: (m) => openSetup(m.windowId).then(() => undefined),
   openDialog: (m) => openDialog(m.windowId, m.query),
+  openWelcome: () => openWelcome().then(() => undefined),
   // Dialog pages framed in a web page only get storage and messaging: everything else
   // goes through here.
   claimDialog: (m) => (dialogTokens.get(m.token) || 0) > Date.now(),
@@ -1599,8 +1608,11 @@ const handlers = {
   tabAction: async (m) => tabAction('arb-tab-' + m.action, await browser.tabs.get(m.tabId)),
   toggleMute: (m) => browser.tabs.update(m.tabId, { muted: m.muted }).then(() => undefined),
   toggleGroup: (m) => browser.tabGroups.update(m.groupId, { collapsed: m.collapsed }).then(() => undefined),
-  exportSpaces: () => spaces.map(({ cookieStoreId, ...rest }) => rest),
-  importSpaces: (m) => importSpaces(m.spaces),
+  // A selection of spaces, with or without their favorites (a template to share).
+  exportSpaces: (m) => spaces
+    .filter((s) => !m.ids || m.ids.includes(s.id))
+    .map(({ cookieStoreId, ...rest }) => (m.withFavorites === false ? { ...rest, favorites: [] } : rest)),
+  importSpaces: (m) => importSpaces(m.spaces, m.mode),
   clearSpace: async (m) => {
     // "Clean up": stores the space's tabs in the archive (except favorites and
     // pinned), internal pages are simply closed.

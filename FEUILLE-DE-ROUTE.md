@@ -71,16 +71,17 @@ Fait en premier car tous les textes ajoutés ensuite en dépendent.
 - [x] Clic molette sur un onglet : ferme (le défilement automatique de Firefox avalait le clic). Croix de fermeture au survol en mode compact.
 - [x] Commentaires du code en anglais (dépôt public), textes de l'interface en français et en anglais.
 
-## Phase 8 : plusieurs PC et prise en main
+## Phase 8 : plusieurs PC et prise en main (faite le 28/10/2026, version 0.11.0)
 
-- [ ] Mises à jour automatiques avant publication : `update_url` vers un petit fichier JSON hébergé en HTTPS (lien public Nextcloud ou serveur personnel).
-- [ ] Modèles d'espaces : enregistrer un ou plusieurs espaces (icônes, couleurs, favoris, règles) comme modèle à partager ou réimporter, choisis par l'utilisateur.
-- [ ] Assistant de premier lancement : créer ses espaces, choisir les icônes, masquer les onglets natifs.
+- [x] Mises à jour automatiques avant publication : `update_url` vers `updates.json` du dépôt GitHub public, chaque `.xpi` signé attaché à une Release. Publication : télécharger le `.xpi` signé sur AMO, puis `sh tools/release.sh <fichier.xpi>` (Release, `updates.json`, commit, push).
+- [x] Modèles d'espaces : fenêtre « Partager des espaces » (Réglages) : export d'une sélection, avec ou sans favoris ; import d'un fichier en choisissant les espaces, ajoutés aux siens (modèle) ou à leur place (autre PC).
+- [x] Assistant de premier lancement (onglet à l'installation, à revoir depuis les Réglages) : espaces de départ à choisir et renommer, ou fichier modèle, ou espaces déjà synchronisés détectés ; installateur « une seule barre » ; fenêtres centrées, teinte, historique, raccourcis.
 
 ## Phase 9 : publication publique
 
 - [ ] Fiche AMO en français et en anglais : description, captures, courte vidéo.
 - [ ] Passage en « listée » sur AMO (relecture Mozilla), mises à jour automatiques pour tout le monde.
+- [ ] Bascule des installations existantes : la version listée n'a plus d'`update_url` (AMO l'interdit) ; une dernière entrée de `updates.json` pointe vers le `.xpi` listé, ensuite AMO prend le relais.
 
 ## Écarté
 
