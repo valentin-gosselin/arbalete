@@ -1,7 +1,18 @@
 {
   "addons": {
     "arbalete@gosselin.pro": {
-      "updates": []
+      "updates": [
+        {
+          "version": "0.11.0",
+          "update_link": "https://github.com/valentin-gosselin/arbalete/releases/download/v0.11.0/arbalete-0.11.0.xpi",
+          "update_hash": "sha256:d04c4c2690655f7f95386dd1ccbe79297952157274bd8be4a87c3a767ddad331",
+          "browser_specific_settings": {
+            "gecko": {
+              "strict_min_version": "142.0"
+            }
+          }
+        }
+      ]
     }
   }
 }
