@@ -14,7 +14,7 @@ it has no `update_url`, which AMO refuses on listed versions.
 | Tags | tab, productivity, container |
 | Homepage | https://github.com/valentin-gosselin/arbalete |
 | Support site | https://github.com/valentin-gosselin/arbalete/issues |
-| License | MIT |
+| License | Mozilla Public License 2.0 |
 | Privacy policy | the content of `PRIVACY.md` |
 | Icon | `icon-128.png` (also in the package as `icons/arbalete.svg`) |
 | Firefox | 142 and later |
@@ -54,7 +54,7 @@ it has no `update_url`, which AMO refuses on listed versions.
 <li>Un assistant de démarrage crée vos espaces en une minute.</li>
 </ul>
 
-<b>Vie privée</b> : aucune donnée collectée ni envoyée, aucun pistage. Code ouvert, licence MIT : <a href="https://github.com/valentin-gosselin/arbalete">github.com/valentin-gosselin/arbalete</a>
+<b>Vie privée</b> : aucune donnée collectée ni envoyée, aucun pistage. Code ouvert, licence MPL 2.0 : <a href="https://github.com/valentin-gosselin/arbalete">github.com/valentin-gosselin/arbalete</a>
 
 <i>Arbalète est un projet indépendant, sans lien avec The Browser Company ni avec le navigateur Arc.</i>
 ```
@@ -88,7 +88,7 @@ it has no `update_url`, which AMO refuses on listed versions.
 <li>A first run assistant sets up your spaces in a minute.</li>
 </ul>
 
-<b>Privacy</b>: no data collected or sent, no tracking. Open source, MIT license: <a href="https://github.com/valentin-gosselin/arbalete">github.com/valentin-gosselin/arbalete</a>
+<b>Privacy</b>: no data collected or sent, no tracking. Open source, MPL 2.0 license: <a href="https://github.com/valentin-gosselin/arbalete">github.com/valentin-gosselin/arbalete</a>
 
 <i>Arbalète is an independent project, not affiliated with The Browser Company or the Arc browser.</i>
 ```

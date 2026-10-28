@@ -16,7 +16,7 @@ Fait en premier car tous les textes ajoutés ensuite en dépendent.
 - [x] Traduction : tous les textes dans `_locales/fr` et `_locales/en` (source : `tools/messages.js`), menus, fenêtres, installateur.
 - [x] Accessibilité : navigation au clavier dans la barre (flèches, Début/Fin, Entrée, Suppr), libellés pour lecteurs d'écran, focus visible.
 - [x] Validateur de Mozilla (addons-linter) : 0 erreur, 0 avertissement. Firefox 142 minimum.
-- [x] Politique de confidentialité (PRIVACY.md), licence MIT, README anglais et LISEZMOI à jour.
+- [x] Politique de confidentialité (PRIVACY.md), licence MIT (MPL 2.0 depuis la 0.11.1), README anglais et LISEZMOI à jour.
 - [x] Dépôt git local. Dépôt public (GitHub ou forge perso) au moment de publier.
 
 ## Phase 2 : clic droit et vue scindée (faite le 28/10/2026, version 0.4.0)

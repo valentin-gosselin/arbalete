@@ -38,4 +38,4 @@ Requires Firefox 142 or later.
 
 ## License
 
-MIT, see [LICENSE](LICENSE).
+Mozilla Public License 2.0 (MPL-2.0), see [LICENSE](LICENSE). Versions up to 0.11.0 were released under the MIT license.

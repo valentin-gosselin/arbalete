@@ -45,4 +45,4 @@ Tous les textes sont dans `tools/messages.js` (français et anglais). Après mod
 
 ## Confidentialité et licence
 
-Rien n'est collecté ni envoyé : voir [PRIVACY.md](PRIVACY.md). Licence MIT : [LICENSE](LICENSE). Icônes Lucide, licence ISC.
+Rien n'est collecté ni envoyé : voir [PRIVACY.md](PRIVACY.md). Licence Mozilla Public License 2.0 (MPL-2.0) : [LICENSE](LICENSE) ; les versions jusqu'à la 0.11.0 sont parues sous licence MIT. Icônes Lucide, licence ISC.
