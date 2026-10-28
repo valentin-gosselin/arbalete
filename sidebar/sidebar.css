@@ -174,6 +174,8 @@ body:not(.mode-sidebar) > .footer { display: none; }
 .tab.selected:hover { background: color-mix(in srgb, var(--space) 28%, transparent); }
 /* Unloaded tab: faded, as in Firefox */
 .tab.discarded .favicon, .tab.discarded .title { opacity: 0.55; }
+/* The default favicon is a sprite icon: dimmed through the color (see .space-dot) */
+.tab.discarded .favicon.default, .tab.loading .favicon.default { opacity: 1; color: color-mix(in srgb, var(--muted) 55%, transparent); }
 
 /* Split view: two tabs on the same line */
 .split {
@@ -319,12 +321,15 @@ body:not(.mode-sidebar) > .footer { display: none; }
   cursor: pointer;
 }
 .space-dot .label, .tool .label { overflow: hidden; text-overflow: ellipsis; }
-.space-dot .label { color: var(--fg); }
 .space-dot .ic, .space-dot .space-img { width: 17px; height: 17px; flex: none; }
 .tool .ic { width: 16px; height: 16px; flex: none; margin-left: 1px; }
-.space-dot { color: var(--dot, var(--muted)); opacity: 0.55; }
-.space-dot:hover { opacity: 1; background: var(--row-hover); }
-.space-dot.active { opacity: 1; background: color-mix(in srgb, var(--dot) 25%, transparent); }
+/* Inactive spaces are dimmed through the color, not opacity: an opacity below 1 on the
+   Lucide sprite icons (<use> of an external SVG) can leave them unpainted. */
+.space-dot { color: color-mix(in srgb, var(--dot, var(--muted)) 60%, transparent); }
+.space-dot .label { color: var(--muted); }
+.space-dot:hover { color: var(--dot, var(--fg)); background: var(--row-hover); }
+.space-dot:hover .label, .space-dot.active .label { color: var(--fg); }
+.space-dot.active { color: var(--dot); background: color-mix(in srgb, var(--dot) 25%, transparent); }
 .space-dot.add { color: var(--muted); }
 .space-dot.drop-target { outline: 2px solid var(--dot); }
 .tool { color: var(--muted); }
