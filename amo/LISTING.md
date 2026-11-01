@@ -4,6 +4,10 @@ Everything needed for the public (listed) page of Arbalète on addons.mozilla.or
 Build the listed package with `sh build.sh listed` (or `powershell -File build.ps1 -Listed`):
 it has no `update_url`, which AMO refuses on listed versions.
 
+To send a new version: write its release notes in `versions/<version>.json`, then run
+`sh tools/submit.sh`. It builds and validates the listed package and submits it through the
+AMO API, with the notes to reviewers below.
+
 ## Fields
 
 | Field | Value |

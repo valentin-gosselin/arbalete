@@ -1,0 +1,6 @@
+{
+  "release_notes": {
+    "en-US": "- New setting \"Links from other applications\": a link opened from your mail or chat app, with no space site matching it, goes to the space you choose (Personal...) instead of the displayed one. The sites of a space still win.\n- Fix: the sidebar now follows when such a link switches the window to another space.\n- Tab close buttons reworked like Firefox's vertical tabs: a round badge in compact mode, always visible on the active tab when expanded.",
+    "fr": "- Nouveau réglage « Liens venant d'autres applications » : un lien ouvert depuis la messagerie ou une discussion, sans site d'espace correspondant, va dans l'espace de votre choix (Perso…) au lieu de l'espace affiché. Les sites d'un espace restent prioritaires.\n- Correctif : la barre latérale suit bien quand un tel lien fait changer d'espace.\n- Croix de fermeture des onglets reprises des onglets verticaux de Firefox : pastille ronde en mode compact, toujours visible sur l'onglet actif en mode déplié."
+  }
+}
