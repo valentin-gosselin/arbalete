@@ -11,6 +11,16 @@
               "strict_min_version": "142.0"
             }
           }
+        },
+        {
+          "version": "0.11.1",
+          "update_link": "https://github.com/valentin-gosselin/arbalete/releases/download/v0.11.1/arbalete-0.11.1.xpi",
+          "update_hash": "sha256:a9923854869cb8ae11cff79e4f6bf9cb784be747ee9638f2e82a9376699e35f1",
+          "browser_specific_settings": {
+            "gecko": {
+              "strict_min_version": "142.0"
+            }
+          }
         }
       ]
     }
