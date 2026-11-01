@@ -83,13 +83,13 @@ Fait en premier car tous les textes ajoutés ensuite en dépendent.
 - [x] Correctif : un onglet activé pendant qu'Arbalète choisit son espace fait bien basculer la fenêtre.
 - [x] Croix de fermeture reprises des onglets verticaux de Firefox 158 : pastille ronde en haut à gauche en compact, bouton de 24 px toujours visible sur l'onglet actif en déplié.
 
-## Phase 9 : publication publique
+## Phase 9 : publication publique (faite le 02/11/2026, versions 0.11.1 et 0.11.2)
 
 - [x] Fiche AMO en français et en anglais prête dans `amo/LISTING.md` (nom, résumés, descriptions, catégories, notes pour la relecture, plan des captures), icône `amo/icon-128.png`, politique de confidentialité à jour.
 - [x] Build listé sans `update_url` : `sh build.sh listed` (ou `build.ps1 -Listed`), validé avec les règles des versions listées.
-- [ ] Captures d'écran 1280 × 800 (8, voir `amo/LISTING.md`), courte vidéo facultative.
-- [ ] Passage en « listée » sur AMO (relecture Mozilla), mises à jour automatiques pour tout le monde.
-- [ ] Bascule des installations existantes : la version listée n'a plus d'`update_url` (AMO l'interdit) ; une dernière entrée de `updates.json` pointe vers le `.xpi` listé, ensuite AMO prend le relais.
+- [x] Captures d'écran 1280 × 800 (8, voir `amo/LISTING.md`), courte vidéo facultative.
+- [x] Passage en « listée » sur AMO (relecture Mozilla), mises à jour automatiques pour tout le monde : 0.11.1 approuvée le 02/11/2026, 0.11.2 envoyée par l'API (`sh tools/submit.sh`) et validée le jour même.
+- [x] Bascule des installations existantes : la version listée n'a plus d'`update_url` (AMO l'interdit) ; une dernière entrée de `updates.json` pointe vers le `.xpi` listé, ensuite AMO prend le relais.
 
 ## Écarté
 
