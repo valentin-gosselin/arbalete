@@ -11,7 +11,7 @@ const t = (key, ...subs) => browser.i18n.getMessage(key, subs.map(String)) || ke
 const send = (type, data = {}) => browser.runtime.sendMessage({ type, windowId, ...data });
 
 const params = new URLSearchParams(location.search);
-const mode = ['edit', 'group', 'settings', 'setup', 'archive', 'grant', 'share', 'welcome'].find((m) => params.has(m)) || 'sidebar';
+const mode = ['edit', 'group', 'folder', 'settings', 'setup', 'archive', 'grant', 'share', 'welcome'].find((m) => params.has(m)) || 'sidebar';
 // Where a dialog is shown: overlay (frame in the page, see palette/overlay.js), panel
 // (under the toolbar button) or window (popup window). In the overlay, Firefox only gives
 // storage and messaging: anything else goes through the background script.
@@ -121,8 +121,26 @@ function renderFavorites(space) {
         class: classes,
         title: fav.title,
         'aria-label': fav.title,
+        draggable: true,
         onclick: () => send('openFavorite', { spaceId: space.id, favId: fav.id }),
         onauxclick: (e) => { if (e.button === 1 && tab) send('closeTab', { tabId: tab.id }); },
+        ondragstart: (e) => dragFavorite(e, fav),
+        // Another favorite dropped on a tile goes before it.
+        ondragover: (e) => {
+          if (!isFavDrag(e)) return;
+          e.preventDefault();
+          node.classList.add('drop-before');
+        },
+        ondragleave: () => node.classList.remove('drop-before'),
+        ondrop: (e) => {
+          node.classList.remove('drop-before');
+          const favId = e.dataTransfer.getData('application/x-arbalete-fav');
+          if (!favId) return;
+          e.preventDefault();
+          e.stopPropagation();
+          favBox.classList.remove('drop-target');
+          send('moveFavorite', { spaceId: space.id, favId, folderId: null, beforeId: fav.id });
+        },
       }, [favicon(tab ? tab.favIconUrl || fav.favIconUrl : fav.favIconUrl, fav.title), el('span', { class: 'label' }, fav.title)]);
       node.menuTarget = { kind: 'fav', spaceId: space.id, favId: fav.id, tabId: tab ? tab.id : null, shared };
       return node;
@@ -132,10 +150,14 @@ function renderFavorites(space) {
 
 function renderTabs(space) {
   const pinned = state.tabs.filter((t) => t.pinned);
-  const own = state.tabs.filter((t) => !t.pinned && t.spaceId === space.id && !t.favId);
+  const own = state.tabs.filter((t) => !t.pinned && t.spaceId === space.id && !t.favId && !t.folderId);
   const groups = new Map(state.groups.map((g) => [g.id, g]));
+  // Firefox's pinned tabs first (shown in every space), then the folders of the space.
+  const folders = folderRows(space);
   const rows = pinned.map((t) => tabRow(t));
-  if (pinned.length && own.length) rows.push(el('div', { class: 'separator' }));
+  if (pinned.length && (folders.length || own.length)) rows.push(el('div', { class: 'separator' }));
+  rows.push(...folders);
+  if (folders.length && own.length) rows.push(el('div', { class: 'separator' }));
 
   let currentGroup = null;
   for (let i = 0; i < own.length; i++) {
@@ -224,13 +246,139 @@ function groupRow(group) {
   return row;
 }
 
+// --- Link folders ------------------------------------------------------------
+// Like Arc's pinned folders: a link behaves like a favorite, its tab shows under the
+// link (not in the tab list). The open tabs of the folder's sites come next. A closed
+// folder still shows the row of the active tab.
+
+function folderRows(space) {
+  const rows = [];
+  for (const folder of space.folders || []) {
+    rows.push(folderRow(folder, space));
+    for (const link of folder.links) {
+      const tab = state.tabs.find((x) => x.favId === link.id && x.spaceId === space.id);
+      if (folder.open || (tab && tab.active)) rows.push(linkRow(link, tab, folder, space));
+    }
+    const siteTabs = state.tabs.filter((x) => x.folderId === folder.id && x.spaceId === space.id);
+    for (const tab of siteTabs) {
+      if (!folder.open && !tab.active) continue;
+      const row = tabRow(tab, folder);
+      row.style.setProperty('--group', folderColor(folder));
+      rows.push(row);
+    }
+    if (folder.open && !folder.links.length && !siteTabs.length) {
+      const hint = el('div', { class: 'folder-hint in-group' }, t('folderEmpty'));
+      hint.style.setProperty('--group', folderColor(folder));
+      acceptDrops(hint, 'drop-target', (e) => dropOnFolder(e, folder));
+      rows.push(hint);
+    }
+  }
+  return rows;
+}
+
+// Folder color: any color, like spaces (the first test versions stored a group color name).
+const FOLDER_DEFAULT_COLOR = '#7d7a89';
+const folderColor = (folder) => (/^#[0-9a-f]{6}$/i.test(folder.color) ? folder.color : GROUP_COLORS[folder.color] || FOLDER_DEFAULT_COLOR);
+
+// A chosen icon, or the folder itself (open or closed).
+const folderIcon = (folder) => (folder.icon && folder.icon !== 'folder' ? folder.icon : folder.open ? 'folder-open' : 'folder');
+
+function folderRow(folder, space) {
+  const row = el('div', {
+    class: folder.open ? 'group folder' : 'group folder collapsed',
+    role: 'listitem',
+    tabIndex: -1,
+    'aria-expanded': String(!!folder.open),
+    'aria-label': folder.name,
+    title: t(folder.open ? 'groupCollapse' : 'groupExpand', folder.name),
+    onclick: () => send('toggleFolder', { spaceId: space.id, folderId: folder.id, open: !folder.open }),
+  }, [
+    icon(folderIcon(folder), 'ic folder-icon'),
+    el('span', { class: 'group-title' }, folder.name),
+    icon('chevron-down', 'ic chevron'),
+  ]);
+  acceptDrops(row, 'drop-target', (e) => dropOnFolder(e, folder));
+  row.style.setProperty('--group', folderColor(folder));
+  row.menuTarget = { kind: 'folder', spaceId: space.id, folderId: folder.id };
+  row.dataset.key = 'folder:' + folder.id;
+  return row;
+}
+
+function linkRow(link, tab, folder, space) {
+  const classes = ['tab', 'link', 'in-group', !tab && 'closed', tab && tab.active && 'active',
+    tab && tab.discarded && 'discarded', tab && tab.status === 'loading' && 'loading'].filter(Boolean).join(' ');
+  const row = el('div', {
+    class: classes,
+    title: `${link.title}\n${link.url}`,
+    role: 'listitem',
+    tabIndex: -1,
+    'aria-label': link.title,
+    draggable: true,
+    onclick: () => send('openFavorite', { spaceId: space.id, favId: link.id }),
+    onauxclick: (e) => { if (e.button === 1 && tab) send('closeTab', { tabId: tab.id }); },
+    ondragstart: (e) => dragFavorite(e, link),
+  }, [
+    el('span', { class: 'fav-wrap' }, [
+      favicon(tab ? tab.favIconUrl || link.favIconUrl : link.favIconUrl, link.title),
+      tab && unreadCount(tab.title) ? el('span', { class: 'count', 'aria-label': t('unreadCount', unreadCount(tab.title)) }, formatCount(unreadCount(tab.title))) : null,
+    ]),
+    el('span', { class: 'title' }, link.title),
+    // The cross closes the link's tab; the link stays in the folder.
+    tab ? el('button', {
+      class: 'close',
+      title: t('closeTab'),
+      'aria-label': t('closeTab'),
+      tabIndex: -1,
+      onclick: (e) => { e.stopPropagation(); send('closeTab', { tabId: tab.id }); },
+    }, icon('x')) : null,
+  ]);
+  acceptDrops(row, 'drop-before', (e) => dropOnFolder(e, folder, link.id));
+  row.style.setProperty('--group', folderColor(folder));
+  row.menuTarget = { kind: 'fav', spaceId: space.id, favId: link.id, tabId: tab ? tab.id : null, inFolder: true };
+  row.dataset.key = 'fav:' + link.id;
+  if (tab && tab.active) row.setAttribute('aria-current', 'page');
+  return row;
+}
+
+// A folder (or one of its links) accepts a tab, a favorite or a link from a web page.
+function acceptDrops(node, className, onDrop) {
+  node.addEventListener('dragover', (e) => {
+    if (!isTabDrag(e) && !isFavDrag(e) && !isLinkDrag(e)) return;
+    e.preventDefault();
+    node.classList.add(className);
+  });
+  node.addEventListener('dragleave', () => node.classList.remove(className));
+  node.addEventListener('drop', (e) => {
+    node.classList.remove(className);
+    e.preventDefault();
+    onDrop(e);
+  });
+}
+
+function dropOnFolder(e, folder, beforeId = null) {
+  const spaceId = currentSpace().id;
+  const favId = e.dataTransfer.getData('application/x-arbalete-fav');
+  if (favId) return send('moveFavorite', { spaceId, favId, folderId: folder.id, beforeId });
+  const tabId = draggedTab(e);
+  if (tabId != null) return send('addFavorite', { tabId, folderId: folder.id });
+  const [url, title] = (e.dataTransfer.getData('text/x-moz-url') || e.dataTransfer.getData('text/uri-list')).split(/\r?\n/);
+  if (url) return send('addFavoriteUrl', { url: url.trim(), title: (title || '').trim(), folderId: folder.id });
+  return undefined;
+}
+
+function dragFavorite(e, fav) {
+  e.dataTransfer.setData('application/x-arbalete-fav', fav.id);
+  e.dataTransfer.setData('text/uri-list', fav.url);
+  e.dataTransfer.effectAllowed = 'move';
+}
+
 // Multi-selection: it is Firefox's ("highlighted" tabs), shared with
 // its own shortcuts and with the Arbalète right click.
 const isMultiSelected = (tab) => tab.highlighted && !tab.active && state.tabs.some((x) => x.active && x.highlighted);
 
 function ownTabIds() {
   const space = currentSpace();
-  return state.tabs.filter((x) => !x.pinned && x.spaceId === space.id && !x.favId).map((x) => x.id);
+  return state.tabs.filter((x) => !x.pinned && x.spaceId === space.id && !x.favId && !x.folderId).map((x) => x.id);
 }
 
 function onTabClick(e, tab) {
@@ -380,22 +528,29 @@ document.addEventListener('mousedown', (e) => {
 // --- Drag and drop -----------------------------------------------------------
 
 const isTabDrag = (e) => e.dataTransfer.types.includes('application/x-arbalete-tab');
+const isFavDrag = (e) => e.dataTransfer.types.includes('application/x-arbalete-fav');
 function draggedTab(e) {
   const raw = e.dataTransfer.getData('application/x-arbalete-tab');
   return raw ? Number(raw) : null;
 }
 
 const favBox = $('#favorites');
-// Accepts a tab from the sidebar, or a link dragged from a web page.
+// Accepts a tab from the sidebar, a folder link, or a link dragged from a web page.
 const isLinkDrag = (e) => e.dataTransfer.types.includes('text/x-moz-url') || e.dataTransfer.types.includes('text/uri-list');
 favBox.addEventListener('dragover', (e) => {
-  if (!isTabDrag(e) && !isLinkDrag(e)) return;
+  if (!isTabDrag(e) && !isFavDrag(e) && !isLinkDrag(e)) return;
   e.preventDefault();
   favBox.classList.add('drop-target');
 });
 favBox.addEventListener('dragleave', () => favBox.classList.remove('drop-target'));
 favBox.addEventListener('drop', (e) => {
   favBox.classList.remove('drop-target');
+  const favId = e.dataTransfer.getData('application/x-arbalete-fav');
+  if (favId) {
+    e.preventDefault();
+    send('moveFavorite', { spaceId: currentSpace().id, favId, folderId: null });
+    return;
+  }
   const tabId = draggedTab(e);
   if (tabId != null) {
     e.preventDefault();
@@ -576,6 +731,7 @@ const FR_WORDS = {
 
 let iconIndex = null;
 let selectedIcon = { name: 'sparkles' };
+let iconForm = 'f'; // id prefix of the form holding the icon popover: f (space) or d (folder)
 
 const normalize = (text) => text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
@@ -586,13 +742,13 @@ async function loadIconIndex() {
 
 async function renderIconGrid() {
   const index = await loadIconIndex();
-  const words = normalize($('#f-icon-search').value).split(/\s+/).filter(Boolean);
+  const words = normalize($(`#${iconForm}-icon-search`).value).split(/\s+/).filter(Boolean);
   const groups = words.map((w) => [w, ...(FR_WORDS[w] || '').split(' ').filter(Boolean)]);
   const matches = index.filter(([name, tags]) =>
     groups.every((alternatives) => alternatives.some((a) => name.includes(a) || tags.includes(a)))
   );
   const shown = matches.slice(0, 240);
-  $('#f-icon-grid').replaceChildren(
+  $(`#${iconForm}-icon-grid`).replaceChildren(
     ...shown.map(([name]) => el('button', {
       type: 'button',
       class: selectedIcon.name === name ? 'icon-choice selected' : 'icon-choice',
@@ -610,19 +766,19 @@ async function renderIconGrid() {
 // selectedIcon: { name } for a Lucide icon, or { image } for an imported image (data URL).
 function selectIcon(choice) {
   selectedIcon = choice;
-  $('#f-icon-preview').replaceChildren(choice.image ? el('img', { class: 'space-img', src: choice.image, alt: '' }) : icon(choice.name));
+  $(`#${iconForm}-icon-preview`).replaceChildren(choice.image ? el('img', { class: 'space-img', src: choice.image, alt: '' }) : icon(choice.name));
   for (const b of document.querySelectorAll('.icon-choice')) b.classList.toggle('selected', b.title === choice.name);
 }
 
 function toggleIconPopover(open) {
-  const popover = $('#f-icon-popover');
-  const preview = $('#f-icon-preview');
+  const popover = $(`#${iconForm}-icon-popover`);
+  const preview = $(`#${iconForm}-icon-preview`);
   popover.hidden = !open;
   popover.style.top = `${preview.offsetTop + preview.offsetHeight + 10}px`;
   preview.setAttribute('aria-expanded', String(open));
   if (open) {
     renderIconGrid();
-    $('#f-icon-search').focus();
+    $(`#${iconForm}-icon-search`).focus();
   }
 }
 
@@ -963,17 +1119,30 @@ async function initGroupForm() {
   $('#group-form').hidden = false;
   $('#g-title').value = group.title || '';
   let color = group.color;
+  groupSwatches($('#g-colors'), color, (name) => { color = name; });
+  $('#g-title').select();
 
+  $('#g-cancel').addEventListener('click', closeDialog);
+  $('#group-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await send('updateGroup', { groupId, changes: { title: $('#g-title').value.trim(), color } });
+    closeDialog();
+  });
+}
+
+// The nine colors of Firefox's tab groups, shared by groups and link folders.
+function groupSwatches(box, current, onPick) {
   const swatches = Object.entries(GROUP_COLORS).map(([name, hex]) => {
+    const label = t('color' + name[0].toUpperCase() + name.slice(1));
     const swatch = el('button', {
       type: 'button',
-      class: name === color ? 'swatch selected' : 'swatch',
-      title: t('color' + name[0].toUpperCase() + name.slice(1)),
+      class: name === current ? 'swatch selected' : 'swatch',
+      title: label,
       role: 'radio',
-      'aria-checked': String(name === color),
-      'aria-label': t('color' + name[0].toUpperCase() + name.slice(1)),
+      'aria-checked': String(name === current),
+      'aria-label': label,
       onclick: () => {
-        color = name;
+        onPick(name);
         for (const s of swatches) {
           s.classList.toggle('selected', s === swatch);
           s.setAttribute('aria-checked', String(s === swatch));
@@ -983,15 +1152,72 @@ async function initGroupForm() {
     swatch.style.setProperty('--swatch', hex);
     return swatch;
   });
-  $('#g-colors').replaceChildren(...swatches);
-  $('#g-title').select();
+  box.replaceChildren(...swatches);
+}
 
-  $('#g-cancel').addEventListener('click', closeDialog);
-  $('#group-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    await send('updateGroup', { groupId, changes: { title: $('#g-title').value.trim(), color } });
-    closeDialog();
+// Link folder (?folder=<id>|new&space=<id>): icon, name and one of the group colors.
+async function initFolderForm() {
+  const spaceId = params.get('space');
+  const folderId = params.get('folder');
+  const folder = folderId === 'new' ? null : await send('getFolder', { spaceId, folderId });
+  if (folderId !== 'new' && !folder) return closeDialog();
+  const form = $('#folder-form');
+  document.title = t(folder ? 'folderFormTitle' : 'newFolderName');
+  $('#d-title').textContent = document.title;
+  form.hidden = false;
+  $('#d-name').value = folder ? folder.name : '';
+  $('#d-name').placeholder = t('newFolderName');
+  iconForm = 'd';
+  selectIcon({ name: (folder && folder.icon) || 'folder' });
+  // Same colors as the spaces; the dialog takes the folder's color (icon, focus, button).
+  let color = folder ? folderColor(folder) : FOLDER_DEFAULT_COLOR;
+  colorPicker($('#d-colors'), color, (hex) => {
+    color = hex;
+    form.style.setProperty('--space', hex);
   });
+
+  // Container: the space's by default, or one for the folder alone.
+  const select = $('#d-container');
+  select.replaceChildren(
+    el('option', { value: '' }, t('folderContainerSpace')),
+    ...state.containers.map((c) => el('option', { value: c.id }, c.name)),
+    el('option', { value: '__new__' }, t('containerCreate'))
+  );
+  select.value = folder && state.containers.some((c) => c.id === folder.cookieStoreId) ? folder.cookieStoreId : '';
+  select.addEventListener('change', () => { $('#d-new-container-row').hidden = select.value !== '__new__'; });
+  $('#d-sites').value = ((folder && folder.sites) || []).join('\n');
+  $('#d-name').select();
+
+  $('#d-icon-preview').addEventListener('click', () => toggleIconPopover($('#d-icon-popover').hidden));
+  document.addEventListener('mousedown', (e) => {
+    if (!$('#d-icon-popover').hidden && !e.target.closest('#d-icon-popover, #d-icon-preview')) toggleIconPopover(false);
+  });
+  let searchTimer = null;
+  $('#d-icon-search').addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(renderIconGrid, 120);
+  });
+  $('#d-cancel').addEventListener('click', closeDialog);
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const { sites, rejected } = parseSites($('#d-sites').value);
+    if (rejected.length) {
+      $('#d-sites').focus();
+      return toast(t('spaceSitesRejected', rejected.join(', ')));
+    }
+    let cookieStoreId = select.value || null;
+    let containerName = null;
+    if (cookieStoreId === '__new__') {
+      containerName = $('#d-new-container').value.trim() || $('#d-name').value.trim() || t('newFolderName');
+      cookieStoreId = await send('createContainer', { name: containerName });
+    } else if (cookieStoreId) {
+      containerName = state.containers.find((c) => c.id === cookieStoreId).name;
+    }
+    const data = { id: folder ? folder.id : null, name: $('#d-name').value, color, icon: selectedIcon.name, sites, cookieStoreId, containerName };
+    await send('saveFolder', { spaceId, folder: data });
+    return closeDialog();
+  });
+  return undefined;
 }
 
 // --- "Archive" window: tabs automatically stored from the active space -------
@@ -1693,6 +1919,7 @@ async function initDialogFrame() {
   if (mode === 'sidebar') initSidebar();
   else if (mode === 'edit') await initEditForm();
   else if (mode === 'group') await initGroupForm();
+  else if (mode === 'folder') await initFolderForm();
   else if (mode === 'setup') await initSetup();
   else if (mode === 'archive') await initArchive();
   else if (mode === 'grant') initGrant();

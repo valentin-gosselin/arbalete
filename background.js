@@ -8,6 +8,8 @@
 const t = (key, ...subs) => browser.i18n.getMessage(key, subs.map(String)) || key;
 
 const PALETTE = ['#7c6cf2', '#e4834b', '#3fa37b', '#d9577a', '#3d8bd9', '#c9a227'];
+// Folder colors: any color, like spaces.
+const validFolderColor = (value) => (typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value) ? value : '#7d7a89');
 const DEFAULT_SPACES = [
   { id: 'perso', name: t('spacePersonal'), icon: 'lucide:house', color: PALETTE[0], cookieStoreId: null, favorites: [] },
   { id: 'boulot', name: t('spaceWork'), icon: 'lucide:briefcase', color: PALETTE[1], cookieStoreId: null, favorites: [] },
@@ -48,15 +50,14 @@ function setFav(tabId, favId) {
 // Spaces go through Firefox Sync to follow the user from one PC to another (work / home).
 // One key per space, because storage.sync limits each value to 8 KB.
 // An imported icon (iconImage, a data URL of up to ~7 KB) gets its own key "icon:<id>",
-// so that it does not eat into the 8 KB of the space itself.
+// so that it does not eat into the 8 KB of the space itself. Link folders get their own
+// key "folders:<id>" too, with shorter favicons (they can hold many links).
+const storedLink = (f, max = 1500) => ({ ...f, favIconUrl: f.favIconUrl && f.favIconUrl.length < max ? f.favIconUrl : '' });
 function toStored(space) {
-  const { iconImage, ...rest } = space;
-  const favorites = space.favorites.map((f) => ({
-    ...f,
-    favIconUrl: f.favIconUrl && f.favIconUrl.length < 1500 ? f.favIconUrl : '',
-  }));
-  return { ...rest, favorites };
+  const { iconImage, folders, ...rest } = space;
+  return { ...rest, favorites: space.favorites.map((f) => storedLink(f)) };
 }
+const storedFolders = (space) => (space.folders || []).map((folder) => ({ ...folder, links: folder.links.map((f) => storedLink(f, 300)) }));
 
 const validIconImage = (value) => (typeof value === 'string' && /^data:image\//.test(value) && value.length <= 7500 ? value : null);
 
@@ -65,12 +66,13 @@ async function saveSpaces() {
   for (const s of spaces) {
     payload['space:' + s.id] = toStored(s);
     if (s.icon === 'image' && s.iconImage) payload['icon:' + s.id] = s.iconImage;
+    if (s.folders && s.folders.length) payload['folders:' + s.id] = storedFolders(s);
   }
   saving = true;
   try {
     await browser.storage.sync.set(payload);
     const all = await browser.storage.sync.get(null);
-    const stale = Object.keys(all).filter((k) => (k.startsWith('space:') || k.startsWith('icon:')) && !payload[k]);
+    const stale = Object.keys(all).filter((k) => /^(space|icon|folders):/.test(k) && !payload[k]);
     if (stale.length) await browser.storage.sync.remove(stale);
   } finally {
     saving = false;
@@ -89,7 +91,8 @@ async function resolveContainers() {
   } catch (e) {
     return;
   }
-  for (const s of spaces) {
+  // Spaces and link folders can each have their own container.
+  for (const s of [...spaces, ...spaces.flatMap((x) => x.folders || [])]) {
     if (!s.containerName) continue;
     let c = containers.find((x) => x.cookieStoreId === s.cookieStoreId && x.name === s.containerName)
       || containers.find((x) => x.name === s.containerName);
@@ -105,7 +108,10 @@ async function loadSpaces() {
   const data = await browser.storage.sync.get(null);
   let loaded = Array.isArray(data.order) ? data.order.map((id) => data['space:' + id]).filter(Boolean) : [];
   if (!loaded.length) loaded = DEFAULT_SPACES.map((s) => ({ ...s, favorites: [] }));
-  for (const s of loaded) s.iconImage = s.icon === 'image' ? validIconImage(data['icon:' + s.id]) : null;
+  for (const s of loaded) {
+    s.iconImage = s.icon === 'image' ? validIconImage(data['icon:' + s.id]) : null;
+    s.folders = Array.isArray(data['folders:' + s.id]) ? data['folders:' + s.id] : [];
+  }
   spaces = loaded;
   shared = Array.isArray(data.shared) ? data.shared : [];
   await resolveContainers();
@@ -167,11 +173,12 @@ async function switchRelative(windowId, delta) {
   await switchSpace(windowId, next.id);
 }
 
-async function newTab(windowId, spaceId, url) {
+// cookieStoreId: a container other than the space's (that of a link folder).
+async function newTab(windowId, spaceId, url, cookieStoreId = null) {
   const space = getSpace(spaceId);
   const props = { windowId, active: true };
   if (url) props.url = url;
-  if (space && space.cookieStoreId) props.cookieStoreId = space.cookieStoreId;
+  if (cookieStoreId || (space && space.cookieStoreId)) props.cookieStoreId = cookieStoreId || space.cookieStoreId;
   const tab = await browser.tabs.create(props);
   assign(tab.id, spaceId);
   return tab;
@@ -190,12 +197,17 @@ async function moveTab(tabId, spaceId) {
 
 // Favorites: those of the space, plus the favorites shared by all spaces (shared).
 // A shared favorite opens in the space where the user clicks: one tab per space.
+// The links of a folder are favorites too (folder = the folder holding them).
 function findFavorite(spaceId, favId) {
   const space = getSpace(spaceId);
   const own = space && space.favorites.find((f) => f.id === favId);
-  if (own) return { fav: own, shared: false };
+  if (own) return { fav: own, shared: false, folder: null };
+  for (const folder of (space && space.folders) || []) {
+    const link = folder.links.find((f) => f.id === favId);
+    if (link) return { fav: link, shared: false, folder };
+  }
   const common = shared.find((f) => f.id === favId);
-  return common ? { fav: common, shared: true } : null;
+  return common ? { fav: common, shared: true, folder: null } : null;
 }
 
 async function openFavorite(windowId, spaceId, favId) {
@@ -207,23 +219,30 @@ async function openFavorite(windowId, spaceId, favId) {
     await browser.tabs.update(existing.id, { active: true });
     return;
   }
-  const tab = await newTab(windowId, spaceId, found.fav.url);
+  const tab = await newTab(windowId, spaceId, found.fav.url, found.folder && found.folder.cookieStoreId);
   setFav(tab.id, favId);
   notify();
 }
 
-async function addFavorite(tabId) {
+// List receiving a new favorite: the tiles of the space, or one of its folders.
+function favoriteList(space, folderId) {
+  const folder = folderId && (space.folders || []).find((f) => f.id === folderId);
+  return folder ? folder.links : space.favorites;
+}
+
+async function addFavorite(tabId, folderId = null) {
   const tab = await browser.tabs.get(tabId);
   const space = getSpace(tabSpace.get(tabId));
   if (!space || !/^https?:|^file:/.test(tab.url)) return;
+  if (tabFav.has(tabId)) return moveFavorite(space.id, tabFav.get(tabId), folderId);
   const fav = { id: uid(), url: tab.url, title: tab.title, favIconUrl: tab.favIconUrl || '' };
-  space.favorites.push(fav);
+  favoriteList(space, folderId).push(fav);
   setFav(tabId, fav.id);
   await saveSpaces();
 }
 
-// Link dragged from a web page onto the tiles.
-async function addFavoriteUrl(windowId, url, title) {
+// Link dragged from a web page onto the tiles or a folder.
+async function addFavoriteUrl(windowId, url, title, folderId = null) {
   if (!/^https?:|^file:/.test(url || '')) return;
   const space = getSpace(activeSpace(windowId));
   let name = title;
@@ -232,13 +251,14 @@ async function addFavoriteUrl(windowId, url, title) {
   } catch (e) {
     name = url;
   }
-  space.favorites.push({ id: uid(), url, title: name, favIconUrl: '' });
+  favoriteList(space, folderId).push({ id: uid(), url, title: name, favIconUrl: '' });
   await saveSpaces();
 }
 
 async function removeFavorite(spaceId, favId) {
   const space = getSpace(spaceId);
   if (space) space.favorites = space.favorites.filter((f) => f.id !== favId);
+  for (const folder of (space && space.folders) || []) folder.links = folder.links.filter((f) => f.id !== favId);
   shared = shared.filter((f) => f.id !== favId);
   for (const [tabId, id] of tabFav) if (id === favId) setFav(tabId, null);
   await saveSpaces();
@@ -273,6 +293,83 @@ async function toggleSharedFavorite(spaceId, favId) {
 async function resetFavorite(tabId) {
   const found = findFavorite(tabSpace.get(tabId), tabFav.get(tabId));
   if (found) await browser.tabs.update(tabId, { url: found.fav.url });
+}
+
+// --- Link folders (like Arc's pinned folders) ---------------------------------
+// Each space has folders of links under its tiles. A link behaves like a favorite: it
+// has its own tab, shown under the link instead of in the tab list.
+
+// A Lucide icon name; "folder" (the default) follows the folder's open state.
+const validFolderIcon = (value) => (typeof value === 'string' && /^[a-z0-9-]{1,40}$/.test(value) ? value : 'folder');
+
+function getFolder(spaceId, folderId) {
+  const space = getSpace(spaceId);
+  return space && (space.folders || []).find((f) => f.id === folderId);
+}
+
+async function saveFolder(spaceId, data) {
+  const space = getSpace(spaceId);
+  if (!space) return;
+  space.folders = space.folders || [];
+  const name = String(data.name || '').trim().slice(0, 60) || t('newFolderName');
+  const color = validFolderColor(data.color);
+  const icon = validFolderIcon(data.icon);
+  const sites = Array.isArray(data.sites) ? data.sites.map(String).slice(0, 50) : [];
+  const container = { containerName: data.containerName || null, cookieStoreId: data.cookieStoreId || null };
+  const folder = data.id && getFolder(spaceId, data.id);
+  if (folder) Object.assign(folder, { name, color, icon, sites, ...container });
+  else space.folders.push({ id: uid(), name, color, icon, sites, ...container, open: true, links: [] });
+  await resolveContainers();
+  await saveSpaces();
+}
+
+async function toggleFolder(spaceId, folderId, open) {
+  const folder = getFolder(spaceId, folderId);
+  if (!folder) return;
+  folder.open = open;
+  await saveSpaces();
+}
+
+// The folder goes with its links; their open tabs stay, as ordinary tabs.
+async function deleteFolder(spaceId, folderId) {
+  const space = getSpace(spaceId);
+  const folder = getFolder(spaceId, folderId);
+  if (!folder) return;
+  const ids = new Set(folder.links.map((f) => f.id));
+  space.folders = space.folders.filter((f) => f !== folder);
+  for (const [tabId, id] of tabFav) if (ids.has(id)) setFav(tabId, null);
+  await saveSpaces();
+}
+
+// Moves a favorite (tile, folder link or shared favorite) to a folder of the space, or
+// to its tiles (folderId null), before the favorite beforeId or at the end.
+async function moveFavorite(spaceId, favId, folderId, beforeId = null) {
+  const space = getSpace(spaceId);
+  const found = findFavorite(spaceId, favId);
+  if (!space || !found || favId === beforeId) return;
+  const from = found.shared ? shared : found.folder ? found.folder.links : space.favorites;
+  from.splice(from.indexOf(found.fav), 1);
+  const to = favoriteList(space, folderId);
+  const at = to.findIndex((f) => f.id === beforeId);
+  to.splice(at === -1 ? to.length : at, 0, found.fav);
+  if (found.shared) {
+    // A shared favorite only stays open in this space.
+    for (const [tabId, id] of tabFav) if (id === favId && tabSpace.get(tabId) !== spaceId) setFav(tabId, null);
+  }
+  await saveSpaces();
+}
+
+async function openFolder(windowId, spaceId, folderId) {
+  const folder = getFolder(spaceId, folderId);
+  for (const link of (folder && folder.links) || []) await openFavorite(windowId, spaceId, link.id);
+}
+
+async function closeFolderTabs(windowId, spaceId, folderId) {
+  const folder = getFolder(spaceId, folderId);
+  if (!folder) return;
+  const ids = new Set(folder.links.map((f) => f.id));
+  const tabs = (await browser.tabs.query({ windowId })).filter((x) => ids.has(tabFav.get(x.id)) && tabSpace.get(x.id) === spaceId);
+  await browser.tabs.remove(tabs.map((x) => x.id));
 }
 
 // --- Space management --------------------------------------------------------
@@ -374,6 +471,7 @@ async function getState(windowId) {
       groupId: t.groupId === undefined ? -1 : t.groupId,
       spaceId: tabSpace.get(t.id) || null,
       favId: tabFav.get(t.id) || null,
+      folderId: tabFav.has(t.id) || t.pinned ? null : (ruleFolder(getSpace(tabSpace.get(t.id)), t.url) || {}).id || null,
     })),
   };
 }
@@ -524,6 +622,14 @@ function onTabUpdated(tabId, change) {
   if (change.pinned === false && !tabSpace.has(tabId)) {
     browser.tabs.get(tabId).then((t) => assign(tabId, activeSpace(t.windowId)));
   }
+  // A favorite added from a dragged link has no icon yet: it takes its tab's.
+  if (change.favIconUrl && tabFav.has(tabId)) {
+    const found = findFavorite(tabSpace.get(tabId), tabFav.get(tabId));
+    if (found && !found.fav.favIconUrl && change.favIconUrl.length < 1500) {
+      found.fav.favIconUrl = change.favIconUrl;
+      saveSpaces();
+    }
+  }
   notify();
 }
 const WATCHED = ['title', 'favIconUrl', 'status', 'pinned', 'audible', 'mutedInfo', 'url', 'discarded'];
@@ -545,7 +651,7 @@ browser.tabs.onAttached.addListener(async (tabId, { newWindowId }) => {
 
 browser.contextualIdentities.onRemoved.addListener(async ({ contextualIdentity }) => {
   await ready;
-  for (const s of spaces) {
+  for (const s of [...spaces, ...spaces.flatMap((x) => x.folders || [])]) {
     if (s.cookieStoreId === contextualIdentity.cookieStoreId) {
       s.cookieStoreId = null;
       s.containerName = null;
@@ -568,6 +674,9 @@ browser.storage.onChanged.addListener(async (changes, area) => {
 // Import of an exported file (for example dropped in Nextcloud): replaces the spaces.
 // mode "replace": the file's spaces replace the current ones (moving to another PC);
 // mode "add": they are added next to them, with new ids (a space template).
+const readLinks = (list, adding) => (Array.isArray(list) ? list : []).filter((f) => f && f.url)
+  .map((f) => ({ id: adding ? uid() : f.id || uid(), url: String(f.url), title: String(f.title || f.url), favIconUrl: f.favIconUrl || '' }));
+
 async function importSpaces(imported, mode = 'replace') {
   if (!Array.isArray(imported) || !imported.length) throw new Error('Invalid file');
   const adding = mode === 'add';
@@ -585,7 +694,18 @@ async function importSpaces(imported, mode = 'replace') {
     sites: Array.isArray(s.sites) ? s.sites.map(String) : [],
     schedule: s.schedule && typeof s.schedule === 'object' ? s.schedule : null,
     color2: s.color2 || null,
-    favorites: (s.favorites || []).filter((f) => f && f.url).map((f) => ({ id: adding ? uid() : f.id || uid(), url: f.url, title: f.title || f.url, favIconUrl: f.favIconUrl || '' })),
+    favorites: readLinks(s.favorites, adding),
+    folders: (Array.isArray(s.folders) ? s.folders : []).filter((f) => f && typeof f === 'object').map((f) => ({
+      id: adding || !f.id ? uid() : String(f.id),
+      name: String(f.name || t('newFolderName')).slice(0, 60),
+      color: validFolderColor(f.color),
+      icon: validFolderIcon(f.icon),
+      sites: Array.isArray(f.sites) ? f.sites.map(String) : [],
+      containerName: f.containerName || null,
+      cookieStoreId: null,
+      open: f.open !== false,
+      links: readLinks(f.links, adding),
+    })),
   }));
   spaces = adding ? [...spaces, ...read] : read;
   await resolveContainers();
@@ -710,16 +830,33 @@ function siteMatches(hostname, site) {
   return sitePatterns.get(site).test(hostname);
 }
 
-function siteRuleSpace(url) {
-  let hostname;
+function ruleHost(url) {
   try {
     const u = new URL(url);
-    if (!/^https?:$/.test(u.protocol)) return null;
-    hostname = u.hostname.replace(/^www\./, '');
+    return /^https?:$/.test(u.protocol) ? u.hostname.replace(/^www\./, '') : null;
   } catch (e) {
     return null;
   }
-  return spaces.find((s) => (s.sites || []).some((d) => siteMatches(hostname, d))) || null;
+}
+
+// Link folders can claim sites too: their tabs show under the folder. A folder is more
+// precise than a space, so folder sites win over space sites.
+function ruleFolder(space, url) {
+  const hostname = ruleHost(url);
+  if (!space || !hostname) return null;
+  return (space.folders || []).find((f) => (f.sites || []).some((d) => siteMatches(hostname, d))) || null;
+}
+
+// { space, folder } claiming this address, or null.
+function siteRule(url) {
+  const hostname = ruleHost(url);
+  if (!hostname) return null;
+  for (const space of spaces) {
+    const folder = ruleFolder(space, url);
+    if (folder) return { space, folder };
+  }
+  const space = spaces.find((s) => (s.sites || []).some((d) => siteMatches(hostname, d)));
+  return space ? { space, folder: null } : null;
 }
 
 const ruleMoves = new Set(); // tabs being reopened in a container
@@ -728,9 +865,12 @@ async function applySiteRule(tab) {
   if (tab.pinned || ruleMoves.has(tab.id)) return;
   const win = await browser.windows.get(tab.windowId).catch(() => null);
   if (!win || win.type !== 'normal') return;
-  const space = siteRuleSpace(tab.url);
-  if (!space) return;
-  const needsContainer = space.cookieStoreId && tab.cookieStoreId !== space.cookieStoreId;
+  const rule = siteRule(tab.url);
+  if (!rule) return;
+  const { space } = rule;
+  // The folder's container, or else the space's.
+  const container = (rule.folder && rule.folder.cookieStoreId) || space.cookieStoreId;
+  const needsContainer = container && tab.cookieStoreId !== container;
   if (tabSpace.get(tab.id) === space.id && !needsContainer) return;
 
   if (needsContainer) {
@@ -742,7 +882,7 @@ async function applySiteRule(tab) {
         index: tab.index + 1,
         url: tab.url,
         active: tab.active,
-        cookieStoreId: space.cookieStoreId,
+        cookieStoreId: container,
       });
       assign(reopened.id, space.id);
       await browser.tabs.remove(tab.id);
@@ -981,7 +1121,7 @@ const openArchive = (windowId) => openDialog(windowId, 'archive=1');
 // These "native" entries are only shown from the sidebar (viewType sidebar),
 // so as not to duplicate the real menu when the native tabs are visible.
 
-let lastMenuTarget = null; // { kind: 'fav' | 'space' | 'group' | 'global', windowId, spaceId, favId, tabId, groupId }
+let lastMenuTarget = null; // { kind: 'fav' | 'folder' | 'space' | 'group' | 'global', windowId, spaceId, favId, tabId, groupId, folderId, inFolder }
 
 // menu id -> translation key
 const SIDE_ITEMS = {
@@ -989,7 +1129,13 @@ const SIDE_ITEMS = {
   'arb-fav-close': 'menuFavClose',
   'arb-fav-update': 'menuFavUpdate',
   'arb-fav-share': 'menuFavShare',
+  'arb-fav-out': 'menuFavOutOfFolder',
   'arb-fav-remove': 'menuFavRemove',
+  'arb-folder-edit': 'menuFolderEdit',
+  'arb-folder-openall': 'menuFolderOpenAll',
+  'arb-folder-closeall': 'menuFolderCloseAll',
+  'arb-folder-delete': 'menuFolderDelete',
+  'arb-folder-new': 'menuNewFolder',
   'arb-space-edit': 'menuSpaceEdit',
   'arb-space-left': 'menuSpaceLeft',
   'arb-space-right': 'menuSpaceRight',
@@ -1019,6 +1165,7 @@ const TAB_ITEMS = [
   { id: 'arb-tab-duplicate', key: 'menuTabDuplicate', native: true },
   null,
   { id: 'arb-fav', key: 'menuAddFavorite' },
+  { id: 'arb-folder-add', key: 'menuAddToFolder' },
   { id: 'arb-move', key: 'menuMoveTab' },
   { id: 'arb-tab-copyurl', key: 'menuTabCopyUrl', native: true },
   { id: 'arb-tab-moveopts', key: 'menuTabMoveOptions', native: true },
@@ -1098,6 +1245,12 @@ async function updateTabMenu(tab, fromSidebar) {
 
   for (const item of TAB_ITEMS) if (item && item.native) updates[item.id] = { visible: fromSidebar };
 
+  // "Add to folder": the folders of the tab's space.
+  const space = getSpace(tabSpace.get(tab.id));
+  const folders = (space && space.folders) || [];
+  for (const f of folders) add({ id: `arb-folder-add:${space.id}:${f.id}`, parentId: 'arb-folder-add', title: f.name });
+  updates['arb-folder-add'] = { visible: folders.length > 0 && !tab.pinned };
+
   if (browser.tabGroups && fromSidebar) {
     const groups = (await browser.tabGroups.query({ windowId: tab.windowId }).catch(() => []))
       .filter((g) => g.id !== tab.groupId);
@@ -1144,8 +1297,14 @@ browser.menus.onShown.addListener(async (info, tab) => {
     'arb-fav-reset': kind === 'fav' && !!t.tabId,
     'arb-fav-close': kind === 'fav' && !!t.tabId,
     'arb-fav-update': kind === 'fav' && !!t.tabId,
-    'arb-fav-share': kind === 'fav',
+    'arb-fav-share': kind === 'fav' && !t.inFolder,
+    'arb-fav-out': kind === 'fav' && !!t.inFolder,
     'arb-fav-remove': kind === 'fav',
+    'arb-folder-edit': kind === 'folder',
+    'arb-folder-openall': kind === 'folder',
+    'arb-folder-closeall': kind === 'folder',
+    'arb-folder-delete': kind === 'folder',
+    'arb-folder-new': kind === 'fav' || kind === 'folder' || kind === 'global',
     'arb-space-edit': kind === 'space',
     'arb-space-left': kind === 'space' && index > 0,
     'arb-space-right': kind === 'space' && index < spaces.length - 1,
@@ -1494,9 +1653,16 @@ browser.menus.onClicked.addListener(async (info, tab) => {
   if (target && id === 'arb-new-space') return dialogFromMenu(target.windowId, 'edit=new');
   if (target && id === 'arb-settings') return dialogFromMenu(target.windowId, 'settings=1');
   if (target && id === 'arb-group-edit') return dialogFromMenu(target.windowId, `group=${target.groupId}`);
+  if (target && id === 'arb-folder-edit') return dialogFromMenu(target.windowId, `folder=${target.folderId}&space=${encodeURIComponent(target.spaceId)}`);
+  if (target && id === 'arb-folder-new') return dialogFromMenu(target.windowId, `folder=new&space=${encodeURIComponent(activeSpace(target.windowId))}`);
   await ready;
   if (id === 'arb-fav' && tab) {
     for (const x of await menuTabs(tab)) await addFavorite(x.id);
+    return undefined;
+  }
+  if (id.startsWith('arb-folder-add:') && tab) {
+    const folderId = id.split(':')[2];
+    for (const x of await menuTabs(tab)) await addFavorite(x.id, folderId);
     return undefined;
   }
   if (id.startsWith('arb-move:') && tab) {
@@ -1514,6 +1680,10 @@ browser.menus.onClicked.addListener(async (info, tab) => {
     case 'arb-fav-remove': return removeFavorite(t.spaceId, t.favId);
     case 'arb-fav-update': return updateFavorite(t.spaceId, t.favId, t.tabId);
     case 'arb-fav-share': return toggleSharedFavorite(t.spaceId, t.favId);
+    case 'arb-fav-out': return moveFavorite(t.spaceId, t.favId, null);
+    case 'arb-folder-openall': return openFolder(t.windowId, t.spaceId, t.folderId);
+    case 'arb-folder-closeall': return closeFolderTabs(t.windowId, t.spaceId, t.folderId);
+    case 'arb-folder-delete': return deleteFolder(t.spaceId, t.folderId);
     case 'arb-space-left':
     case 'arb-space-right': {
       const ids = spaces.map((s) => s.id);
@@ -1566,7 +1736,11 @@ const handlers = {
   moveTab: (m) => moveTab(m.tabId, m.spaceId),
   reorderTab: (m) => browser.tabs.move(m.tabId, { index: m.index }).then(() => undefined),
   openFavorite: (m) => openFavorite(m.windowId, m.spaceId, m.favId),
-  addFavorite: (m) => addFavorite(m.tabId),
+  addFavorite: (m) => addFavorite(m.tabId, m.folderId),
+  moveFavorite: (m) => moveFavorite(m.spaceId, m.favId, m.folderId, m.beforeId),
+  getFolder: (m) => getFolder(m.spaceId, m.folderId) || null,
+  saveFolder: (m) => saveFolder(m.spaceId, m.folder),
+  toggleFolder: (m) => toggleFolder(m.spaceId, m.folderId, m.open),
   removeFavorite: (m) => removeFavorite(m.spaceId, m.favId),
   resetFavorite: (m) => resetFavorite(m.tabId),
   createSpace: (m) => createSpace(m.windowId, m.space),
@@ -1636,7 +1810,7 @@ const handlers = {
   // A selection of spaces, with or without their favorites (a template to share).
   exportSpaces: (m) => spaces
     .filter((s) => !m.ids || m.ids.includes(s.id))
-    .map(({ cookieStoreId, ...rest }) => (m.withFavorites === false ? { ...rest, favorites: [] } : rest)),
+    .map(({ cookieStoreId, ...rest }) => (m.withFavorites === false ? { ...rest, favorites: [], folders: [] } : rest)),
   importSpaces: (m) => importSpaces(m.spaces, m.mode),
   clearSpace: async (m) => {
     // "Clean up": stores the space's tabs in the archive (except favorites and
@@ -1652,7 +1826,7 @@ const handlers = {
   reopenArchived: (m) => reopenArchived(m.windowId, m.spaceId, m.url),
   removeArchived: (m) => removeArchived(m.spaceId, m.url),
   archiveDelays: () => ARCHIVE_DELAYS,
-  addFavoriteUrl: (m) => addFavoriteUrl(m.windowId, m.url, m.title),
+  addFavoriteUrl: (m) => addFavoriteUrl(m.windowId, m.url, m.title, m.folderId),
   getStats: async () => (await browser.storage.local.get('stats')).stats || {},
 };
 

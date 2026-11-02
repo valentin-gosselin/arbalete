@@ -166,7 +166,8 @@ async function search(query) {
     list.push(...scored(state.tabs.filter((x) => !x.active).map(tabResult)).slice(0, 8));
     const favorites = [];
     for (const space of state.spaces) {
-      for (const fav of space.favorites) {
+      // Tiles of the space, then the links of its folders.
+      for (const fav of [...space.favorites, ...(space.folders || []).flatMap((f) => f.links)]) {
         favorites.push({
           kind: 'favorite',
           section: t('paletteSectionFavorites'),

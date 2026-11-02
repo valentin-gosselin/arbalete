@@ -10,6 +10,7 @@ English version: [README.md](README.md).
 - **Changer d'espace** : icônes en bas, glissé horizontal ou Maj+molette n'importe où dans la barre, Alt+1 à Alt+5, Alt+Maj+Haut/Bas.
 - **Modifier un espace** : double-clic sur son icône, ou clic droit puis « Modifier l'espace… » (nom, icône parmi 1 900, couleur, conteneur).
 - **Favoris** : tuiles en haut de chaque espace. Glisser un onglet dessus, ou clic droit sur l'onglet.
+- **Dossiers de liens** : sous les tuiles, des dossiers avec un nom, une icône et une couleur (clic droit, « Nouveau dossier… »). Un lien garde son propre onglet, affiché sous le lien ; on y glisse des onglets, des liens de page ou des tuiles. Comme un espace, un dossier peut avoir ses sites (leurs onglets se rangent sous lui, d'où qu'ils viennent) et son conteneur.
 - **Groupes d'onglets** : affichés avec leur couleur, repliables. Clic droit sur un onglet pour l'ajouter à un groupe, clic droit sur un groupe pour le renommer, le dissocier, le déplacer vers un espace ou le fermer.
 - **Clic droit** sur un onglet : le menu natif de Firefox, plus les actions d'Arbalète.
 - **Mode compact** : icônes seules, titres en infobulle. En option (Réglages) : élargissement au survol, et bouton en bas pour garder la barre dépliée.

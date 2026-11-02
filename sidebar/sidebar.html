@@ -134,6 +134,48 @@
     </div>
   </form>
 
+  <!-- Link folder (?folder=<id>|new&space=<id>) -->
+  <form id="folder-form" class="panel" hidden>
+    <header class="dialog-head">
+      <h2 id="d-title"></h2>
+      <button type="button" class="dialog-close" data-icon="x" data-i18n-title="close" data-i18n-label="close"></button>
+    </header>
+    <div class="identity">
+      <button type="button" id="d-icon-preview" class="icon-preview" aria-haspopup="dialog" aria-expanded="false" data-i18n-title="iconChange" data-i18n-label="iconChange"></button>
+      <input id="d-name" class="name-input" maxlength="60" autocomplete="off" data-i18n-label="name">
+    </div>
+    <div id="d-icon-popover" class="popover" role="dialog" data-i18n-label="icon" hidden>
+      <input id="d-icon-search" type="search" autocomplete="off" data-i18n-placeholder="iconSearch" data-i18n-label="iconSearch">
+      <div id="d-icon-grid" class="icon-grid"></div>
+    </div>
+    <section class="card">
+      <div class="line">
+        <span class="line-label" data-i18n="color"></span>
+        <div id="d-colors" class="color-picker"></div>
+      </div>
+      <label class="line">
+        <span class="line-label" data-i18n="container"></span>
+        <select id="d-container"></select>
+      </label>
+      <label class="line" id="d-new-container-row" hidden>
+        <span class="line-label" data-i18n="newContainerName"></span>
+        <input id="d-new-container" maxlength="40">
+      </label>
+    </section>
+    <section class="card">
+      <label class="stack">
+        <span class="line-label" data-i18n="folderSites"></span>
+        <textarea id="d-sites" rows="2" data-i18n-placeholder="spaceSitesPlaceholder"></textarea>
+        <span class="hint" data-i18n="folderSitesHint"></span>
+      </label>
+    </section>
+    <div class="actions">
+      <span class="grow"></span>
+      <button type="button" id="d-cancel" data-i18n="cancel"></button>
+      <button type="submit" class="primary" data-i18n="save"></button>
+    </div>
+  </form>
+
   <!-- Archive of the active space (?archive=1) -->
   <section id="archive-panel" class="panel" hidden>
     <header class="dialog-head">

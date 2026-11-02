@@ -9,6 +9,7 @@ Version française : [LISEZMOI.md](LISEZMOI.md).
 - **Spaces**: each space has its own tabs, favorites, color, icon and optionally its own Firefox container (separate logins). Switching spaces hides the other spaces' tabs in the same window, no extra windows.
 - **Switch spaces** with the icons at the bottom, a horizontal swipe or Shift+wheel anywhere in the sidebar, or Alt+1 to Alt+5 and Alt+Shift+Up/Down.
 - **Favorites**: tiles at the top of each space, like Arc's pinned tabs.
+- **Link folders**: folders of links under the tiles, each with its name, icon and color. A link keeps its own tab, shown under the link; drag tabs, links or tiles into a folder. Like a space, a folder can claim sites (their tabs gather under it, from any space) and have its own container.
 - **Auto-archive**: per space, tabs inactive for 12 h, 24 h or 7 days go to the space archive (sidebar button and quick search), kept 30 days.
 - **Quick search** (Alt+K): tabs of all spaces, favorites, archive, commands, history, web search with your engine's suggestions.
 - **Split view**: two sites side by side in one tab.

@@ -323,6 +323,27 @@
   "menuFavRemove": {
     "message": "Retirer des favoris"
   },
+  "menuFavOutOfFolder": {
+    "message": "Sortir du dossier"
+  },
+  "menuAddToFolder": {
+    "message": "Ajouter au dossier"
+  },
+  "menuNewFolder": {
+    "message": "Nouveau dossier…"
+  },
+  "menuFolderEdit": {
+    "message": "Modifier le dossier…"
+  },
+  "menuFolderOpenAll": {
+    "message": "Ouvrir tous les liens"
+  },
+  "menuFolderCloseAll": {
+    "message": "Fermer les onglets du dossier"
+  },
+  "menuFolderDelete": {
+    "message": "Supprimer le dossier et ses liens"
+  },
   "menuSpaceEdit": {
     "message": "Modifier l'espace…"
   },
@@ -688,6 +709,24 @@
   },
   "groupFormTitle": {
     "message": "Groupe d'onglets"
+  },
+  "folderFormTitle": {
+    "message": "Dossier de liens"
+  },
+  "newFolderName": {
+    "message": "Nouveau dossier"
+  },
+  "folderEmpty": {
+    "message": "Glissez ici un onglet ou un lien"
+  },
+  "folderSites": {
+    "message": "Sites de ce dossier"
+  },
+  "folderContainerSpace": {
+    "message": "Celui de l’espace"
+  },
+  "folderSitesHint": {
+    "message": "Les onglets de ces sites se rangent sous le dossier, dans son espace et son conteneur. Ils passent avant les sites des espaces."
   },
   "colorGrey": {
     "message": "Gris"

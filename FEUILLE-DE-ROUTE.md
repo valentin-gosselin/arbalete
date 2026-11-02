@@ -55,7 +55,7 @@ Fait en premier car tous les textes ajoutés ensuite en dépendent.
 - [x] Clic droit sur un favori : « Revenir à l'adresse du favori » ou « Mettre à jour le favori avec cette page ».
 - [x] Glisser un lien d'une page web vers les tuiles crée un favori.
 - [x] Favoris communs à tous les espaces (« Partager avec tous les espaces », bord en pointillés, un onglet par espace), aussi dans Alt+K.
-- [ ] Dossiers de liens sous les tuiles : reporté.
+- [x] Dossiers de liens sous les tuiles : faits en 0.12.0 (voir plus bas).
 
 ## Retours de la recette 0.9 (faits le 28/10/2026, version 0.10.0)
 
@@ -82,6 +82,15 @@ Fait en premier car tous les textes ajoutés ensuite en dépendent.
 - [x] Réglage « Liens venant d'autres applications » : un lien sans règle ouvert depuis la messagerie ou une autre application va dans l'espace choisi (Perso…) au lieu de l'espace affiché ; les sites d'un espace restent prioritaires. Détection : Firefox au second plan ou revenu au premier plan depuis moins de 1,5 s (Wayland), onglet sans parent.
 - [x] Correctif : un onglet activé pendant qu'Arbalète choisit son espace fait bien basculer la fenêtre.
 - [x] Croix de fermeture reprises des onglets verticaux de Firefox 158 : pastille ronde en haut à gauche en compact, bouton de 24 px toujours visible sur l'onglet actif en déplié.
+
+## Version 0.12.0 : dossiers de liens
+
+- [x] Dossiers de liens sous les tuiles, propres à chaque espace, comme les dossiers d'onglets épinglés d'Arc : nom, icône au choix (parmi les icônes des espaces, dossier par défaut) et couleur (le même nuancier que les espaces, réglette comprise), dépliés ou repliés. Ordre de la barre : tuiles, onglets épinglés de Firefox (communs à tous les espaces), dossiers, onglets. Un lien se comporte comme un favori : son onglet s'affiche sous le lien, pas dans la liste ; un dossier replié garde visible le lien de l'onglet actif.
+- [x] Remplissage : glisser un onglet, un lien de page ou une tuile sur le dossier (ou avant un lien) ; clic droit sur un onglet, « Ajouter au dossier ». Une tuile se réordonne ou sort d'un dossier en la glissant sur les tuiles.
+- [x] Clic droit sur un dossier : « Modifier le dossier… » (nom, icône et couleur), ouvrir tous les liens, fermer leurs onglets, supprimer le dossier et ses liens (les onglets ouverts restent, en onglets ordinaires). Sur un lien : « Sortir du dossier ».
+- [x] Sites et conteneur du dossier, comme pour un espace : un onglet ouvert sur un site du dossier (depuis n'importe quel espace) rejoint l'espace du dossier, s'affiche sous le dossier après ses liens (sans devenir un lien) et s'ouvre dans le conteneur du dossier. Les sites d'un dossier passent avant ceux des espaces. Conteneur par défaut : celui de l'espace ; les liens du dossier s'ouvrent aussi dans le conteneur du dossier. Horaires, fond de barre et archive restent propres aux espaces.
+- [x] Mode compact : l'icône de dossier dans sa couleur, les favicônes dessous avec le filet de couleur.
+- [x] Stockage : clé `folders:<espace>` à part dans Firefox Sync (8 Ko par clé), modèles d'espaces et recherche rapide compris.
 
 ## Phase 9 : publication publique (faite le 02/11/2026, versions 0.11.1 et 0.11.2)
 

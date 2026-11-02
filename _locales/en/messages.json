@@ -323,6 +323,27 @@
   "menuFavRemove": {
     "message": "Remove from favorites"
   },
+  "menuFavOutOfFolder": {
+    "message": "Move out of the folder"
+  },
+  "menuAddToFolder": {
+    "message": "Add to folder"
+  },
+  "menuNewFolder": {
+    "message": "New folder…"
+  },
+  "menuFolderEdit": {
+    "message": "Edit folder…"
+  },
+  "menuFolderOpenAll": {
+    "message": "Open all links"
+  },
+  "menuFolderCloseAll": {
+    "message": "Close the folder’s tabs"
+  },
+  "menuFolderDelete": {
+    "message": "Delete the folder and its links"
+  },
   "menuSpaceEdit": {
     "message": "Edit space…"
   },
@@ -688,6 +709,24 @@
   },
   "groupFormTitle": {
     "message": "Tab group"
+  },
+  "folderFormTitle": {
+    "message": "Link folder"
+  },
+  "newFolderName": {
+    "message": "New folder"
+  },
+  "folderEmpty": {
+    "message": "Drop a tab or a link here"
+  },
+  "folderSites": {
+    "message": "Sites of this folder"
+  },
+  "folderContainerSpace": {
+    "message": "The space’s"
+  },
+  "folderSitesHint": {
+    "message": "Tabs of these sites gather under the folder, in its space and container. They win over the sites of spaces."
   },
   "colorGrey": {
     "message": "Grey"

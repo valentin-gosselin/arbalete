@@ -115,6 +115,7 @@ body:not(.mode-sidebar) > .footer { display: none; }
   background: var(--muted);
 }
 .fav.active { border-color: var(--space); box-shadow: 0 0 0 1px var(--space); }
+.fav.drop-before { box-shadow: 0 -3px 0 -1px var(--space); }
 .fav.active::after { background: var(--space); }
 
 .favicon {
@@ -294,6 +295,25 @@ body:not(.mode-sidebar) > .footer { display: none; }
 }
 .group + .tab.in-group::before { top: 4px; border-top-left-radius: 2px; border-top-right-radius: 2px; }
 .tab.in-group:not(:has(+ .tab.in-group))::before { bottom: 4px; border-bottom-left-radius: 2px; border-bottom-right-radius: 2px; }
+
+/* Link folders: a group-like header (folder icon in the folder's color), then its links */
+.group.folder { color: var(--fg); font-weight: 500; font-size: 12.5px; padding: 5px 6px; }
+.folder .folder-icon { color: var(--group); width: 16px; height: 16px; }
+.folder .chevron { margin-left: auto; color: var(--muted); }
+.group.folder.drop-target { box-shadow: inset 0 0 0 2px var(--group); }
+.tab.link.closed .title { color: color-mix(in srgb, var(--fg) 70%, transparent); }
+.folder-hint {
+  margin: 0 0 2px 2px;
+  padding: 5px 8px 5px 12px;
+  border-left: 3px solid var(--group);
+  border-radius: 2px;
+  color: var(--muted);
+  font-size: 11.5px;
+}
+.folder-hint.drop-target { background: var(--row-hover); }
+/* The folder dialog is short: its icon popover takes room in the dialog instead of
+   overflowing the overlay frame, which would cut it. */
+#folder-form .popover { position: relative; top: 0 !important; left: 0; right: 0; }
 
 .empty { color: var(--muted); padding: 12px 8px; text-align: center; }
 
@@ -875,6 +895,8 @@ body.mode-welcome { background: var(--bg); }
   .tab.in-group::before { left: -3px; }
   .group { justify-content: center; padding: 3px 0; }
   .group-title { display: none; }
+  .group.folder { padding: 6px 0; }
+  .group.folder .chevron, .folder-hint { display: none; }
   .empty { display: none; }
 
   .space-dot, .tool { width: 30px; padding: 0; justify-content: center; align-self: center; }
