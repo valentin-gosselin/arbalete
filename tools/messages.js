@@ -103,6 +103,7 @@ const M = [
   // Menus (right click)
   ['menuAddFavorite', "Ajouter aux favoris de l'espace", 'Add to space favorites'],
   ['menuMoveTab', "Déplacer vers l'espace", 'Move to space'],
+  ['menuBringBack', 'Ramener dans la fenêtre principale', 'Move back to the main window'],
   ['menuNewGroup', 'Ajouter à un nouveau groupe', 'Add to new group'],
   ['menuAddToGroup', 'Ajouter au groupe', 'Add to group'],
   ['menuUngroupTab', 'Retirer du groupe', 'Remove from group'],

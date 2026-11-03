@@ -24,6 +24,7 @@ let shared = []; // favorites shared by all spaces
 const activeByWindow = new Map(); // windowId -> spaceId
 const tabSpace = new Map(); // tabId -> spaceId
 const tabFav = new Map(); // tabId -> favId (tab opened from a favorite)
+const spaceChosen = new Set(); // windows whose space was set by switchSpace()
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 const getSpace = (id) => spaces.find((s) => s.id === id);
@@ -160,6 +161,7 @@ async function ensureActiveInSpace(windowId) {
 async function switchSpace(windowId, spaceId) {
   if (!getSpace(spaceId)) return;
   activeByWindow.set(windowId, spaceId);
+  spaceChosen.add(windowId);
   browser.sessions.setWindowValue(windowId, 'space', spaceId).catch(() => {});
   await ensureActiveInSpace(windowId);
   await applyVisibility(windowId);
@@ -191,6 +193,82 @@ async function moveTab(tabId, spaceId) {
   await ensureActiveInSpace(tab.windowId);
   await applyVisibility(tab.windowId);
   notify();
+}
+
+// --- Windows: detaching a tab, bringing it back ------------------------------
+
+// A tab dragged out of the sidebar gets its own window, like Firefox's own tabs.
+// The new window shows the tab's space (see tabs.onAttached).
+// Dropped on the sidebar of another window, the tab is adopted there instead: that drop
+// comes before the end of the drag, which also asks to detach it.
+const adoptedAt = new Map(); // tabId -> time it was adopted by another window
+async function detachTab(tabId, place = {}) {
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  if (Date.now() - (adoptedAt.get(tabId) || 0) < 2000) return;
+  const tab = await browser.tabs.get(tabId);
+  if ((await browser.tabs.query({ windowId: tab.windowId })).length < 2) return;
+  const size = {};
+  for (const key of ['left', 'top', 'width', 'height']) {
+    if (Number.isFinite(place[key])) size[key] = Math.round(place[key]);
+  }
+  await browser.windows.create({ tabId, ...size }).catch(() => browser.windows.create({ tabId }));
+}
+
+// Moves a tab of another window into this one (dropped on its sidebar, or brought back
+// by the menu): it joins the space displayed there, or the space it was dropped on.
+async function adoptTab(tabId, windowId, index = -1, spaceId = null) {
+  adoptedAt.set(tabId, Date.now());
+  setTimeout(() => adoptedAt.delete(tabId), 2000);
+  const tab = await browser.tabs.get(tabId);
+  const target = getSpace(spaceId) ? spaceId : activeSpace(windowId);
+  if (!tab.pinned) {
+    if (tabSpace.get(tabId) !== target) setFav(tabId, null);
+    assign(tabId, target);
+  }
+  if (tab.windowId !== windowId) await browser.tabs.move(tabId, { windowId, index });
+  else if (index >= 0) await browser.tabs.move(tabId, { index });
+  await browser.tabs.update(tabId, { active: true });
+  await browser.windows.update(windowId, { focused: true }).catch(() => {});
+}
+
+// A tab dropped before or after a row of the sidebar (from this window or another).
+// Dropped among Firefox's pinned tabs, it is pinned; a pinned tab dropped among the
+// ordinary ones is unpinned and joins the displayed space.
+async function placeTab(tabId, windowId, targetId, after, pinned) {
+  let tab = await browser.tabs.get(tabId);
+  if (tab.windowId !== windowId) {
+    await adoptTab(tabId, windowId);
+    tab = await browser.tabs.get(tabId);
+  }
+  if (tab.pinned !== pinned) {
+    if (pinned) setFav(tabId, null);
+    else assign(tabId, activeSpace(windowId));
+    tab = await browser.tabs.update(tabId, { pinned });
+  }
+  const target = await browser.tabs.get(targetId);
+  let index = target.index + (after ? 1 : 0);
+  if (tab.index < index) index -= 1;
+  if (index !== tab.index) await browser.tabs.move(tabId, { index });
+  await applyVisibility(windowId);
+  notify();
+}
+
+// The main window, for a tab of a secondary window: the normal window with the most
+// tabs, when it has more of them than the tab's own window (or the tab is in a popup).
+async function mainWindowFor(tab) {
+  const windows = await browser.windows.getAll({ populate: true, windowTypes: ['normal', 'popup'] });
+  const own = windows.find((w) => w.id === tab.windowId);
+  if (!own) return null;
+  const [main] = windows
+    .filter((w) => w.type === 'normal' && w.id !== own.id && w.incognito === own.incognito)
+    .sort((a, b) => b.tabs.length - a.tabs.length);
+  if (!main) return null;
+  return own.type !== 'normal' || main.tabs.length > own.tabs.length ? main : null;
+}
+
+async function bringBack(tab) {
+  const main = await mainWindowFor(tab);
+  if (main) await adoptTab(tab.id, main.id);
 }
 
 // --- Favorites ("pinned" tabs specific to each space) ------------------------
@@ -525,6 +603,7 @@ browser.storage.onChanged.addListener((changes, area) => {
 browser.windows.onCreated.addListener(async (win) => {
   await ready;
   const saved = await browser.sessions.getWindowValue(win.id, 'space').catch(() => null);
+  if (spaceChosen.has(win.id)) return; // detached tab: the window already follows it
   if (getSpace(saved)) activeByWindow.set(win.id, saved);
   else {
     const last = [...activeByWindow.values()].pop();
@@ -532,7 +611,10 @@ browser.windows.onCreated.addListener(async (win) => {
   }
 });
 
-browser.windows.onRemoved.addListener((windowId) => activeByWindow.delete(windowId));
+browser.windows.onRemoved.addListener((windowId) => {
+  activeByWindow.delete(windowId);
+  spaceChosen.delete(windowId);
+});
 
 // Links opened from another application (mail, chat...) arrive while no Firefox window
 // has the focus, or right after Firefox takes it back (on Wayland the system raises the
@@ -645,8 +727,29 @@ browser.tabs.onHighlighted.addListener(notify);
 
 browser.tabs.onAttached.addListener(async (tabId, { newWindowId }) => {
   await ready;
+  const win = await browser.windows.get(newWindowId, { populate: true }).catch(() => null);
+  const tab = win && win.tabs.find((x) => x.id === tabId);
+  if (win && win.type === 'normal' && tab && !tab.pinned) {
+    const spaceId = tabSpace.get(tabId);
+    // Coming from a popup (no space): it joins the displayed space.
+    if (!getSpace(spaceId)) assign(tabId, activeSpace(newWindowId));
+    // Window made of this tab alone (detached): it shows the tab's space.
+    else if (win.tabs.length === 1 && spaceId !== activeSpace(newWindowId)) await switchSpace(newWindowId, spaceId);
+  }
   await applyVisibility(newWindowId);
   notify();
+});
+
+// The tab left: the old window must still display a tab of its space.
+browser.tabs.onDetached.addListener(async (tabId, { oldWindowId }) => {
+  await ready;
+  setTimeout(async () => {
+    const win = await browser.windows.get(oldWindowId).catch(() => null);
+    if (!win || win.type !== 'normal') return;
+    await ensureActiveInSpace(oldWindowId).catch(() => {});
+    await applyVisibility(oldWindowId).catch(() => {});
+    notify();
+  }, 100);
 });
 
 browser.contextualIdentities.onRemoved.addListener(async ({ contextualIdentity }) => {
@@ -1167,6 +1270,7 @@ const TAB_ITEMS = [
   { id: 'arb-fav', key: 'menuAddFavorite' },
   { id: 'arb-folder-add', key: 'menuAddToFolder' },
   { id: 'arb-move', key: 'menuMoveTab' },
+  { id: 'arb-bringback', key: 'menuBringBack' },
   { id: 'arb-tab-copyurl', key: 'menuTabCopyUrl', native: true },
   { id: 'arb-tab-moveopts', key: 'menuTabMoveOptions', native: true },
   { id: 'arb-tab-container', key: 'menuTabContainer', native: true },
@@ -1201,6 +1305,9 @@ function buildMenus() {
     for (const [id, key] of [['above', 'menuTabCloseAbove'], ['below', 'menuTabCloseBelow'], ['others', 'menuTabCloseOthers']]) {
       browser.menus.create({ id: `arb-tab-closeopts:${id}`, parentId: 'arb-tab-closeopts', title: t(key), contexts: ['tab'] });
     }
+
+    // Right click in the page of a secondary window (or of a popup).
+    browser.menus.create({ id: 'arb-page-bringback', title: t('menuBringBack'), contexts: ['page'], viewTypes: ['tab'], visible: false });
 
     for (const [id, key] of Object.entries(SIDE_ITEMS)) {
       browser.menus.create({ id, title: t(key), contexts: ['all'], viewTypes: ['sidebar', 'popup', 'tab'], visible: false });
@@ -1244,6 +1351,7 @@ async function updateTabMenu(tab, fromSidebar) {
   const updates = {};
 
   for (const item of TAB_ITEMS) if (item && item.native) updates[item.id] = { visible: fromSidebar };
+  updates['arb-bringback'] = { visible: !many && !!(await mainWindowFor(tab)) };
 
   // "Add to folder": the folders of the tab's space.
   const space = getSpace(tabSpace.get(tab.id));
@@ -1290,6 +1398,10 @@ async function updateTabMenu(tab, fromSidebar) {
 browser.menus.onShown.addListener(async (info, tab) => {
   const fromSidebar = (info.pageUrl || '').startsWith(SIDEBAR_PAGE) || info.viewType === 'sidebar';
   if (info.contexts.includes('tab') && tab) await updateTabMenu(tab, fromSidebar).catch(() => {});
+  if (info.contexts.includes('page') && !info.contexts.includes('tab') && tab && !fromSidebar) {
+    const main = await mainWindowFor(tab).catch(() => null);
+    await browser.menus.update('arb-page-bringback', { visible: !!main }).catch(() => {});
+  }
   const t = (info.pageUrl || '').startsWith(SIDEBAR_PAGE) && !info.contexts.includes('tab') ? lastMenuTarget : null;
   const kind = t && t.kind;
   const index = t ? spaces.findIndex((s) => s.id === t.spaceId) : -1;
@@ -1669,6 +1781,7 @@ browser.menus.onClicked.addListener(async (info, tab) => {
     for (const x of await menuTabs(tab)) await moveTab(x.id, id.slice('arb-move:'.length));
     return undefined;
   }
+  if ((id === 'arb-bringback' || id === 'arb-page-bringback') && tab) return bringBack(tab);
   if (id.startsWith('arb-tab-') && tab) return tabAction(id, tab);
   const t = lastMenuTarget;
   if (!t) return undefined;
@@ -1735,8 +1848,19 @@ const handlers = {
   closeTab: (m) => browser.tabs.remove(m.tabId),
   moveTab: (m) => moveTab(m.tabId, m.spaceId),
   reorderTab: (m) => browser.tabs.move(m.tabId, { index: m.index }).then(() => undefined),
+  detachTab: (m) => detachTab(m.tabId, m.place),
+  placeTab: (m) => placeTab(m.tabId, m.windowId, m.targetId, m.after, m.pinned),
+  adoptTab: (m) => adoptTab(m.tabId, m.windowId, m.index, m.spaceId),
   openFavorite: (m) => openFavorite(m.windowId, m.spaceId, m.favId),
-  addFavorite: (m) => addFavorite(m.tabId, m.folderId),
+  addFavorite: async (m) => {
+    // Dragged from another window: it comes into this one first.
+    if (m.adopt) await adoptTab(m.tabId, m.windowId);
+    return addFavorite(m.tabId, m.folderId);
+  },
+  groupTab: async (m) => {
+    if (m.adopt) await adoptTab(m.tabId, m.windowId);
+    await browser.tabs.group({ groupId: m.groupId, tabIds: [m.tabId] });
+  },
   moveFavorite: (m) => moveFavorite(m.spaceId, m.favId, m.folderId, m.beforeId),
   getFolder: (m) => getFolder(m.spaceId, m.folderId) || null,
   saveFolder: (m) => saveFolder(m.spaceId, m.folder),

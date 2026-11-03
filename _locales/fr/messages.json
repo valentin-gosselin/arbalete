@@ -287,6 +287,9 @@
   "menuMoveTab": {
     "message": "Déplacer vers l'espace"
   },
+  "menuBringBack": {
+    "message": "Ramener dans la fenêtre principale"
+  },
   "menuNewGroup": {
     "message": "Ajouter à un nouveau groupe"
   },

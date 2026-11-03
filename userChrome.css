@@ -1,10 +1,13 @@
 /* Arbalète: a single, compact sidebar, Arc-style.
    Installed by the Arbalète installer (Settings > Hide Firefox's native
    tabs), or to be copied into <Firefox profile>/chrome/userChrome.css.
-   Checked against the structure of Firefox 158.
+   Checked against the structure of Firefox 159.
 
-   The Arbalète sidebar is recognized by its title (#sidebar-title), which leaves
-   the other sidebars (history, bookmarks...) untouched.
+   The Arbalète sidebar is recognized by its checked item in the View > Sidebar
+   menu (#menubar_menu_arbalete_gosselin_pro-sidebar-action), which leaves the
+   other sidebars (history, bookmarks...) untouched. The sidebar title alone is
+   not enough: with vertical tabs, Firefox no longer updates it when another
+   panel opens, so "Arbalète" stays there over the bookmarks.
    The "Expand on hover" option in the Arbalète settings adds an invisible character
    to this title (and the "expand" button another one): this is what activates
    rules 4 and 5, without touching this file. */
@@ -16,28 +19,27 @@
 
 /* 1. Hide Firefox's native tabs when Arbalète is open:
       the vertical column on the left and the horizontal bar at the top. */
-:root:has(#sidebar-box:not([hidden]) #sidebar-title[value^="Arbalète"]) #sidebar-container,
-:root:has(#sidebar-box:not([hidden]) #sidebar-title[value^="Arbalète"]) #sidebar-launcher-splitter,
-:root:has(#sidebar-box:not([hidden]) #sidebar-title[value^="Arbalète"]) #TabsToolbar {
+:root:has(#menubar_menu_arbalete_gosselin_pro-sidebar-action[checked]):has(#sidebar-box:not([hidden])) #sidebar-container,
+:root:has(#menubar_menu_arbalete_gosselin_pro-sidebar-action[checked]):has(#sidebar-box:not([hidden])) #sidebar-launcher-splitter,
+:root:has(#menubar_menu_arbalete_gosselin_pro-sidebar-action[checked]):has(#sidebar-box:not([hidden])) #TabsToolbar {
   visibility: collapse !important;
 }
 
 /* 2. Hide the "Arbalète  ✕" header and the resize handle.
       Since Firefox's new sidebar, the extensions' header
       is drawn inside the panel page (webext-panels.xhtml): hide it
-      there too. */
-#sidebar-panel-header {
+      there too, but not in the bookmarks or history panels, whose
+      header is the way back to Arbalète. */
+#webextpanels-window #sidebar-panel-header {
   display: none !important;
 }
-#sidebar-box:has(#sidebar-title[value^="Arbalète"]) #sidebar-header {
-  display: none !important;
-}
-:root:has(#sidebar-title[value^="Arbalète"]) #sidebar-splitter {
+:root:has(#menubar_menu_arbalete_gosselin_pro-sidebar-action[checked]) #sidebar-header,
+:root:has(#menubar_menu_arbalete_gosselin_pro-sidebar-action[checked]) #sidebar-splitter {
   display: none !important;
 }
 
 /* 3. Compact sidebar, fixed width. */
-#sidebar-box:has(#sidebar-title[value^="Arbalète"]) {
+:root:has(#menubar_menu_arbalete_gosselin_pro-sidebar-action[checked]) #sidebar-box {
   position: relative !important;
   z-index: 3 !important;
   min-width: var(--arbalete-compact) !important;
@@ -47,23 +49,29 @@
   transition: min-width 0.15s ease, max-width 0.15s ease, width 0.15s ease, margin-inline-end 0.15s ease !important;
 }
 
-#sidebar-box:has(#sidebar-title[value^="Arbalète"]) #sidebar {
+:root:has(#menubar_menu_arbalete_gosselin_pro-sidebar-action[checked]) #sidebar-box #sidebar {
   min-width: 0 !important;
   width: 100% !important;
 }
 
 /* 4. Expanded sidebar (button at the bottom of the sidebar): wide permanently,
       the page shifts aside. Marker: zero-width non-joiner. */
-#sidebar-box:has(#sidebar-title[value="Arbalète\200C"]) {
+:root:has(#menubar_menu_arbalete_gosselin_pro-sidebar-action[checked]) #sidebar-box:has(#sidebar-title[value="Arbalète\200C"]) {
   min-width: var(--arbalete-expanded) !important;
   max-width: var(--arbalete-expanded) !important;
   width: var(--arbalete-expanded) !important;
 }
 
 /* 5. "Expand on hover" option: the sidebar goes over the page. */
-#sidebar-box:has(#sidebar-title[value="Arbalète\200B"]):hover {
+:root:has(#menubar_menu_arbalete_gosselin_pro-sidebar-action[checked]) #sidebar-box:has(#sidebar-title[value="Arbalète\200B"]):hover {
   min-width: var(--arbalete-expanded) !important;
   max-width: var(--arbalete-expanded) !important;
   width: var(--arbalete-expanded) !important;
   margin-inline-end: calc(var(--arbalete-compact) - var(--arbalete-expanded)) !important;
+}
+
+/* 6. The other panels (bookmarks, history...) opened in place of Arbalète: Firefox
+      may keep a narrow width for them, room enough to read them. */
+:root:not(:has(#menubar_menu_arbalete_gosselin_pro-sidebar-action[checked])) #sidebar-box:not([hidden]) {
+  min-width: 300px !important;
 }

@@ -236,6 +236,20 @@ function groupRow(group) {
     'aria-label': title,
     title: t(group.collapsed ? 'groupExpand' : 'groupCollapse', title),
     onclick: () => send('toggleGroup', { groupId: group.id, collapsed: !group.collapsed }),
+    // A tab dropped on the group header joins the group.
+    ondragover: (e) => {
+      if (!isTabDrag(e)) return;
+      e.preventDefault();
+      row.classList.add('drop-target');
+    },
+    ondragleave: () => row.classList.remove('drop-target'),
+    ondrop: (e) => {
+      row.classList.remove('drop-target');
+      const tabId = draggedTab(e);
+      if (tabId == null) return;
+      e.preventDefault();
+      send('groupTab', { tabId, groupId: group.id, adopt: fromOtherWindow(e) });
+    },
   }, [
     icon('chevron-down', 'ic chevron'),
     el('span', { class: 'group-title' }, title),
@@ -360,7 +374,7 @@ function dropOnFolder(e, folder, beforeId = null) {
   const favId = e.dataTransfer.getData('application/x-arbalete-fav');
   if (favId) return send('moveFavorite', { spaceId, favId, folderId: folder.id, beforeId });
   const tabId = draggedTab(e);
-  if (tabId != null) return send('addFavorite', { tabId, folderId: folder.id });
+  if (tabId != null) return send('addFavorite', { tabId, folderId: folder.id, adopt: fromOtherWindow(e) });
   const [url, title] = (e.dataTransfer.getData('text/x-moz-url') || e.dataTransfer.getData('text/uri-list')).split(/\r?\n/);
   if (url) return send('addFavoriteUrl', { url: url.trim(), title: (title || '').trim(), folderId: folder.id });
   return undefined;
@@ -425,24 +439,34 @@ function tabRow(tab, group) {
     onclick: (e) => onTabClick(e, tab),
     onauxclick: (e) => { if (e.button === 1) send('closeTab', { tabId: tab.id }); },
     ondragstart: (e) => {
+      // No text/uri-list: the page would take the drop and load the address there,
+      // instead of detaching the tab.
       e.dataTransfer.setData('application/x-arbalete-tab', String(tab.id));
-      e.dataTransfer.setData('text/uri-list', tab.url);
+      e.dataTransfer.setData('application/x-arbalete-window', String(windowId));
       e.dataTransfer.effectAllowed = 'move';
+      try {
+        e.dataTransfer.setDragImage(tabDragCard(tab, row), 24, 28);
+      } catch (error) {
+        // Default image: the snapshot of the row.
+      }
     },
+    ondragend: (e) => detachIfDroppedOutside(e, tab),
+    // A line shows where the tab goes: before this one (top half) or after it.
     ondragover: (e) => {
       if (!isTabDrag(e)) return;
       e.preventDefault();
-      row.classList.add('drop-before');
+      const after = inLowerHalf(e, row);
+      row.classList.toggle('drop-after', after);
+      row.classList.toggle('drop-before', !after);
     },
-    ondragleave: () => row.classList.remove('drop-before'),
+    ondragleave: () => row.classList.remove('drop-before', 'drop-after'),
     ondrop: (e) => {
-      row.classList.remove('drop-before');
+      row.classList.remove('drop-before', 'drop-after');
       const tabId = draggedTab(e);
       if (tabId == null || tabId === tab.id) return;
       e.preventDefault();
-      const dragged = state.tabs.find((t) => t.id === tabId);
-      const index = dragged && dragged.index < tab.index ? tab.index - 1 : tab.index;
-      send('reorderTab', { tabId, index });
+      // Among the pinned tabs it gets pinned, among the others unpinned.
+      send('placeTab', { tabId, targetId: tab.id, after: inLowerHalf(e, row), pinned: tab.pinned });
     },
   }, [
     el('span', { class: 'fav-wrap' }, [
@@ -498,6 +522,7 @@ function renderSpaces(space) {
           dot.classList.remove('drop-target');
           e.preventDefault();
           const tabId = draggedTab(e);
+          if (tabId != null && fromOtherWindow(e)) return send('adoptTab', { tabId, spaceId: s.id });
           if (tabId != null) return send('moveTab', { tabId, spaceId: s.id });
           const movedId = e.dataTransfer.getData('application/x-arbalete-space');
           if (!movedId || movedId === s.id) return;
@@ -533,6 +558,120 @@ function draggedTab(e) {
   const raw = e.dataTransfer.getData('application/x-arbalete-tab');
   return raw ? Number(raw) : null;
 }
+// A tab dragged from the sidebar of another window.
+function fromOtherWindow(e) {
+  const from = Number(e.dataTransfer.getData('application/x-arbalete-window'));
+  return Boolean(from) && from !== windowId;
+}
+
+// A tab dropped outside the sidebar (on the page, the desktop, another screen) gets its
+// own window; one dropped in the sidebar of another window moves there instead (the
+// background script sorts the two out). Neither the drop effect (a page may accept the
+// drop) nor the drag events (on Wayland the drag only starts once the pointer has left
+// the narrow sidebar) can tell it: the position of the drop, seen from the sidebar, can.
+// The image that follows the pointer while dragging a tab: a small card (icon, title,
+// domain, edged with the space color), which shows that the tab can leave the sidebar,
+// rather than the snapshot of a narrow row. Firefox takes a canvas as it is, without
+// clipping it to the sidebar.
+function tabDragCard(tab, row) {
+  const width = 260;
+  const height = 60;
+  // Drawn at 1:1: Firefox reads the canvas size as CSS pixels (a 2x canvas would show
+  // twice as big on a HiDPI screen).
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  const css = getComputedStyle(document.documentElement);
+  const color = (name) => css.getPropertyValue(name).trim();
+  const font = getComputedStyle(document.body).fontFamily;
+  // The card, with room around it for its shadow.
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+  ctx.shadowBlur = 8;
+  ctx.shadowOffsetY = 2;
+  ctx.beginPath();
+  ctx.roundRect(6, 4, width - 12, height - 14, 10);
+  ctx.fillStyle = color('--card');
+  ctx.fill();
+  ctx.shadowColor = 'transparent';
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = color('--space');
+  ctx.stroke();
+  // Icon: the one already shown in the row, or a dot.
+  const img = row.querySelector('img.favicon');
+  if (img && img.complete && img.naturalWidth) {
+    ctx.drawImage(img, 18, 19, 16, 16);
+  } else {
+    ctx.beginPath();
+    ctx.arc(26, 27, 6, 0, 2 * Math.PI);
+    ctx.fillStyle = color('--muted');
+    ctx.fill();
+  }
+  const fit = (text, max) => {
+    if (ctx.measureText(text).width <= max) return text;
+    let cut = text;
+    while (cut && ctx.measureText(`${cut}…`).width > max) cut = cut.slice(0, -1);
+    return `${cut}…`;
+  };
+  let host = '';
+  try {
+    host = new URL(tab.url).hostname;
+  } catch (error) {
+    // not a web address
+  }
+  ctx.fillStyle = color('--fg');
+  ctx.font = `600 13px ${font}`;
+  ctx.fillText(fit(tab.title || tab.url, width - 62), 44, 25);
+  ctx.fillStyle = color('--muted');
+  ctx.font = `12px ${font}`;
+  ctx.fillText(fit(host || tab.url, width - 62), 44, 41);
+  return canvas;
+}
+
+function detachIfDroppedOutside(e, tab) {
+  if (mode !== 'sidebar' || e.dataTransfer.mozUserCancelled) return;
+  const outside = e.clientX < 0 || e.clientY < 0 || e.clientX >= innerWidth || e.clientY >= innerHeight;
+  if (!outside) return;
+  const place = { width: window.outerWidth, height: window.outerHeight };
+  // Where the system says where the window is (not Wayland): under the pointer.
+  if (window.screenX || window.screenY) Object.assign(place, { left: e.screenX - 40, top: e.screenY - 20 });
+  send('detachTab', { tabId: tab.id, place });
+}
+function inLowerHalf(e, node) {
+  const rect = node.getBoundingClientRect();
+  return e.clientY > rect.top + rect.height / 2;
+}
+function clearDropMarks() {
+  $('#tabs').classList.remove('drop-end');
+  for (const node of document.querySelectorAll('.drop-before, .drop-after, .drop-target')) {
+    node.classList.remove('drop-before', 'drop-after', 'drop-target');
+  }
+}
+if (mode === 'sidebar') {
+  // Over no row (under the list...): the tab goes at the end of the list, shown by a line.
+  document.addEventListener('dragover', (e) => {
+    if (!isTabDrag(e)) return;
+    $('#tabs').classList.toggle('drop-end', !e.defaultPrevented);
+    e.preventDefault();
+  });
+  document.addEventListener('dragleave', (e) => {
+    if (!e.relatedTarget) clearDropMarks();
+  });
+  document.addEventListener('dragend', clearDropMarks);
+  document.addEventListener('drop', (e) => {
+    const handled = e.defaultPrevented;
+    clearDropMarks();
+    if (handled || !isTabDrag(e)) return;
+    e.preventDefault();
+    const tabId = draggedTab(e);
+    if (tabId == null) return;
+    // After the last tab of the list (unpinned if it was pinned).
+    const space = currentSpace();
+    const last = state.tabs.filter((t) => !t.pinned && t.spaceId === space.id && !t.favId && !t.folderId).pop();
+    if (last && last.id !== tabId) send('placeTab', { tabId, targetId: last.id, after: true, pinned: false });
+    else if (fromOtherWindow(e)) send('adoptTab', { tabId });
+  });
+}
 
 const favBox = $('#favorites');
 // Accepts a tab from the sidebar, a folder link, or a link dragged from a web page.
@@ -554,7 +693,7 @@ favBox.addEventListener('drop', (e) => {
   const tabId = draggedTab(e);
   if (tabId != null) {
     e.preventDefault();
-    send('addFavorite', { tabId });
+    send('addFavorite', { tabId, adopt: fromOtherWindow(e) });
     return;
   }
   // text/x-moz-url: "address" then "title" on two lines

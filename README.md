@@ -13,6 +13,7 @@ Version française : [LISEZMOI.md](LISEZMOI.md).
 - **Auto-archive**: per space, tabs inactive for 12 h, 24 h or 7 days go to the space archive (sidebar button and quick search), kept 30 days.
 - **Quick search** (Alt+K): tabs of all spaces, favorites, archive, commands, history, web search with your engine's suggestions.
 - **Split view**: two sites side by side in one tab.
+- **Windows**: drag a tab out of the sidebar to give it its own window, or onto the sidebar of another window to move it there (dropped on a space icon, it joins that space). Right-click a tab or a page of a secondary window or popup: "Move back to the main window".
 - **Tab groups**: Firefox tab groups are shown with their color, can be collapsed, renamed, ungrouped or moved to another space.
 - **Right-click** opens Firefox's own tab menu, plus Arbalète actions (favorites, move to space, groups).
 - **Compact mode**: icons only, titles as tooltips. Optional expand on hover, and a button to keep the sidebar expanded.

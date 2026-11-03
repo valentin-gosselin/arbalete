@@ -287,6 +287,9 @@
   "menuMoveTab": {
     "message": "Move to space"
   },
+  "menuBringBack": {
+    "message": "Move back to the main window"
+  },
   "menuNewGroup": {
     "message": "Add to new group"
   },
