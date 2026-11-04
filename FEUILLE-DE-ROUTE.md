@@ -83,6 +83,11 @@ Fait en premier car tous les textes ajoutés ensuite en dépendent.
 - [x] Correctif : un onglet activé pendant qu'Arbalète choisit son espace fait bien basculer la fenêtre.
 - [x] Croix de fermeture reprises des onglets verticaux de Firefox 158 : pastille ronde en haut à gauche en compact, bouton de 24 px toujours visible sur l'onglet actif en déplié.
 
+## Version 0.12.2 : prévenir quand le userChrome.css est périmé
+
+- [x] Le userChrome.css porte une version, lue par la barre dans sa propre largeur : la version 1 laissait les bordures de Firefox autour de la barre (46 ou 47 px utiles pour 48, 278 ou 279 pour 280), la version 2 les remplace par un contour dessiné par-dessus (même rendu) et la barre remplit exactement 48 ou 280 px. Une barre trop courte de 1 ou 2 px affiche un bouton « Mettre à jour la barre » (icône dans la couleur de l'espace, pastille) au-dessus des réglages ; il ouvre la fenêtre de l'installateur avec un message de mise à jour.
+- [ ] Pour une prochaine version du CSS, il faudra une autre largeur témoin (par exemple un contour plus fin d'un côté) : celle-ci ne distingue que la version 1.
+
 ## Version 0.12.1 : barre bloquée sur les marque-pages, fenêtres
 
 - [x] Correctif du userChrome.css : avec les onglets verticaux, Firefox ne met plus à jour le titre du panneau latéral quand on ouvre les marque-pages ou l'historique (Ctrl+B, Ctrl+H). Le titre restait « Arbalète » : les onglets natifs restaient masqués et le panneau des marque-pages était écrasé à 48 px, sans moyen d'en sortir. La barre d'Arbalète est maintenant repérée par son entrée cochée dans le menu Affichage > Panneau latéral, et l'en-tête n'est plus masqué que dans les panneaux d'extension. Les autres panneaux gardent au moins 300 px (Firefox pouvait leur laisser une largeur étroite). Un second Ctrl+B ferme le panneau sans rouvrir Arbalète : Alt+Maj+S. Relancer l'installateur pour en profiter.

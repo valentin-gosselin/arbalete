@@ -318,6 +318,9 @@ const M = [
 
   // "Single sidebar" window
   ['setupTitle', 'Une seule barre', 'A single sidebar'],
+  ['setupUpdate', "La barre d'Arbalète a changé : relancez l'installateur ci-dessous, puis redémarrez Firefox.", "The Arbalète sidebar has changed: run the installer below again, then restart Firefox."],
+  ['updateBarTitle', "Mettre à jour la barre : la personnalisation de Firefox date d'une version précédente d'Arbalète", "Update the sidebar: Firefox's customization comes from an earlier version of Arbalète"],
+  ['toolUpdateBar', 'Mettre à jour la barre', 'Update the sidebar'],
   ['setupWindowTitle', 'Arbalète : une seule barre', 'Arbalète: a single sidebar'],
   ['setupIntro', "Firefox n'autorise pas les extensions à masquer ses propres onglets. Un petit fichier de personnalisation (userChrome.css) le fait une fois pour toutes, sans droits administrateur. Les onglets natifs ne sont masqués que lorsque la barre Arbalète est ouverte.", "Firefox does not let extensions hide its own tabs. A small customization file (userChrome.css) does it once and for all, without administrator rights. Firefox's tabs are only hidden while the Arbalète sidebar is open."],
   ['setupHint', "Ensuite, l'option « Élargir la barre au survol » se règle dans les réglages d'Arbalète.", 'Afterwards, "Expand the sidebar on hover" is set in the Arbalète settings.'],

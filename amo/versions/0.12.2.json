@@ -1,0 +1,6 @@
+{
+  "release_notes": {
+    "en-US": "- When an update of Arbalète changes the customization that hides Firefox's own tabs (userChrome.css), a button at the bottom of the sidebar now says so: \"Update the sidebar\" opens the installer, to run again before restarting Firefox. Installed from 0.12.1 or earlier, it shows up once, for the fix of the bookmarks sidebar stuck in the narrow column.",
+    "fr": "- Quand une mise à jour d'Arbalète modifie la personnalisation qui masque les onglets de Firefox (userChrome.css), un bouton en bas de la barre le signale désormais : « Mettre à jour la barre » ouvre l'installateur, à relancer avant de redémarrer Firefox. Installée avec la 0.12.1 ou avant, il apparaîtra une fois, pour le correctif des marque-pages coincés dans la colonne étroite."
+  }
+}

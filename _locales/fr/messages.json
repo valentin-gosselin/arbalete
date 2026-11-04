@@ -890,6 +890,15 @@
   "setupTitle": {
     "message": "Une seule barre"
   },
+  "setupUpdate": {
+    "message": "La barre d'Arbalète a changé : relancez l'installateur ci-dessous, puis redémarrez Firefox."
+  },
+  "updateBarTitle": {
+    "message": "Mettre à jour la barre : la personnalisation de Firefox date d'une version précédente d'Arbalète"
+  },
+  "toolUpdateBar": {
+    "message": "Mettre à jour la barre"
+  },
   "setupWindowTitle": {
     "message": "Arbalète : une seule barre"
   },

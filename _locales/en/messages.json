@@ -890,6 +890,15 @@
   "setupTitle": {
     "message": "A single sidebar"
   },
+  "setupUpdate": {
+    "message": "The Arbalète sidebar has changed: run the installer below again, then restart Firefox."
+  },
+  "updateBarTitle": {
+    "message": "Update the sidebar: Firefox's customization comes from an earlier version of Arbalète"
+  },
+  "toolUpdateBar": {
+    "message": "Update the sidebar"
+  },
   "setupWindowTitle": {
     "message": "Arbalète: a single sidebar"
   },

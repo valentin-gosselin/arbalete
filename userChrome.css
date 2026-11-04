@@ -10,7 +10,12 @@
    panel opens, so "Arbalète" stays there over the bookmarks.
    The "Expand on hover" option in the Arbalète settings adds an invisible character
    to this title (and the "expand" button another one): this is what activates
-   rules 4 and 5, without touching this file. */
+   rules 4 and 5, without touching this file.
+
+   Version 2 of this file. The sidebar page measures its own width to know which
+   version is installed: version 1 left Firefox's borders (1 or 2 px) around it, from
+   version 2 it fills the whole 48 px (or 280 px), the border being drawn over it.
+   A sidebar still 1 or 2 px short asks to run the installer again. */
 
 :root {
   --arbalete-compact: 48px;
@@ -47,6 +52,10 @@
   width: var(--arbalete-compact) !important;
   padding: 0 !important;
   transition: min-width 0.15s ease, max-width 0.15s ease, width 0.15s ease, margin-inline-end 0.15s ease !important;
+  /* Version marker (see above): no side border, the same line drawn as an outline. */
+  border-inline-width: 0 !important;
+  outline: 1px solid var(--chrome-content-separator-color) !important;
+  outline-offset: -1px !important;
 }
 
 :root:has(#menubar_menu_arbalete_gosselin_pro-sidebar-action[checked]) #sidebar-box #sidebar {

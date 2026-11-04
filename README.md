@@ -17,7 +17,7 @@ Version française : [LISEZMOI.md](LISEZMOI.md).
 - **Tab groups**: Firefox tab groups are shown with their color, can be collapsed, renamed, ungrouped or moved to another space.
 - **Right-click** opens Firefox's own tab menu, plus Arbalète actions (favorites, move to space, groups).
 - **Compact mode**: icons only, titles as tooltips. Optional expand on hover, and a button to keep the sidebar expanded.
-- **A single sidebar**: a small userChrome.css (installed from the extension settings, no admin rights needed) hides Firefox's own tabs while Arbalète is open.
+- **A single sidebar**: a small userChrome.css (installed from the extension settings, no admin rights needed) hides Firefox's own tabs while Arbalète is open. When an update of Arbalète changes it, a button at the bottom of the sidebar offers to run the installer again.
 - **Sync**: spaces and favorites follow you through Firefox Sync, or through an export file.
 - **Space templates**: export a selection of spaces (with or without favorites) and add them to someone else's spaces, or move all of them to another computer.
 - **First run assistant**: pick and rename starting spaces, hide Firefox's own tabs, set a few useful options.

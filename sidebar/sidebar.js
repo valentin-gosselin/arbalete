@@ -731,6 +731,24 @@ function initSidebar() {
   $('#search-button').addEventListener('click', openPalette);
   $('#settings-button').addEventListener('click', () => openDialog('settings=1'));
 
+  // userChrome.css from an older Arbalète: its version shows in the sidebar width (see
+  // userChrome.css). Version 1 leaves the sidebar 1 or 2 px short of 48 or 280 px.
+  const update = $('#update-button');
+  update.append(icon('refresh-cw'), label('toolUpdateBar'));
+  update.addEventListener('click', () => openDialog('setup=1&update=1'));
+  let measuring = null;
+  const checkBar = () => {
+    clearTimeout(measuring);
+    // After the widening animation of the sidebar.
+    measuring = setTimeout(() => {
+      const width = document.documentElement.getBoundingClientRect().width;
+      const short = (full) => width > full - 3.5 && width < full - 0.5;
+      update.hidden = !(short(48) || short(280));
+    }, 600);
+  };
+  window.addEventListener('resize', checkBar);
+  checkBar();
+
   // Expand / collapse button (like the "Collapse" of many web apps): visible when widening on
   // hover is enabled (or when the sidebar was left expanded).
   const pin = $('#pin-button');
@@ -1762,6 +1780,7 @@ function download(name, text, type) {
 async function initSetup() {
   document.title = t('setupWindowTitle');
   $('#setup-panel').hidden = false;
+  $('#setup-update').hidden = !params.has('update');
   const os = await send('platform');
   const unix = os === 'linux' || os === 'mac' || os === 'openbsd';
   $('#setup-windows').hidden = os !== 'win';

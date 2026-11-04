@@ -15,7 +15,7 @@ English version: [README.md](README.md).
 - **Clic droit** sur un onglet : le menu natif de Firefox, plus les actions d'Arbalète.
 - **Fenêtres** : glisser un onglet hors de la barre lui donne sa propre fenêtre ; le glisser sur la barre d'une autre fenêtre l'y déplace (lâché sur l'icône d'un espace, il rejoint cet espace). Clic droit sur un onglet ou sur la page d'une fenêtre secondaire ou d'une pop-up : « Ramener dans la fenêtre principale ».
 - **Mode compact** : icônes seules, titres en infobulle. En option (Réglages) : élargissement au survol, et bouton en bas pour garder la barre dépliée.
-- **Une seule barre** : Réglages, « Masquer les onglets natifs de Firefox… » télécharge un petit installateur (Windows, sans droits administrateur) qui masque les onglets de Firefox quand Arbalète est ouverte.
+- **Une seule barre** : Réglages, « Masquer les onglets natifs de Firefox… » télécharge un petit installateur (Windows, sans droits administrateur) qui masque les onglets de Firefox quand Arbalète est ouverte. Quand une mise à jour d'Arbalète le modifie, un bouton en bas de la barre propose de relancer l'installateur.
 - **Clavier** : flèches, Entrée et Suppr dans la liste des onglets. Alt+Maj+C copie l'adresse de l'onglet, Alt+Maj+S affiche ou masque la barre.
 
 ## Installer

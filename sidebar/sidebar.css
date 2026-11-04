@@ -382,6 +382,24 @@ body:not(.mode-sidebar) > .footer { display: none; }
 .space-dot.drop-target { outline: 2px solid var(--dot); }
 .tool { color: var(--muted); }
 .tool:hover { background: var(--row-hover); color: var(--fg); }
+/* userChrome.css to update: the space color, and a dot. */
+.tool.update { color: var(--space); position: relative; }
+.tool.update::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 24px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--space);
+}
+.setup-update {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--space) 14%, transparent);
+  font-weight: 600;
+}
 
 .toast {
   position: fixed;
