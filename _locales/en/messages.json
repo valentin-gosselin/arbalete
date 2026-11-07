@@ -918,7 +918,7 @@
     "message": "Close Firefox completely, then start it again."
   },
   "setupRepeat": {
-    "message": "Do it once on each computer. Running the installer again simply updates the configuration."
+    "message": "Do it once on each computer. Running the installer again simply updates the configuration; it deletes itself once run."
   },
   "setupDownloadScriptUnix": {
     "message": "Download the installer (Linux, macOS)"

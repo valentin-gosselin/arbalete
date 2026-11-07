@@ -736,27 +736,31 @@ function initSidebar() {
   const update = $('#update-button');
   update.append(icon('refresh-cw'), label('toolUpdateBar'));
   update.addEventListener('click', () => openDialog('setup=1&update=1'));
+  // The sidebar can be short for a while (Firefox starting, a window moving between
+  // screens): the button needs two short readings 2 s apart, and is checked again
+  // every 10 s while shown, so that it never stays on an old reading.
   let measuring = null;
-  const checkBar = () => {
+  let shortBefore = false;
+  const checkBar = (delay = 600) => {
     clearTimeout(measuring);
     // After the widening animation of the sidebar.
     measuring = setTimeout(() => {
       const width = document.documentElement.getBoundingClientRect().width;
       const short = (full) => width > full - 3.5 && width < full - 0.5;
-      update.hidden = !(short(48) || short(280));
-    }, 600);
+      const now = short(48) || short(280);
+      update.hidden = !(now && shortBefore);
+      shortBefore = now;
+      if (now) checkBar(update.hidden ? 2000 : 10000);
+    }, delay);
   };
-  window.addEventListener('resize', checkBar);
-  checkBar();
+  new ResizeObserver(() => checkBar()).observe(document.documentElement);
+  document.addEventListener('visibilitychange', () => checkBar());
 
-  // Expand / collapse button (like the "Collapse" of many web apps): visible when widening on
-  // hover is enabled (or when the sidebar was left expanded).
+  // Expand / collapse button (like the "Collapse" of many web apps), always shown.
   const pin = $('#pin-button');
   let pinned = false;
   const updatePin = async () => {
-    const s = await browser.storage.local.get(['expandOnHover', 'pinnedOpen']);
-    pinned = !!s.pinnedOpen;
-    pin.hidden = !s.expandOnHover && !pinned;
+    pinned = !!(await browser.storage.local.get('pinnedOpen')).pinnedOpen;
     pin.title = t(pinned ? 'pinCollapse' : 'pinExpand');
     pin.replaceChildren(icon(pinned ? 'panel-left-close' : 'panel-left-open'), el('span', { class: 'label' }, pin.title));
     pin.setAttribute('aria-label', pin.title);
@@ -764,7 +768,7 @@ function initSidebar() {
   };
   pin.addEventListener('click', () => browser.storage.local.set({ pinnedOpen: !pinned }));
   browser.storage.onChanged.addListener((changes, area) => {
-    if (area === 'local' && (changes.expandOnHover || changes.pinnedOpen)) updatePin();
+    if (area === 'local' && changes.pinnedOpen) updatePin();
   });
   updatePin();
 
@@ -1734,7 +1738,7 @@ done
 echo
 if [ "$found" = 0 ]; then echo "$MSG_NO_FIREFOX"
 elif [ "$count" = 0 ]; then echo "$MSG_NO_PROFILE"
-else echo "$MSG_DONE"
+else echo "$MSG_DONE"; rm -f "$0"
 fi
 exit 0
 `;
@@ -1759,10 +1763,12 @@ function shInstaller(css) {
   ].join('\n');
 }
 
-// Command to paste in a terminal (the file arrives in the download folder).
+// Command to paste in a terminal (the file arrives in the download folder). It runs the
+// newest installer: a second download is saved as installer-arbalete(1).sh, next to an
+// older one that would put the old CSS back. The installer deletes itself once done.
 const unixCommand = (os) => (os === 'mac'
-  ? 'sh ~/Downloads/installer-arbalete.sh'
-  : 'sh "$(xdg-user-dir DOWNLOAD)/installer-arbalete.sh"');
+  ? 'sh "$(ls -t ~/Downloads/installer-arbalete*.sh | head -n 1)"'
+  : 'sh "$(ls -t "$(xdg-user-dir DOWNLOAD)"/installer-arbalete*.sh | head -n 1)"');
 
 async function userChromeCss() {
   return (await fetch('../userChrome.css')).text();
@@ -1803,7 +1809,8 @@ async function initSetup() {
       `echo ${plain(t('installerRunning'))}`,
       `powershell -NoProfile -ExecutionPolicy Bypass -Command "$f='%~f0'; $s=(Get-Content -LiteralPath $f -Raw -Encoding UTF8) -split ('#'+'PS1#'); iex (($s[1] -split ('#'+'CSS#'))[0])"`,
       'pause',
-      'exit /b',
+      // Deletes this file, so that the next download keeps its name (see unixCommand).
+      '(goto) 2>nul & del "%~f0"',
       '#PS1#',
       installerMessages() + INSTALLER_PS.trim(),
       '#CSS#',

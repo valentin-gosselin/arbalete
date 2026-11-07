@@ -108,7 +108,8 @@ click, a script from the userChrome.css shipped in the package (.cmd running Pow
 on Windows, .sh on Linux and macOS) and offers it as a download. The user runs it
 explicitly. It only writes user_pref("toolkit.legacyUserProfileCustomizations.stylesheets",
 true) into user.js and the CSS into chrome/userChrome.css, in the user's own Firefox
-profiles, between marker comments (other customizations are kept).
+profiles, between marker comments (other customizations are kept). The script then
+deletes itself, so that a later download keeps its file name.
 
 Split view (optional permissions webRequest, webRequestBlocking, browsingData,
 <all_urls>, requested on first use): the extension page split/split.html shows two

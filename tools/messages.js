@@ -327,7 +327,7 @@ const M = [
   ['setupDownloadScript', "Télécharger l'installateur (Windows)", 'Download the installer (Windows)'],
   ['setupStep1', 'Ouvrez le fichier téléchargé. Si Windows affiche « Windows a protégé votre ordinateur », cliquez sur « Informations complémentaires » puis « Exécuter quand même ».', 'Open the downloaded file. If Windows shows "Windows protected your PC", click "More info" then "Run anyway".'],
   ['setupStep2', 'Fermez complètement Firefox puis relancez-le.', 'Close Firefox completely, then start it again.'],
-  ['setupRepeat', "À refaire sur chaque PC. Relancer l'installateur met simplement à jour la configuration.", 'Do it once on each computer. Running the installer again simply updates the configuration.'],
+  ['setupRepeat', "À refaire sur chaque PC. Relancer l'installateur met simplement à jour la configuration ; il s'efface tout seul une fois lancé.", 'Do it once on each computer. Running the installer again simply updates the configuration; it deletes itself once run.'],
   ['setupDownloadScriptUnix', "Télécharger l'installateur (Linux, macOS)", 'Download the installer (Linux, macOS)'],
   ['setupUnixStep1', 'Ouvrez un terminal et lancez :', 'Open a terminal and run:'],
   ['setupUnixDrag', 'Fichier enregistré ailleurs : tapez sh suivi d’une espace, glissez le fichier dans le terminal, puis Entrée.', 'Saved it elsewhere? Type sh followed by a space, drag the file into the terminal, then press Enter.'],

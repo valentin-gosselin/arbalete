@@ -83,6 +83,11 @@ Fait en premier car tous les textes ajoutés ensuite en dépendent.
 - [x] Correctif : un onglet activé pendant qu'Arbalète choisit son espace fait bien basculer la fenêtre.
 - [x] Croix de fermeture reprises des onglets verticaux de Firefox 158 : pastille ronde en haut à gauche en compact, bouton de 24 px toujours visible sur l'onglet actif en déplié.
 
+## Version 0.12.3 : l'installateur qui remettait l'ancien CSS
+
+- [x] Correctif : au deuxième téléchargement, Firefox enregistre l'installateur sous installer-arbalete(1).sh (ou .cmd), et la commande proposée (ou un double-clic dans le dossier Téléchargements) lançait l'ancien fichier, qui réinstallait l'ancien CSS : le bouton « Mettre à jour la barre » ne partait pas. La commande Linux et macOS lance le plus récent des installer-arbalete*.sh, et l'installateur s'efface une fois lancé (le .sh après un passage réussi, le .cmd après la pause).
+- [x] Correctif : le bouton « Mettre à jour la barre » était toujours affiché, la règle display: flex des boutons du bas l'emportant sur l'attribut hidden (le banc de la 0.12.2 lisait l'attribut, pas l'affichage). Règle .tool[hidden] ajoutée ; le bouton « Garder la barre dépliée », affiché par ce même défaut depuis la 0.10.0 alors que le code le réservait à l'option « Élargir au survol », reste affiché exprès. Par prudence, la mesure demande aussi deux lectures courtes à 2 s d'écart, est relue à chaque changement de taille (ResizeObserver) et quand la barre redevient visible, et toutes les 10 s tant que le bouton est affiché.
+
 ## Version 0.12.2 : prévenir quand le userChrome.css est périmé
 
 - [x] Le userChrome.css porte une version, lue par la barre dans sa propre largeur : la version 1 laissait les bordures de Firefox autour de la barre (46 ou 47 px utiles pour 48, 278 ou 279 pour 280), la version 2 les remplace par un contour dessiné par-dessus (même rendu) et la barre remplit exactement 48 ou 280 px. Une barre trop courte de 1 ou 2 px affiche un bouton « Mettre à jour la barre » (icône dans la couleur de l'espace, pastille) au-dessus des réglages ; il ouvre la fenêtre de l'installateur avec un message de mise à jour.

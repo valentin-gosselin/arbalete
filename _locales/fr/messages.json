@@ -918,7 +918,7 @@
     "message": "Fermez complètement Firefox puis relancez-le."
   },
   "setupRepeat": {
-    "message": "À refaire sur chaque PC. Relancer l'installateur met simplement à jour la configuration."
+    "message": "À refaire sur chaque PC. Relancer l'installateur met simplement à jour la configuration ; il s'efface tout seul une fois lancé."
   },
   "setupDownloadScriptUnix": {
     "message": "Télécharger l'installateur (Linux, macOS)"

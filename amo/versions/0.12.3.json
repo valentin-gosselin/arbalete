@@ -1,0 +1,6 @@
+{
+  "release_notes": {
+    "en-US": "- Fix: once a first installer had been downloaded, Firefox saved the next one as installer-arbalete(1).sh, and the suggested command ran the old file, which put the old customization back: the \"Update the sidebar\" button then stayed. The command now runs the newest installer, and the installer (Linux, macOS and Windows) deletes itself once run. To get rid of the button: download the installer again from that button and run it.\n- Fix: the \"Update the sidebar\" button of 0.12.2 was always shown, even with an up to date userChrome.css. It now only appears when the customization really needs updating.",
+    "fr": "- Correctif : après un premier téléchargement, Firefox enregistrait le nouvel installateur sous installer-arbalete(1).sh et la commande proposée lançait l'ancien fichier, qui remettait l'ancienne personnalisation : le bouton « Mettre à jour la barre » restait affiché. La commande lance maintenant l'installateur le plus récent, et l'installateur (Linux, macOS et Windows) s'efface une fois lancé. Pour faire disparaître le bouton : retéléchargez l'installateur depuis ce bouton et lancez-le.\n- Correctif : le bouton « Mettre à jour la barre » de la 0.12.2 restait toujours affiché, même avec un userChrome.css à jour. Il n'apparaît plus que lorsque la personnalisation est vraiment à mettre à jour."
+  }
+}

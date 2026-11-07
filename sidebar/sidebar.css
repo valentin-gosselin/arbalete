@@ -381,6 +381,8 @@ body:not(.mode-sidebar) > .footer { display: none; }
 .space-dot.add { color: var(--muted); }
 .space-dot.drop-target { outline: 2px solid var(--dot); }
 .tool { color: var(--muted); }
+/* display: flex above would show them in spite of the hidden attribute. */
+.tool[hidden] { display: none; }
 .tool:hover { background: var(--row-hover); color: var(--fg); }
 /* userChrome.css to update: the space color, and a dot. */
 .tool.update { color: var(--space); position: relative; }
