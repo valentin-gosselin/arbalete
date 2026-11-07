@@ -83,6 +83,10 @@ Fait en premier car tous les textes ajoutés ensuite en dépendent.
 - [x] Correctif : un onglet activé pendant qu'Arbalète choisit son espace fait bien basculer la fenêtre.
 - [x] Croix de fermeture reprises des onglets verticaux de Firefox 158 : pastille ronde en haut à gauche en compact, bouton de 24 px toujours visible sur l'onglet actif en déplié.
 
+## Version 0.12.4 : ne plus écraser les espaces des autres PC
+
+- [x] Correctif : avec un stockage vide (premier démarrage, ou extension retirée puis remise : Firefox efface alors son storage.sync local, module temporaire compris), loadSpaces enregistrait aussitôt les espaces par défaut, et Firefox Sync remplaçait les espaces de tous les autres PC (arrivé le 07/11/2026 en retirant un module temporaire). Les espaces par défaut restent maintenant provisoires : affichés, jamais écrits, jusqu'à ce que Sync ramène les espaces (rechargés par storage.onChanged) ou qu'une modification de l'utilisateur passe par saveSpaces. Un onglet d'un espace inconnu garde sa valeur de session et retrouve son espace à l'arrivée de Sync. La suppression d'un conteneur n'enregistre plus que si un espace l'utilisait.
+
 ## Version 0.12.3 : l'installateur qui remettait l'ancien CSS
 
 - [x] Correctif : au deuxième téléchargement, Firefox enregistre l'installateur sous installer-arbalete(1).sh (ou .cmd), et la commande proposée (ou un double-clic dans le dossier Téléchargements) lançait l'ancien fichier, qui réinstallait l'ancien CSS : le bouton « Mettre à jour la barre » ne partait pas. La commande Linux et macOS lance le plus récent des installer-arbalete*.sh, et l'installateur s'efface une fois lancé (le .sh après un passage réussi, le .cmd après la pause).

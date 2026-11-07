@@ -1,0 +1,6 @@
+{
+  "release_notes": {
+    "en-US": "- Fix: on a first start with empty storage (new computer, or Arbalète reinstalled, since Firefox erases an extension's data when it is removed), Arbalète saved its two default spaces right away, and Firefox Sync then replaced the spaces of every other computer with them. The default spaces are now only shown, until Firefox Sync brings back your spaces (tabs then return to theirs) or until you change something yourself.",
+    "fr": "- Correctif : au premier démarrage avec un stockage vide (nouvel ordinateur, ou Arbalète réinstallée, puisque Firefox efface les données d'une extension retirée), Arbalète enregistrait aussitôt ses deux espaces par défaut, et Firefox Sync les imposait ensuite à tous les autres ordinateurs à la place de vos espaces. Les espaces par défaut sont désormais seulement affichés, jusqu'à ce que Firefox Sync ramène vos espaces (les onglets retrouvent alors le leur) ou que vous changiez vous-même quelque chose."
+  }
+}

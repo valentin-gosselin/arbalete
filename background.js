@@ -63,6 +63,7 @@ const storedFolders = (space) => (space.folders || []).map((folder) => ({ ...fol
 const validIconImage = (value) => (typeof value === 'string' && /^data:image\//.test(value) && value.length <= 7500 ? value : null);
 
 async function saveSpaces() {
+  provisional = false;
   const payload = { order: spaces.map((s) => s.id), shared: shared.map((f) => toStored({ favorites: [f] }).favorites[0]) };
   for (const s of spaces) {
     payload['space:' + s.id] = toStored(s);
@@ -115,12 +116,17 @@ async function loadSpaces() {
   }
   spaces = loaded;
   shared = Array.isArray(data.shared) ? data.shared : [];
+  provisional = !data.order;
   await resolveContainers();
-  if (!data.order) await saveSpaces();
-  else buildMenus();
+  buildMenus();
 }
 
 let saving = false;
+// Empty storage (first install, or reinstalled: Firefox clears it on uninstall): the default
+// spaces are shown but not saved. Saving them would replace, through Firefox Sync, the spaces
+// of every other PC; Sync may still bring them back here. Only a change made by the user
+// (saveSpaces) makes them real.
+let provisional = false;
 
 let notifyTimer = null;
 function notify() {
@@ -558,7 +564,13 @@ async function getState(windowId) {
 
 async function init() {
   await loadSpaces();
+  await readSessionSpaces();
+}
 
+// Space of each window and tab, as saved in the session. With provisional spaces, a tab of
+// an unknown space is shown in the active one without overwriting its saved value: it gets
+// its space back once Firefox Sync brings the spaces.
+async function readSessionSpaces() {
   for (const win of await browser.windows.getAll({ windowTypes: ['normal'] })) {
     const saved = await browser.sessions.getWindowValue(win.id, 'space').catch(() => null);
     activeByWindow.set(win.id, getSpace(saved) ? saved : spaces[0].id);
@@ -566,7 +578,9 @@ async function init() {
   for (const tab of await browser.tabs.query({})) {
     if (tab.pinned) continue;
     const saved = await browser.sessions.getTabValue(tab.id, 'space').catch(() => null);
-    assign(tab.id, getSpace(saved) ? saved : activeSpace(tab.windowId));
+    if (getSpace(saved)) assign(tab.id, saved);
+    else if (saved && provisional) tabSpace.set(tab.id, activeSpace(tab.windowId));
+    else assign(tab.id, activeSpace(tab.windowId));
     const fav = await browser.sessions.getTabValue(tab.id, 'fav').catch(() => null);
     if (fav) tabFav.set(tab.id, fav);
   }
@@ -754,20 +768,25 @@ browser.tabs.onDetached.addListener(async (tabId, { oldWindowId }) => {
 
 browser.contextualIdentities.onRemoved.addListener(async ({ contextualIdentity }) => {
   await ready;
+  let changed = false;
   for (const s of [...spaces, ...spaces.flatMap((x) => x.folders || [])]) {
     if (s.cookieStoreId === contextualIdentity.cookieStoreId) {
       s.cookieStoreId = null;
       s.containerName = null;
+      changed = true;
     }
   }
-  await saveSpaces();
+  if (changed) await saveSpaces();
 });
 
 // Change coming from the other PC through Firefox Sync.
 browser.storage.onChanged.addListener(async (changes, area) => {
   await ready;
   if (area !== 'sync' || saving) return;
+  const wasProvisional = provisional;
   await loadSpaces();
+  // The spaces came back from the other PCs: the tabs return to theirs.
+  if (wasProvisional && !provisional) await readSessionSpaces();
   for (const [windowId, spaceId] of activeByWindow) {
     if (!getSpace(spaceId)) await switchSpace(windowId, spaces[0].id);
   }
