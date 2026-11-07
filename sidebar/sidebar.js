@@ -1133,6 +1133,17 @@ async function initEditForm() {
   archive.value = String(space.archiveAfter || 0);
 
   $('#f-sites').value = (space.sites || []).join('\n');
+  // Exclusive space: the other tabs go to another space, the first non-exclusive one by default.
+  const others = $('#f-others');
+  const otherSpaces = state.spaces.filter((s) => s.id !== space.id);
+  others.replaceChildren(...otherSpaces.map((s) => el('option', { value: s.id }, s.name)));
+  const fallback = otherSpaces.find((s) => !s.exclusive) || otherSpaces[0];
+  others.value = otherSpaces.some((s) => s.id === space.othersTo) ? space.othersTo : (fallback ? fallback.id : '');
+  $('#f-exclusive').checked = !!space.exclusive && otherSpaces.length > 0;
+  $('#f-exclusive').disabled = !otherSpaces.length;
+  const toggleExclusive = () => { $('#f-others-row').hidden = !$('#f-exclusive').checked; };
+  $('#f-exclusive').addEventListener('change', toggleExclusive);
+  toggleExclusive();
   const slots = scheduleSlots(space.schedule);
   $('#f-sched-on').checked = slots.length > 0;
   for (const slot of slots.length ? slots : [{ days: [1, 2, 3, 4, 5], from: '09:00', to: '18:00' }]) addSlot(slot);
@@ -1185,6 +1196,8 @@ async function initEditForm() {
       background,
       color2: background === 'gradient' ? color2() : null,
       sites,
+      exclusive: $('#f-exclusive').checked,
+      othersTo: $('#f-exclusive').checked ? others.value || null : null,
       schedule: $('#f-sched-on').checked && slots.length ? { slots } : null,
       name: $('#f-name').value.trim() || t('spaceFallbackName'),
       color: color(),

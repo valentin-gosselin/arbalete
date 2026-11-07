@@ -576,6 +576,7 @@ async function readSessionSpaces() {
     activeByWindow.set(win.id, getSpace(saved) ? saved : spaces[0].id);
   }
   for (const tab of await browser.tabs.query({})) {
+    webTabs.add(tab.id);
     if (tab.pinned) continue;
     const saved = await browser.sessions.getTabValue(tab.id, 'space').catch(() => null);
     if (getSpace(saved)) assign(tab.id, saved);
@@ -648,7 +649,14 @@ browser.storage.onChanged.addListener((changes, area) => {
   if (area === 'local' && changes.externalSpace) externalSpaceId = changes.externalSpace.newValue || null;
 });
 
-browser.tabs.onCreated.addListener(async (tab) => {
+// Tabs whose space is being decided: the site rules wait for it.
+const creating = new Map(); // tabId -> promise
+browser.tabs.onCreated.addListener((tab) => {
+  const deciding = onTabCreated(tab).finally(() => creating.delete(tab.id));
+  creating.set(tab.id, deciding);
+});
+
+async function onTabCreated(tab) {
   // Read before any await: the focus may change right after.
   const outside = !firefoxFocused || Date.now() - focusedAgainAt < EXTERNAL_DELAY;
   const external = outside && !tab.openerTabId && !BLANK_URLS.includes(tab.url);
@@ -660,6 +668,7 @@ browser.tabs.onCreated.addListener(async (tab) => {
 
   // Reopened tab (Ctrl+Shift+T, session restore): it keeps its space.
   const saved = await browser.sessions.getTabValue(tab.id, 'space').catch(() => null);
+  if (saved) webTabs.add(tab.id);
   if (tabSpace.has(tab.id)) return notify(); // assigned in the meantime by newTab()
   let spaceId = getSpace(saved) ? saved : activeSpace(tab.windowId);
   if (!saved && tab.openerTabId && tabSpace.has(tab.openerTabId)) spaceId = tabSpace.get(tab.openerTabId);
@@ -692,7 +701,7 @@ browser.tabs.onCreated.addListener(async (tab) => {
     else await browser.tabs.hide(tab.id).catch(() => {});
   }
   notify();
-});
+}
 
 browser.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
   await ready;
@@ -706,6 +715,7 @@ browser.tabs.onRemoved.addListener(onSplitTabRemoved);
 browser.tabs.onRemoved.addListener((tabId) => {
   tabSpace.delete(tabId);
   tabFav.delete(tabId);
+  webTabs.delete(tabId);
   notify();
 });
 
@@ -814,6 +824,9 @@ async function importSpaces(imported, mode = 'replace') {
     cookieStoreId: null,
     archiveAfter: Number(s.archiveAfter) || 0,
     sites: Array.isArray(s.sites) ? s.sites.map(String) : [],
+    exclusive: s.exclusive === true,
+    // Added next to other spaces, the ids change: the first space that is not exclusive.
+    othersTo: !adding && s.othersTo ? String(s.othersTo) : null,
     schedule: s.schedule && typeof s.schedule === 'object' ? s.schedule : null,
     color2: s.color2 || null,
     favorites: readLinks(s.favorites, adding),
@@ -982,20 +995,52 @@ function siteRule(url) {
 }
 
 const ruleMoves = new Set(); // tabs being reopened in a container
+// Tabs that have shown a web page, or were restored. The others are new tabs: an exclusive
+// space (space.exclusive) sends them to another space (space.othersTo) when their first web
+// page is not one of its sites. Links followed in the same tab stay: a login going through
+// another site and back would otherwise bounce between the spaces.
+const webTabs = new Set();
 
 async function applySiteRule(tab) {
+  await creating.get(tab.id);
   if (tab.pinned || ruleMoves.has(tab.id)) return;
   const win = await browser.windows.get(tab.windowId).catch(() => null);
   if (!win || win.type !== 'normal') return;
+  const fresh = !webTabs.has(tab.id) && ruleHost(tab.url);
+  if (fresh) webTabs.add(tab.id);
   const rule = siteRule(tab.url);
-  if (!rule) return;
+  if (!rule) {
+    if (fresh) await leaveExclusiveSpace(tab);
+    return;
+  }
   const { space } = rule;
   // The folder's container, or else the space's.
   const container = (rule.folder && rule.folder.cookieStoreId) || space.cookieStoreId;
-  const needsContainer = container && tab.cookieStoreId !== container;
-  if (tabSpace.get(tab.id) === space.id && !needsContainer) return;
+  if (tabSpace.get(tab.id) === space.id && !(container && tab.cookieStoreId !== container)) return;
+  await moveTabToSpace(tab, space.id, container);
+}
 
-  if (needsContainer) {
+// The space where an exclusive space sends the other tabs: its choice, or else the first
+// space that is not exclusive.
+function othersSpace(space) {
+  const chosen = getSpace(space.othersTo);
+  if (chosen && chosen !== space) return chosen;
+  return spaces.find((s) => s !== space && !s.exclusive) || null;
+}
+
+async function leaveExclusiveSpace(tab) {
+  const space = getSpace(tabSpace.get(tab.id));
+  if (!space || !space.exclusive) return;
+  const target = othersSpace(space);
+  if (!target) return;
+  // Out of the exclusive space's container too, so that its logins do not follow.
+  const container = target.cookieStoreId
+    || (space.cookieStoreId && tab.cookieStoreId === space.cookieStoreId ? 'firefox-default' : null);
+  await moveTabToSpace(tab, target.id, container);
+}
+
+async function moveTabToSpace(tab, spaceId, container) {
+  if (container && tab.cookieStoreId !== container) {
     // A container's cookies cannot be switched on the fly: reopen in the right one.
     ruleMoves.add(tab.id);
     try {
@@ -1006,18 +1051,19 @@ async function applySiteRule(tab) {
         active: tab.active,
         cookieStoreId: container,
       });
-      assign(reopened.id, space.id);
+      assign(reopened.id, spaceId);
+      webTabs.add(reopened.id);
       await browser.tabs.remove(tab.id);
-      if (reopened.active) await switchSpace(tab.windowId, space.id);
+      if (reopened.active) await switchSpace(tab.windowId, spaceId);
       else await applyVisibility(tab.windowId);
     } finally {
       ruleMoves.delete(tab.id);
     }
     return;
   }
-  assign(tab.id, space.id);
+  assign(tab.id, spaceId);
   setFav(tab.id, null);
-  if (tab.active) await switchSpace(tab.windowId, space.id);
+  if (tab.active) await switchSpace(tab.windowId, spaceId);
   else await applyVisibility(tab.windowId);
   notify();
 }

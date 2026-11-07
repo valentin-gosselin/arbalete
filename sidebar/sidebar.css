@@ -587,6 +587,7 @@ body.mode-setup .panel, body.mode-archive .panel { user-select: text; }
 .line-label { color: var(--fg); font-size: 13px; }
 .stack { display: flex; flex-direction: column; gap: 6px; padding: 11px 0; }
 .inline { display: flex; gap: 8px; }
+.inline.others { align-items: center; justify-content: space-between; }
 .stack.tight { gap: 2px; padding: 0; }
 
 /* First run assistant (in a tab) */

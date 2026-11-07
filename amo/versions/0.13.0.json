@@ -1,0 +1,6 @@
+{
+  "release_notes": {
+    "en-US": "- Exclusive spaces: in the space editor, \"Exclusive: its sites only\" keeps a space for its own sites. A new tab opened from it (a link opened in a new tab, an address typed in a new tab) that does not go to one of its sites moves to the space of your choice (\"Other tabs go to\"), and out of the exclusive space's container. A link followed in the same tab stays, so that logins going through another site do not bounce between spaces.",
+    "fr": "- Espaces exclusifs : dans l'éditeur d'un espace, « Exclusif : ses sites seulement » réserve un espace à ses propres sites. Un nouvel onglet ouvert depuis lui (lien ouvert dans un nouvel onglet, adresse tapée dans un nouvel onglet) qui ne va pas sur un de ses sites part dans l'espace de votre choix (« Les autres onglets vont dans »), et sort du conteneur de l'espace exclusif. Un lien suivi dans le même onglet reste, pour que les connexions qui passent par un autre site ne fassent pas sauter d'un espace à l'autre."
+  }
+}

@@ -40,7 +40,7 @@ AMO uses a limited Markdown in this field.
 
 - Barre latérale verticale et compacte, qui peut se déployer au survol. Un petit installateur (Windows, Linux, macOS) masque les onglets natifs de Firefox quand la barre est ouverte.
 - Favoris en tuiles, propres à un espace ou communs à tous.
-- Sites d'un espace : un lien vers vos sites de travail (l'étoile est acceptée, dev.\*.exemple.fr) rejoint tout seul le bon espace et son conteneur.
+- Sites d'un espace : un lien vers vos sites de travail (l'étoile est acceptée, dev.\*.exemple.fr) rejoint tout seul le bon espace et son conteneur. Un espace exclusif renvoie les autres liens dans l'espace de votre choix.
 - Bascule horaire : des créneaux par jour (du lundi au vendredi de 9 h à 18 h, par exemple) pour passer automatiquement sur un espace.
 - Une couleur, un fond de barre (uni, dégradé ou sans), une icône parmi 1 900 ou votre propre image.
 
@@ -71,7 +71,7 @@ AMO uses a limited Markdown in this field.
 
 - Compact vertical sidebar that can expand on hover. A small installer (Windows, Linux, macOS) hides Firefox's own tab strip while the sidebar is open.
 - Favorites as tiles, for one space or shared by all of them.
-- Space sites: a link to your work sites (wildcards work, dev.\*.example.com) joins the right space and its container by itself.
+- Space sites: a link to your work sites (wildcards work, dev.\*.example.com) joins the right space and its container by itself. An exclusive space sends the other links to the space of your choice.
 - Scheduled switching: time slots per day (Monday to Friday, 9 am to 6 pm for instance) to switch to a space automatically.
 - A color, a sidebar background (plain, gradient or none), an icon among 1,900 or your own image.
 

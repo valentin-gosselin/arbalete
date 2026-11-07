@@ -173,6 +173,15 @@
   "spaceSitesRejected": {
     "message": "Pas une adresse de site : $1"
   },
+  "spaceExclusive": {
+    "message": "Exclusif : ses sites seulement"
+  },
+  "spaceOthersTo": {
+    "message": "Les autres onglets vont dans"
+  },
+  "spaceExclusiveHint": {
+    "message": "Un nouvel onglet ouvert ici (lien, adresse tapée) qui ne va pas sur un de ses sites part dans cet espace. Un lien suivi dans le même onglet reste ici."
+  },
   "spaceSchedule": {
     "message": "Basculer automatiquement sur cet espace"
   },

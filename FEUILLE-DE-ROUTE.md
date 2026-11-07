@@ -83,6 +83,11 @@ Fait en premier car tous les textes ajoutés ensuite en dépendent.
 - [x] Correctif : un onglet activé pendant qu'Arbalète choisit son espace fait bien basculer la fenêtre.
 - [x] Croix de fermeture reprises des onglets verticaux de Firefox 158 : pastille ronde en haut à gauche en compact, bouton de 24 px toujours visible sur l'onglet actif en déplié.
 
+## Version 0.13.0 : espaces exclusifs
+
+- [x] Option « Exclusif : ses sites seulement » dans l'éditeur d'espace, avec « Les autres onglets vont dans » (par défaut le premier espace non exclusif, choix gardé par Firefox Sync). Un nouvel onglet de l'espace (lien ouvert dans un nouvel onglet, adresse tapée dans un nouvel onglet) dont la première page web n'est pas un des sites de l'espace (ni d'un de ses dossiers) part dans l'espace choisi ; s'il est au premier plan, la fenêtre le suit. Un lien suivi dans le même onglet reste : une connexion qui passe par un autre site puis revient ne fait pas sauter la fenêtre. Un site revendiqué par un troisième espace va dans celui-ci, comme avant. L'onglet sort aussi du conteneur de l'espace exclusif (rouvert dans le conteneur de l'espace cible, ou sans conteneur). Espace cible supprimé : le premier espace non exclusif. Les onglets restaurés ou déjà passés par une page web ne bougent pas.
+- [x] Les règles de sites attendent que l'espace d'un nouvel onglet soit décidé (onTabCreated), au lieu de risquer de passer avant.
+
 ## Version 0.12.4 : ne plus écraser les espaces des autres PC
 
 - [x] Correctif : avec un stockage vide (premier démarrage, ou extension retirée puis remise : Firefox efface alors son storage.sync local, module temporaire compris), loadSpaces enregistrait aussitôt les espaces par défaut, et Firefox Sync remplaçait les espaces de tous les autres PC (arrivé le 07/11/2026 en retirant un module temporaire). Les espaces par défaut restent maintenant provisoires : affichés, jamais écrits, jusqu'à ce que Sync ramène les espaces (rechargés par storage.onChanged) ou qu'une modification de l'utilisateur passe par saveSpaces. Un onglet d'un espace inconnu garde sa valeur de session et retrouve son espace à l'arrivée de Sync. La suppression d'un conteneur n'enregistre plus que si un espace l'utilisait.

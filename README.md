@@ -10,6 +10,7 @@ Version française : [LISEZMOI.md](LISEZMOI.md).
 - **Switch spaces** with the icons at the bottom, a horizontal swipe or Shift+wheel anywhere in the sidebar, or Alt+1 to Alt+5 and Alt+Shift+Up/Down.
 - **Favorites**: tiles at the top of each space, like Arc's pinned tabs.
 - **Link folders**: folders of links under the tiles, each with its name, icon and color. A link keeps its own tab, shown under the link; drag tabs, links or tiles into a folder. Like a space, a folder can claim sites (their tabs gather under it, from any space) and have its own container.
+- **Space sites and exclusive spaces**: in the space editor, the sites of a space (wildcards work, dev.*.example.com): tabs going there join the space and its container. An "exclusive" space keeps its sites only: a new tab opened from it to another site moves to the space you chose (Personal, for instance); a link followed in the same tab stays.
 - **Auto-archive**: per space, tabs inactive for 12 h, 24 h or 7 days go to the space archive (sidebar button and quick search), kept 30 days.
 - **Quick search** (Alt+K): tabs of all spaces, favorites, archive, commands, history, web search with your engine's suggestions.
 - **Split view**: two sites side by side in one tab.

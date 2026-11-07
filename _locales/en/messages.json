@@ -173,6 +173,15 @@
   "spaceSitesRejected": {
     "message": "Not a site address: $1"
   },
+  "spaceExclusive": {
+    "message": "Exclusive: its sites only"
+  },
+  "spaceOthersTo": {
+    "message": "Other tabs go to"
+  },
+  "spaceExclusiveHint": {
+    "message": "A new tab opened here (link, typed address) that does not go to one of its sites moves to that space. A link followed in the same tab stays here."
+  },
   "spaceSchedule": {
     "message": "Switch to this space automatically"
   },
